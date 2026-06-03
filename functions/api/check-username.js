@@ -30,8 +30,9 @@ export async function onRequestPost(context) {
 
       for (const user of data.users) {
         if (user.id === userId) continue; // skip self
-        const meta = user.user_metadata || {};
-        if (meta.username && meta.username.toLowerCase() === username.toLowerCase()) {
+        const meta = user.user_metadata || user.raw_user_meta_data || {};
+        const storedUsername = meta.username || '';
+        if (storedUsername.toLowerCase() === username.toLowerCase()) {
           found = true;
           break;
         }

@@ -20,8 +20,10 @@ export async function onRequestPost(context) {
       if (!data.users || data.users.length === 0) break;
 
       for (const user of data.users) {
-        const meta = user.user_metadata || {};
-        if (meta.username && meta.username.toLowerCase() === username.toLowerCase()) {
+        // Supabase admin API may use either field name
+        const meta = user.user_metadata || user.raw_user_meta_data || {};
+        const storedUsername = meta.username || '';
+        if (storedUsername.toLowerCase() === username.toLowerCase()) {
           return Response.json({ email: user.email });
         }
       }
