@@ -33,7 +33,7 @@ export async function onRequestPost(context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
+        from: 'noreply@zenlootexchange.com',
         to: email,
         subject: 'Your ZenLootX verification code',
         html: `
