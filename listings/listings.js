@@ -76,7 +76,7 @@ document.body.innerHTML = `
           <span class="filter-label">Type:</span>
           <button class="filter-btn active" data-filter="all">All</button>
           <button class="filter-btn" data-filter="account">Account</button>
-          ${GAME !== 'genshin' ? `<button class="filter-btn" data-filter="items">Items</button>` : ''}
+          ${GAME !== 'genshin' ? '<button class="filter-btn" data-filter="items">Items</button>' : ''}
           <button class="filter-btn" data-filter="topup">Top-up</button>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">
