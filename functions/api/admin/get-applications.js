@@ -1,19 +1,19 @@
-function isAdmin(payload) {
-  return payload?.app_metadata?.is_admin === true;
-}
-
-function decodeToken(token) {
-  try { return JSON.parse(atob(token.split('.')[1])); }
-  catch { return null; }
+async function verifyAdmin(token, env) {
+  try {
+    const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
+    });
+    if (!res.ok) return false;
+    const user = await res.json();
+    return user?.app_metadata?.is_admin === true;
+  } catch { return false; }
 }
 
 export async function onRequestGet({ request, env }) {
   try {
     const token   = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-    const payload = decodeToken(token);
-    if (!payload || !isAdmin(payload)) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const isAdmin = await verifyAdmin(token, env);
+    if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const url    = new URL(request.url);
     const status = url.searchParams.get('status');
@@ -27,16 +27,11 @@ export async function onRequestGet({ request, env }) {
         apikey: env.SUPABASE_SERVICE_KEY,
       },
     });
-
     const data = await res.json();
     if (!res.ok) return Response.json({ error: data }, { status: res.status });
 
-    // Fetch matching user emails from auth admin API
-    const usersRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users?per_page=1000`, {
-      headers: {
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-        apikey: env.SUPABASE_SERVICE_KEY,
-      },
+    const usersRes  = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users?per_page=1000`, {
+      headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
     });
     const usersData = await usersRes.json();
     const userMap   = {};

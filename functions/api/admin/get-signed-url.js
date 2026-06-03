@@ -1,19 +1,19 @@
-function isAdmin(payload) {
-  return payload?.app_metadata?.is_admin === true;
-}
-
-function decodeToken(token) {
-  try { return JSON.parse(atob(token.split('.')[1])); }
-  catch { return null; }
+async function verifyAdmin(token, env) {
+  try {
+    const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
+    });
+    if (!res.ok) return false;
+    const user = await res.json();
+    return user?.app_metadata?.is_admin === true;
+  } catch { return false; }
 }
 
 export async function onRequestPost({ request, env }) {
   try {
     const token   = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-    const payload = decodeToken(token);
-    if (!payload || !isAdmin(payload)) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const isAdmin = await verifyAdmin(token, env);
+    if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const { path } = await request.json();
     if (!path) return Response.json({ error: 'Missing path' }, { status: 400 });
@@ -30,7 +30,6 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({ expiresIn: 3600 }),
       }
     );
-
     const data = await res.json();
     if (!res.ok) return Response.json({ error: data }, { status: res.status });
 

@@ -1,19 +1,19 @@
-function isAdmin(payload) {
-  return payload?.app_metadata?.is_admin === true;
-}
-
-function decodeToken(token) {
-  try { return JSON.parse(atob(token.split('.')[1])); }
-  catch { return null; }
+async function verifyAdmin(token, env) {
+  try {
+    const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
+    });
+    if (!res.ok) return false;
+    const user = await res.json();
+    return user?.app_metadata?.is_admin === true;
+  } catch { return false; }
 }
 
 export async function onRequestPost({ request, env }) {
   try {
     const token   = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-    const payload = decodeToken(token);
-    if (!payload || !isAdmin(payload)) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const isAdmin = await verifyAdmin(token, env);
+    if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const { applicationId, userId, action, reason } = await request.json();
     if (!applicationId || !userId || !['approve', 'reject'].includes(action)) {
@@ -27,7 +27,6 @@ export async function onRequestPost({ request, env }) {
       ...(action === 'reject' && reason ? { rejection_reason: reason } : {}),
     };
 
-    // Update seller_applications row
     const patchRes = await fetch(
       `${env.SUPABASE_URL}/rest/v1/seller_applications?id=eq.${applicationId}`,
       {
@@ -41,26 +40,17 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify(patchBody),
       }
     );
-    if (!patchRes.ok) {
-      const err = await patchRes.text();
-      return Response.json({ error: err }, { status: patchRes.status });
-    }
+    if (!patchRes.ok) return Response.json({ error: await patchRes.text() }, { status: patchRes.status });
 
-    // Update user app_metadata with seller status
-    await fetch(
-      `${env.SUPABASE_URL}/auth/v1/admin/users/${userId}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-          apikey: env.SUPABASE_SERVICE_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          app_metadata: { is_seller: action === 'approve' },
-        }),
-      }
-    );
+    await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        apikey: env.SUPABASE_SERVICE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ app_metadata: { is_seller: action === 'approve' } }),
+    });
 
     return Response.json({ success: true, status: newStatus });
   } catch (e) {
