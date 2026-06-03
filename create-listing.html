@@ -234,7 +234,7 @@
           <!-- Images -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Screenshots <span style="color:var(--text-faint);font-weight:400;font-size:13px;">— optional, up to 4</span></h2>
+              <h2>Screenshots <span style="color:var(--danger)">*</span></h2>
             </div>
             <div class="form-section-body">
               <div class="image-grid">
@@ -246,7 +246,7 @@
                     <button class="img-remove" id="imgRemove${i}" type="button">✕</button>
                   </div>`).join('')}
               </div>
-              <span class="hint">JPG, PNG or WebP · Max 5MB each · First image is the cover</span>
+              <span class="hint">JPG, PNG or WebP · Max 5MB each · First image is the cover · At least one required</span>
             </div>
           </div>
 
@@ -449,6 +449,7 @@
       if (!selectedType)           { showError('Please select a listing type.'); return; }
       if (!title)                  { showError('Please enter a title.'); return; }
       if (!price || price <= 0)    { showError('Please enter a valid price.'); return; }
+      if (!imgFiles.some(f => f))  { showError('Please upload at least one screenshot.'); return; }
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
