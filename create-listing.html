@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>List an Item — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --danger:#EF4444;--warning:#F5B947;--success:#22C55E;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:1200px;margin:0 auto;padding:0 24px; }
+
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:24px; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em;flex-shrink:0; }
+    .logo .green { color:var(--accent); }
+
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s;text-decoration:none;white-space:nowrap; }
+    .btn-primary   { background:var(--accent);color:var(--bg-base);border-color:var(--accent); }
+    .btn-primary:hover   { background:var(--accent-hover); }
+    .btn-secondary { background:transparent;color:var(--text);border-color:var(--border-hi); }
+    .btn-secondary:hover { background:var(--bg-elevated); }
+    .btn:disabled  { opacity:0.45;cursor:not-allowed;pointer-events:none; }
+
+    /* DROPDOWN */
+    .user-menu { position:relative; }
+    .user-btn { display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;padding:8px 14px;cursor:pointer;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text);transition:border-color 0.18s; }
+    .user-btn:hover { border-color:var(--accent); }
+    .user-avatar { width:26px;height:26px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden; }
+    .user-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+    .user-dropdown { display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:200px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200; }
+    .user-dropdown.open { display:block; }
+    .dropdown-email { padding:12px 16px;font-size:12px;color:var(--text-faint);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .dropdown-item { display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;width:100%;background:none;border:none;font-family:'Geist',sans-serif;text-align:left; }
+    .dropdown-item:hover { background:var(--bg-elevated);color:var(--text); }
+    .dropdown-item.danger { color:var(--danger); }
+    .dropdown-item.danger:hover { background:rgba(239,68,68,0.08); }
+    .dropdown-divider { height:1px;background:var(--border);margin:4px 0; }
+    .dropdown-item svg { width:15px;height:15px;flex-shrink:0; }
+
+    main { flex:1;padding:48px 0 80px; }
+
+    .page-header { margin-bottom:32px; }
+    .page-header h1 { font-size:28px;font-weight:700;letter-spacing:-0.02em; }
+    .page-header p  { font-size:14px;color:var(--text-dim);margin-top:6px; }
+
+    .form-layout { display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start; }
+
+    /* FORM SECTIONS */
+    .form-section { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px; }
+    .form-section-head { padding:18px 24px;border-bottom:1px solid var(--border); }
+    .form-section-head h2 { font-size:15px;font-weight:600; }
+    .form-section-body { padding:24px;display:flex;flex-direction:column;gap:18px; }
+
+    .field { display:flex;flex-direction:column;gap:7px; }
+    .field label { font-size:13px;font-weight:500;color:var(--text-dim); }
+    .field .hint  { font-size:12px;color:var(--text-faint); }
+    .field-row { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
+
+    input, select, textarea {
+      background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;
+      padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);
+      outline:none;width:100%;transition:border-color 0.18s,box-shadow 0.18s;
+    }
+    input:focus, select:focus, textarea:focus { border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow); }
+    input::placeholder, textarea::placeholder { color:var(--text-faint); }
+    select { cursor:pointer; }
+    textarea { resize:vertical;min-height:100px; }
+
+    /* GAME SELECTOR */
+    .game-options { display:grid;grid-template-columns:repeat(3,1fr);gap:10px; }
+    .game-opt { border:2px solid var(--border);border-radius:10px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.16s;background:var(--bg-elevated); }
+    .game-opt:hover { border-color:var(--border-hi); }
+    .game-opt.selected { border-color:var(--accent);background:var(--accent-glow); }
+    .game-opt-icon { font-size:24px;margin-bottom:6px; }
+    .game-opt-label { font-size:13px;font-weight:600; }
+    .game-opt-sub { font-size:11px;color:var(--text-faint);margin-top:2px; }
+
+    /* TYPE SELECTOR */
+    .type-options { display:flex;gap:10px;flex-wrap:wrap; }
+    .type-opt { flex:1;min-width:100px;border:2px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;text-align:center;transition:all 0.16s;background:var(--bg-elevated); }
+    .type-opt:hover { border-color:var(--border-hi); }
+    .type-opt.selected { border-color:var(--accent);background:var(--accent-glow); }
+    .type-opt-label { font-size:13px;font-weight:600; }
+    .type-opt-sub   { font-size:11px;color:var(--text-faint);margin-top:2px; }
+
+    /* IMAGE UPLOADS */
+    .image-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+    .img-zone { aspect-ratio:4/3;border:2px dashed var(--border);border-radius:8px;cursor:pointer;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:var(--bg-elevated);transition:border-color 0.16s,background 0.16s; }
+    .img-zone:hover { border-color:var(--accent);background:var(--accent-glow); }
+    .img-zone.has-img { border-style:solid;border-color:var(--accent); }
+    .img-zone input[type="file"] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+    .img-zone img { width:100%;height:100%;object-fit:cover;border-radius:6px; }
+    .img-zone-icon { font-size:20px;color:var(--text-faint); }
+    .img-zone-label { font-size:11px;color:var(--text-faint); }
+    .img-remove { position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(239,68,68,0.85);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:#fff;font-size:12px;z-index:2; }
+    .img-zone.has-img .img-remove { display:flex; }
+
+    /* PREVIEW / SIDEBAR */
+    .preview-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:88px; }
+    .preview-head { padding:16px 20px;border-bottom:1px solid var(--border); }
+    .preview-head h3 { font-size:14px;font-weight:600;color:var(--text-dim); }
+    .preview-img { height:160px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden; }
+    .preview-img img { width:100%;height:100%;object-fit:cover; }
+    .preview-body { padding:16px 20px;display:flex;flex-direction:column;gap:10px; }
+    .preview-game { font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em;display:inline-flex;align-self:flex-start; }
+    .preview-title { font-size:15px;font-weight:600;color:var(--text);line-height:1.4;min-height:22px; }
+    .preview-price { font-size:24px;font-weight:700; }
+    .preview-currency { font-size:13px;color:var(--text-faint);font-weight:400; }
+
+    .submit-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:16px; }
+    .form-error { font-size:13px;color:var(--danger);background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;display:none; }
+    .form-error.visible { display:block; }
+
+    footer { border-top:1px solid var(--border);padding:20px 0;margin-top:auto; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+    .footer-inner p { font-size:13px;color:var(--text-faint); }
+
+    @media (max-width:900px) { .form-layout { grid-template-columns:1fr; } .preview-card { position:static; } }
+    @media (max-width:600px) { .game-options { grid-template-columns:1fr 1fr; } .image-grid { grid-template-columns:repeat(2,1fr); } .field-row { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+        <div id="navActions">
+          <a href="/login" class="btn btn-secondary">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <div class="page-header">
+        <h1>List an item</h1>
+        <p>Fill in your listing details. Be accurate — buyers rely on your description.</p>
+      </div>
+
+      <div class="form-layout">
+        <div>
+
+          <!-- Game -->
+          <div class="form-section">
+            <div class="form-section-head"><h2>Game <span style="color:var(--danger)">*</span></h2></div>
+            <div class="form-section-body">
+              <div class="game-options">
+                <div class="game-opt" data-game="genshin">
+                  <div class="game-opt-icon">✦</div>
+                  <div class="game-opt-label">Genshin Impact</div>
+                  <div class="game-opt-sub">Accounts · items · primos</div>
+                </div>
+                <div class="game-opt" data-game="mlbb">
+                  <div class="game-opt-icon">⚔</div>
+                  <div class="game-opt-label">Mobile Legends</div>
+                  <div class="game-opt-sub">Accounts · diamonds · skins</div>
+                </div>
+                <div class="game-opt" data-game="valorant">
+                  <div class="game-opt-icon">◈</div>
+                  <div class="game-opt-label">Valorant</div>
+                  <div class="game-opt-sub">Accounts · VP · skins</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Type -->
+          <div class="form-section">
+            <div class="form-section-head"><h2>Listing type <span style="color:var(--danger)">*</span></h2></div>
+            <div class="form-section-body">
+              <div class="type-options">
+                <div class="type-opt" data-type="account">
+                  <div class="type-opt-label">Account</div>
+                  <div class="type-opt-sub">Full game account</div>
+                </div>
+                <div class="type-opt" data-type="items">
+                  <div class="type-opt-label">Items</div>
+                  <div class="type-opt-sub">In-game items</div>
+                </div>
+                <div class="type-opt" data-type="topup">
+                  <div class="type-opt-label">Top-up</div>
+                  <div class="type-opt-sub">In-game currency</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details -->
+          <div class="form-section">
+            <div class="form-section-head"><h2>Listing details</h2></div>
+            <div class="form-section-body">
+              <div class="field">
+                <label>Title <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="f_title" placeholder="e.g. AR 60 Genshin Account — C2 Raiden, C1 Hu Tao" maxlength="100">
+                <span class="hint" id="titleCount">0 / 100</span>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Price <span style="color:var(--danger)">*</span></label>
+                  <input type="number" id="f_price" placeholder="0" min="1" step="1">
+                </div>
+                <div class="field">
+                  <label>Currency</label>
+                  <select id="f_currency">
+                    <option value="PHP">PHP — Philippine Peso</option>
+                    <option value="USD">USD — US Dollar</option>
+                    <option value="SGD">SGD — Singapore Dollar</option>
+                    <option value="MYR">MYR — Malaysian Ringgit</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label>Description</label>
+                <textarea id="f_desc" placeholder="Describe what the buyer gets. Include server, rank, notable items, what's included, trade instructions, etc." maxlength="1000"></textarea>
+                <span class="hint" id="descCount">0 / 1000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Images -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Screenshots <span style="color:var(--text-faint);font-weight:400;font-size:13px;">— optional, up to 4</span></h2>
+            </div>
+            <div class="form-section-body">
+              <div class="image-grid">
+                ${[0,1,2,3].map(i => `
+                  <div class="img-zone" id="imgZone${i}">
+                    <input type="file" id="imgInput${i}" accept="image/jpeg,image/png,image/webp">
+                    <div class="img-zone-icon">📷</div>
+                    <div class="img-zone-label">${i === 0 ? 'Cover' : `Photo ${i+1}`}</div>
+                    <button class="img-remove" id="imgRemove${i}" type="button">✕</button>
+                  </div>`).join('')}
+              </div>
+              <span class="hint">JPG, PNG or WebP · Max 5MB each · First image is the cover</span>
+            </div>
+          </div>
+
+          <div id="formError" class="form-error"></div>
+
+        </div>
+
+        <!-- Preview sidebar -->
+        <div>
+          <div class="preview-card">
+            <div class="preview-head"><h3>Preview</h3></div>
+            <div class="preview-img" id="prevImg"><span>🎮</span></div>
+            <div class="preview-body">
+              <span class="preview-game" id="prevGame" style="display:none;"></span>
+              <div class="preview-title" id="prevTitle" style="color:var(--text-faint);font-style:italic;font-weight:400;">Your listing title will appear here</div>
+              <div>
+                <span class="preview-price" id="prevPrice">—</span>
+                <span class="preview-currency" id="prevCurrency">PHP</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="submit-card">
+            <button class="btn btn-primary" id="submitBtn" style="width:100%;justify-content:center;padding:13px;">Publish listing</button>
+            <p style="font-size:12px;color:var(--text-faint);margin-top:10px;text-align:center;line-height:1.5;">By publishing you confirm this listing is accurate and you agree to the <a href="/terms" style="color:var(--accent);">Seller Terms</a>.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p>© 2026 ZenLootX</p>
+        <div style="display:flex;gap:20px;"><a href="/terms" style="font-size:13px;color:var(--text-faint);">Terms</a><a href="/privacy" style="font-size:13px;color:var(--text-faint);">Privacy</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://msumlsqfergennhzxqon.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let selectedGame = null;
+    let selectedType = null;
+    const imgFiles = [null, null, null, null];
+
+    const GAME_LABELS = { genshin:'Genshin Impact', mlbb:'Mobile Legends', valorant:'Valorant' };
+    const GAME_TAG_STYLE = {
+      genshin:  'background:rgba(245,185,71,0.12);color:#F5B947;',
+      mlbb:     'background:rgba(59,130,246,0.12);color:#60A5FA;',
+      valorant: 'background:rgba(239,68,68,0.12);color:#F87171;',
+    };
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = '/login?redirect=/create-listing'; return; }
+
+      if (!session.user.app_metadata?.is_seller) {
+        window.location.href = '/sell';
+        return;
+      }
+
+      currentUser = session.user;
+      initNav(currentUser);
+      bindEvents();
+    }
+
+    function bindEvents() {
+      // Game selection
+      document.querySelectorAll('.game-opt').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.game-opt').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedGame = el.dataset.game;
+          updatePreview();
+        });
+      });
+
+      // Type selection
+      document.querySelectorAll('.type-opt').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.type-opt').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedType = el.dataset.type;
+        });
+      });
+
+      // Title
+      const titleEl = document.getElementById('f_title');
+      titleEl.addEventListener('input', () => {
+        document.getElementById('titleCount').textContent = `${titleEl.value.length} / 100`;
+        updatePreview();
+      });
+
+      // Price
+      document.getElementById('f_price').addEventListener('input', updatePreview);
+      document.getElementById('f_currency').addEventListener('change', updatePreview);
+
+      // Desc
+      const descEl = document.getElementById('f_desc');
+      descEl.addEventListener('input', () => {
+        document.getElementById('descCount').textContent = `${descEl.value.length} / 1000`;
+      });
+
+      // Image uploads
+      [0,1,2,3].forEach(i => {
+        document.getElementById(`imgInput${i}`).addEventListener('change', e => handleImageSelect(e, i));
+        document.getElementById(`imgRemove${i}`).addEventListener('click', e => {
+          e.stopPropagation();
+          clearImage(i);
+        });
+      });
+
+      // Submit
+      document.getElementById('submitBtn').addEventListener('click', submitListing);
+    }
+
+    function handleImageSelect(e, idx) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { showError('Each image must be under 5MB.'); e.target.value=''; return; }
+
+      imgFiles[idx] = file;
+      const zone = document.getElementById(`imgZone${idx}`);
+      const reader = new FileReader();
+      reader.onload = ev => {
+        zone.innerHTML = `
+          <img src="${ev.target.result}" alt="preview">
+          <button class="img-remove" id="imgRemove${idx}" type="button">✕</button>`;
+        zone.classList.add('has-img');
+        document.getElementById(`imgRemove${idx}`).addEventListener('click', ev2 => {
+          ev2.stopPropagation(); clearImage(idx);
+        });
+        if (idx === 0) document.getElementById('prevImg').innerHTML = `<img src="${ev.target.result}">`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearImage(idx) {
+      imgFiles[idx] = null;
+      const zone = document.getElementById(`imgZone${idx}`);
+      zone.classList.remove('has-img');
+      zone.innerHTML = `
+        <input type="file" id="imgInput${idx}" accept="image/jpeg,image/png,image/webp">
+        <div class="img-zone-icon">📷</div>
+        <div class="img-zone-label">${idx === 0 ? 'Cover' : `Photo ${idx+1}`}</div>
+        <button class="img-remove" id="imgRemove${idx}" type="button">✕</button>`;
+      document.getElementById(`imgInput${idx}`).addEventListener('change', e => handleImageSelect(e, idx));
+      document.getElementById(`imgRemove${idx}`).addEventListener('click', e => { e.stopPropagation(); clearImage(idx); });
+      if (idx === 0) document.getElementById('prevImg').innerHTML = '<span>🎮</span>';
+    }
+
+    function updatePreview() {
+      const title    = document.getElementById('f_title').value.trim();
+      const price    = document.getElementById('f_price').value;
+      const currency = document.getElementById('f_currency').value;
+
+      const prevTitle = document.getElementById('prevTitle');
+      if (title) { prevTitle.textContent = title; prevTitle.style.fontStyle='normal'; prevTitle.style.color='var(--text)'; prevTitle.style.fontWeight='600'; }
+      else { prevTitle.textContent = 'Your listing title will appear here'; prevTitle.style.fontStyle='italic'; prevTitle.style.color='var(--text-faint)'; prevTitle.style.fontWeight='400'; }
+
+      document.getElementById('prevPrice').textContent = price ? Number(price).toLocaleString() : '—';
+      document.getElementById('prevCurrency').textContent = currency;
+
+      const prevGame = document.getElementById('prevGame');
+      if (selectedGame) {
+        prevGame.textContent  = GAME_LABELS[selectedGame];
+        prevGame.style.cssText = GAME_TAG_STYLE[selectedGame];
+        prevGame.style.display = 'inline-flex';
+      } else {
+        prevGame.style.display = 'none';
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('formError');
+      el.textContent = msg;
+      el.classList.add('visible');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function clearError() { document.getElementById('formError').classList.remove('visible'); }
+
+    async function submitListing() {
+      clearError();
+
+      const title    = document.getElementById('f_title').value.trim();
+      const price    = parseFloat(document.getElementById('f_price').value);
+      const currency = document.getElementById('f_currency').value;
+      const desc     = document.getElementById('f_desc').value.trim();
+
+      if (!selectedGame)           { showError('Please select a game.'); return; }
+      if (!selectedType)           { showError('Please select a listing type.'); return; }
+      if (!title)                  { showError('Please enter a title.'); return; }
+      if (!price || price <= 0)    { showError('Please enter a valid price.'); return; }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Uploading images…';
+
+      // Upload images
+      const imageUrls = [];
+      for (let i = 0; i < 4; i++) {
+        if (!imgFiles[i]) continue;
+        const ext  = imgFiles[i].name.split('.').pop();
+        const path = `${currentUser.id}/${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await sb.storage
+          .from('listing-images')
+          .upload(path, imgFiles[i], { upsert: false, contentType: imgFiles[i].type });
+
+        if (upErr) {
+          showError(`Failed to upload image ${i+1}. Check your storage bucket setup.`);
+          btn.disabled = false; btn.textContent = 'Publish listing';
+          return;
+        }
+
+        const { data: { publicUrl } } = sb.storage.from('listing-images').getPublicUrl(path);
+        imageUrls.push(publicUrl);
+      }
+
+      btn.textContent = 'Publishing…';
+
+      const { data, error } = await sb.from('listings').insert({
+        seller_id:   currentUser.id,
+        game:        selectedGame,
+        title,
+        type:        selectedType,
+        price,
+        currency,
+        description: desc || null,
+        images:      imageUrls,
+        status:      'active',
+        attributes:  {},
+      }).select('id').single();
+
+      if (error) {
+        showError(`Failed to publish: ${error.message}`);
+        btn.disabled = false; btn.textContent = 'Publish listing';
+        return;
+      }
+
+      // Redirect to the new listing
+      window.location.href = `/listings/detail?id=${data.id}`;
+    }
+
+    function initNav(user) {
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const initial  = username.charAt(0).toUpperCase();
+      const avatar   = user.user_metadata?.avatar_url;
+
+      document.getElementById('navActions').innerHTML = `
+        <div class="user-menu" id="userMenu">
+          <button class="user-btn" id="userBtn">
+            <div class="user-avatar">${avatar ? `<img src="${avatar}">` : initial}</div>
+            ${username}
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <div class="dropdown-email">${user.email}</div>
+            <a href="/profile" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+              View Profile
+            </a>
+            <a href="/account" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+              My account
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/orders" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>
+              Orders
+            </a>
+            <a href="/messages" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"/></svg>
+              Messages
+            </a>
+            <a href="/notifications" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+              Notifications
+            </a>
+            <a href="/wallet" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/></svg>
+              Wallet
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/create-listing" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L9.568 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/></svg>
+              List an item
+            </a>
+            ${user.app_metadata?.is_admin ? `
+            <div class="dropdown-divider"></div>
+            <a href="/admin" class="dropdown-item" style="color:#F87171;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+              Admin Dashboard
+            </a>` : ''}
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger" id="logoutBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"/></svg>
+              Sign out
+            </button>
+          </div>
+        </div>`;
+
+      document.getElementById('userBtn').addEventListener('click', () => document.getElementById('userDropdown').classList.toggle('open'));
+      document.addEventListener('click', e => {
+        const m = document.getElementById('userMenu');
+        if (m && !m.contains(e.target)) document.getElementById('userDropdown').classList.remove('open');
+      });
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        localStorage.removeItem('zlx_session_row');
+        await sb.auth.signOut();
+        window.location.href = '/login';
+      });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
