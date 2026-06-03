@@ -272,97 +272,6 @@
     .step h3 { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
     .step p  { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
 
-    /* LISTINGS */
-    .listings-header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
-
-    .listings-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-
-    .listing-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.18s;
-    }
-    .listing-card:hover {
-      border-color: var(--border-hi);
-      background: var(--bg-elevated);
-      box-shadow: 0 0 28px var(--accent-glow);
-      transform: translateY(-2px);
-    }
-
-    .listing-thumb {
-      height: 148px;
-      background: var(--bg-elevated);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 52px;
-      user-select: none;
-    }
-
-    .listing-body { padding: 16px; }
-    .listing-meta { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-
-    .pill {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 999px;
-    }
-    .pill-genshin  { background: rgba(245,185,71,0.1);  color: #F5B947; }
-    .pill-mlbb     { background: rgba(59,130,246,0.1);  color: #60A5FA; }
-    .pill-valorant { background: rgba(239,68,68,0.1);   color: #F87171; }
-    .pill-account  { background: rgba(25,195,125,0.1);  color: var(--accent); }
-    .pill-items    { background: rgba(168,85,247,0.1);  color: #C084FC; }
-    .pill-topup    { background: rgba(245,185,71,0.08); color: #FBBF24; }
-
-    .listing-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 14px;
-      line-height: 1.4;
-    }
-
-    .listing-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .price-label { font-size: 11px; color: var(--text-faint); margin-bottom: 1px; }
-    .price-value {
-      font-family: 'Geist', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .seller { display: flex; align-items: center; gap: 7px; }
-    .seller-avatar {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      background: var(--bg-base);
-      border: 1px solid var(--border-hi);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-dim);
-      flex-shrink: 0;
-    }
-    .seller-name { font-size: 12px; color: var(--text-faint); }
 
     /* TRUST */
     .trust-grid {
@@ -499,7 +408,7 @@
       <div class="nav-inner">
         <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
         <ul class="nav-links">
-          <li><a href="#browse">Browse</a></li>
+          <li><a href="#games">Browse</a></li>
           <li><a href="#games">Games</a></li>
           <li><a href="#how">How it works</a></li>
           <li><a href="#sell">Sell</a></li>
@@ -525,7 +434,7 @@
         Buyers are protected. Sellers get paid. No guesswork.
       </p>
       <div class="hero-cta">
-        <a href="#browse" class="btn btn-primary btn-lg">Browse listings</a>
+        <a href="#games" class="btn btn-primary btn-lg">Browse listings</a>
         <a href="#how"    class="btn btn-secondary btn-lg">How it works</a>
       </div>
       <div class="hero-stats">
@@ -607,147 +516,6 @@
     </div>
   </section>
 
-  <!-- RECENT LISTINGS -->
-  <section class="section" id="browse">
-    <div class="container">
-      <div class="listings-header">
-        <div>
-          <h2 class="section-title">Recent listings</h2>
-          <p class="section-sub">A sample of what's available right now.</p>
-        </div>
-        <a href="/listings" class="btn btn-secondary">View all</a>
-      </div>
-      <div class="listings-grid">
-
-        <div class="listing-card">
-          <div class="listing-thumb">✦</div>
-          <div class="listing-body">
-            <div class="listing-meta">
-              <span class="pill pill-genshin">Genshin</span>
-              <span class="pill pill-account">Account</span>
-            </div>
-            <div class="listing-title">AR 58 · 12× C6 Characters · Kazuha + Hu Tao + Raiden</div>
-            <div class="listing-footer">
-              <div>
-                <div class="price-label">Price</div>
-                <div class="price-value">$280</div>
-              </div>
-              <div class="seller">
-                <div class="seller-avatar">Z</div>
-                <div class="seller-name">zephyr_sells</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="listing-card">
-          <div class="listing-thumb">⚔</div>
-          <div class="listing-body">
-            <div class="listing-meta">
-              <span class="pill pill-mlbb">MLBB</span>
-              <span class="pill pill-account">Account</span>
-            </div>
-            <div class="listing-title">Mythical Glory · 200+ Skins · Karrie Collector Skin</div>
-            <div class="listing-footer">
-              <div>
-                <div class="price-label">Price</div>
-                <div class="price-value">$145</div>
-              </div>
-              <div class="seller">
-                <div class="seller-avatar">M</div>
-                <div class="seller-name">mikotrader</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="listing-card">
-          <div class="listing-thumb">◈</div>
-          <div class="listing-body">
-            <div class="listing-meta">
-              <span class="pill pill-valorant">Valorant</span>
-              <span class="pill pill-items">Items</span>
-            </div>
-            <div class="listing-title">Immortal 3 · Prime Vandal + Elderflame Operator Bundle</div>
-            <div class="listing-footer">
-              <div>
-                <div class="price-label">Price</div>
-                <div class="price-value">$210</div>
-              </div>
-              <div class="seller">
-                <div class="seller-avatar">R</div>
-                <div class="seller-name">radiantflip</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="listing-card">
-          <div class="listing-thumb">✦</div>
-          <div class="listing-body">
-            <div class="listing-meta">
-              <span class="pill pill-genshin">Genshin</span>
-              <span class="pill pill-topup">Top-up</span>
-            </div>
-            <div class="listing-title">160 Genesis Crystals · Instant delivery · Asia server</div>
-            <div class="listing-footer">
-              <div>
-                <div class="price-label">Price</div>
-                <div class="price-value">$4.50</div>
-              </div>
-              <div class="seller">
-                <div class="seller-avatar">L</div>
-                <div class="seller-name">lootfuel</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="listing-card">
-          <div class="listing-thumb">⚔</div>
-          <div class="listing-body">
-            <div class="listing-meta">
-              <span class="pill pill-mlbb">MLBB</span>
-              <span class="pill pill-items">Items</span>
-            </div>
-            <div class="listing-title">500 Diamonds · Safe top-up · All servers</div>
-            <div class="listing-footer">
-              <div>
-                <div class="price-label">Price</div>
-                <div class="price-value">$7.20</div>
-              </div>
-              <div class="seller">
-                <div class="seller-avatar">D</div>
-                <div class="seller-name">diamondshop</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="listing-card">
-          <div class="listing-thumb">◈</div>
-          <div class="listing-body">
-            <div class="listing-meta">
-              <span class="pill pill-valorant">Valorant</span>
-              <span class="pill pill-account">Account</span>
-            </div>
-            <div class="listing-title">Diamond 2 · Reaver Vandal · All Agents Unlocked</div>
-            <div class="listing-footer">
-              <div>
-                <div class="price-label">Price</div>
-                <div class="price-value">$95</div>
-              </div>
-              <div class="seller">
-                <div class="seller-avatar">V</div>
-                <div class="seller-name">vaultedge</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
 
   <!-- WHY ZENLOOTX -->
   <section class="section" style="padding-top: 0;" id="sell">
