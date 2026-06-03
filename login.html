@@ -286,10 +286,7 @@
     function showSuccess(msg) { const el = document.getElementById('successMsg'); el.textContent = msg; el.classList.add('visible'); }
 
     function updateAttemptBadge() {
-      const badge = document.getElementById('attemptBadge');
-      if (failedAttempts === 0) { badge.className = 'attempt-badge'; return; }
-      badge.textContent = `${failedAttempts}/${MAX_ATTEMPTS} attempts`;
-      badge.className   = failedAttempts >= 4 ? 'attempt-badge danger' : 'attempt-badge warn';
+      // Badge hidden — attempts tracked internally only
     }
 
     async function triggerReset(identifier) {
@@ -322,13 +319,17 @@
     }
 
     async function getEmailByUsername(username) {
-      const { data, error } = await sb
-        .from('profiles')
-        .select('email')
-        .eq('username', username)
-        .single();
-      if (error || !data) return null;
-      return data.email;
+      try {
+        const res  = await fetch('/api/get-email-by-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+        const { email } = await res.json();
+        return email || null;
+      } catch {
+        return null;
+      }
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
