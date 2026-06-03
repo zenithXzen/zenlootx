@@ -979,6 +979,29 @@
       initUsernameEdit(user);
       initEmailEdit();
 
+      // Listen for auth state changes — update email display if user confirms new email
+      sb.auth.onAuthStateChange((event, session) => {
+        if (!session) return;
+        const updatedEmail = session.user.email;
+        const currentDisplayed = document.getElementById('emailField').value;
+
+        if (updatedEmail && updatedEmail !== currentDisplayed) {
+          document.getElementById('emailField').value         = updatedEmail;
+          document.getElementById('profileEmail').textContent = updatedEmail;
+
+          // Close the edit row if open
+          document.getElementById('emailEditRow').style.display  = 'none';
+          document.getElementById('editEmailBtn').style.display   = '';
+
+          // Show a brief confirmation
+          const statusEl = document.getElementById('emailStatus');
+          statusEl.textContent   = `Email updated to ${updatedEmail}.`;
+          statusEl.style.color   = '#22C55E';
+          statusEl.style.display = 'block';
+          setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+        }
+      });
+
       // Build nav dropdown
       const avatarHtml = avatarUrl
         ? `<img src="${avatarUrl}" alt="avatar">`
