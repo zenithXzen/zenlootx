@@ -895,6 +895,27 @@
     }
 
     initNav();
+
+    // Auto sign-out if session revoked remotely
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') window.location.href = '/login';
+    });
+
+    // Poll every 30s to check if session was revoked in our table
+    setInterval(async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = '/login'; return; }
+      const { data } = await sb
+        .from('user_sessions')
+        .select('is_active')
+        .eq('user_agent', navigator.userAgent)
+        .eq('user_id', session.user.id)
+        .single();
+      if (data && data.is_active === false) {
+        await sb.auth.signOut();
+        window.location.href = '/login';
+      }
+    }, 30000);
   </script>
 
 </body>

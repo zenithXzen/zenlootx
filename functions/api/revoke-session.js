@@ -5,14 +5,41 @@ export async function onRequestPost(context) {
     const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
     if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const payload     = JSON.parse(atob(token.split('.')[1]));
     const tokenUserId = payload.sub;
 
     const { sessionId, userId } = await request.json();
     if (!sessionId || !userId) return Response.json({ error: 'Missing fields' }, { status: 400 });
-    if (tokenUserId !== userId) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    if (tokenUserId !== userId)  return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    // Mark as inactive instead of deleting — keeps history
+    // Get the Supabase session ID from our table
+    const getRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionId}&user_id=eq.${userId}&select=supabase_session_id`,
+      {
+        headers: {
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          apikey: env.SUPABASE_SERVICE_KEY,
+        },
+      }
+    );
+    const rows = await getRes.json();
+    const supabaseSessionId = rows?.[0]?.supabase_session_id;
+
+    // Revoke the Supabase session to force sign-out on that device
+    if (supabaseSessionId) {
+      await fetch(
+        `${env.SUPABASE_URL}/auth/v1/admin/users/${userId}/sessions/${supabaseSessionId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            apikey: env.SUPABASE_SERVICE_KEY,
+          },
+        }
+      );
+    }
+
+    // Mark our record as inactive
     await fetch(
       `${env.SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionId}&user_id=eq.${userId}`,
       {
