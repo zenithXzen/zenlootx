@@ -221,7 +221,7 @@
     .tier-prog-bar { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent-hover)); transition:width 0.8s ease; min-width:4px; }
     .tier-prog-text { font-size:12px; color:var(--text-faint); text-align:center; }
     .tier-prog-text strong { color:var(--text-dim); }
-    .tier-prog-next-locked { filter:grayscale(0.4); opacity:0.7; }
+    .tier-prog-next-locked { opacity:0.75; }
 
     /* TIER BADGE */
     .tier-badge {
@@ -234,8 +234,8 @@
     .tier-badge-num  { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
     .tier-badge-name { font-size: 10px; font-weight: 500; opacity: 0.8; }
 
-    .tier-1  { background: linear-gradient(135deg,#2D3139,#3D4451); border-color:#4B5563; color:#9CA3AF; }
-    .tier-2  { background: linear-gradient(135deg,#1F2937,#374151); border-color:#4B5563; color:#D1D5DB; }
+    .tier-1  { background: linear-gradient(135deg,#2D2D2D,#4A4A4A); border-color:#6B6B6B; color:#A0A0A0; }
+    .tier-2  { background: linear-gradient(135deg,#1a2535,#2a3f5f); border-color:#4A7FA5; color:#8DB8D8; }
     .tier-3  { background: linear-gradient(135deg,#431407,#78350F); border-color:#92400E; color:#FCD34D; }
     .tier-4  { background: linear-gradient(135deg,#374151,#6B7280); border-color:#9CA3AF; color:#F3F4F6; }
     .tier-5  { background: linear-gradient(135deg,#713F12,#92400E); border-color:#D97706; color:#FDE68A; }
@@ -1419,7 +1419,7 @@
     // TIER SYSTEM
     const TIERS = [
       { tier:1,  name:'Stone',    min:0,      trophy:'#9CA3AF' },
-      { tier:2,  name:'Iron',     min:500,    trophy:'#D1D5DB' },
+      { tier:2,  name:'Iron',     min:500,    trophy:'#8DB8D8' },
       { tier:3,  name:'Bronze',   min:2000,   trophy:'#F59E0B' },
       { tier:4,  name:'Silver',   min:5000,   trophy:'#E5E7EB' },
       { tier:5,  name:'Gold',     min:10000,  trophy:'#FDE68A' },
