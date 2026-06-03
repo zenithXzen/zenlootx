@@ -212,6 +212,45 @@
     .meta-label { font-size: 12px; color: var(--text-faint); }
     .meta-value { font-size: 13px; font-weight: 500; color: var(--text-dim); }
 
+    /* TIER BADGE */
+    .tier-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 10px 5px 7px; border-radius: 999px;
+      font-family: 'Geist', sans-serif; border: 1px solid transparent;
+    }
+    .tier-badge svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .tier-badge-info { display: flex; flex-direction: column; line-height: 1.15; }
+    .tier-badge-num  { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+    .tier-badge-name { font-size: 10px; font-weight: 500; opacity: 0.8; }
+
+    .tier-1  { background: linear-gradient(135deg,#2D3139,#3D4451); border-color:#4B5563; color:#9CA3AF; }
+    .tier-2  { background: linear-gradient(135deg,#1F2937,#374151); border-color:#4B5563; color:#D1D5DB; }
+    .tier-3  { background: linear-gradient(135deg,#431407,#78350F); border-color:#92400E; color:#FCD34D; }
+    .tier-4  { background: linear-gradient(135deg,#374151,#6B7280); border-color:#9CA3AF; color:#F3F4F6; }
+    .tier-5  { background: linear-gradient(135deg,#713F12,#92400E); border-color:#D97706; color:#FDE68A; }
+    .tier-6  { background: linear-gradient(135deg,#0C4A6E,#075985); border-color:#0EA5E9; color:#BAE6FD; }
+    .tier-7  { background: linear-gradient(135deg,#064E3B,#065F46); border-color:#059669; color:#6EE7B7; }
+    .tier-8  { background: linear-gradient(135deg,#1E3A8A,#1D4ED8); border-color:#3B82F6; color:#BFDBFE; }
+    .tier-9  { background: linear-gradient(135deg,#881337,#9F1239); border-color:#E11D48; color:#FDA4AF; }
+    .tier-10 {
+      background: linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+      border-color: transparent; color: #fff; position: relative; overflow: hidden;
+      background-size: 200% 200%; animation: diamondShift 4s ease infinite;
+    }
+    .tier-10::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);
+      animation: shimmer 2.5s infinite;
+    }
+    @keyframes diamondShift {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    @keyframes shimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+
     /* SECTIONS */
     .sections { display: flex; flex-direction: column; gap: 20px; }
 
@@ -332,8 +371,8 @@
               <span class="meta-value" id="memberSince">—</span>
             </div>
             <div class="meta-row">
-              <span class="meta-label">Role</span>
-              <span class="meta-value">Buyer</span>
+              <span class="meta-label">Tier</span>
+              <span id="userTierBadge"></span>
             </div>
           </div>
         </div>
@@ -1201,6 +1240,7 @@
       document.getElementById('profileName').textContent  = username;
       document.getElementById('profileEmail').textContent = email;
       document.getElementById('memberSince').textContent  = joined;
+      loadTier(user.id);
       document.getElementById('usernameField').value      = username;
       document.getElementById('emailField').value         = email;
 
@@ -1335,6 +1375,56 @@
         }
       });
       document.getElementById('dropdownLogout').addEventListener('click', logout);
+    }
+
+    // TIER SYSTEM
+    const TIERS = [
+      { tier:1,  name:'Stone',    min:0,      trophy:'#9CA3AF' },
+      { tier:2,  name:'Iron',     min:500,    trophy:'#D1D5DB' },
+      { tier:3,  name:'Bronze',   min:2000,   trophy:'#F59E0B' },
+      { tier:4,  name:'Silver',   min:5000,   trophy:'#E5E7EB' },
+      { tier:5,  name:'Gold',     min:10000,  trophy:'#FDE68A' },
+      { tier:6,  name:'Platinum', min:25000,  trophy:'#BAE6FD' },
+      { tier:7,  name:'Emerald',  min:50000,  trophy:'#6EE7B7' },
+      { tier:8,  name:'Sapphire', min:100000, trophy:'#93C5FD' },
+      { tier:9,  name:'Ruby',     min:250000, trophy:'#FDA4AF' },
+      { tier:10, name:'Diamond',  min:500000, trophy:'url(#diamondGrad)' },
+    ];
+
+    function trophySVG(color) {
+      const isGrad = color.startsWith('url');
+      return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        ${isGrad ? `<defs><linearGradient id="diamondGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#a78bfa"/><stop offset="33%" stop-color="#38bdf8"/>
+          <stop offset="66%" stop-color="#34d399"/><stop offset="100%" stop-color="#fbbf24"/>
+        </linearGradient></defs>` : ''}
+        <path fill="${color}" d="M7 3h10v2H7zM5 5h14l-1 8H6zm1 9h12l-2 3H8zm2 3h6l-3 2z"/>
+        <rect fill="${color}" x="9" y="18" width="6" height="1.5" rx="0.5"/>
+        <rect fill="${color}" x="8" y="19.5" width="8" height="1" rx="0.5"/>
+      </svg>`;
+    }
+
+    async function loadTier(userId) {
+      try {
+        const { data, error } = await sb
+          .from('transactions')
+          .select('amount')
+          .eq('user_id', userId);
+
+        const total = error || !data ? 0 : data.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+        const t = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
+
+        const el = document.getElementById('userTierBadge');
+        if (!el) return;
+        el.innerHTML = `
+          <div class="tier-badge tier-${t.tier}">
+            ${trophySVG(t.trophy)}
+            <div class="tier-badge-info">
+              <span class="tier-badge-num">TIER ${t.tier}</span>
+              <span class="tier-badge-name">${t.name}</span>
+            </div>
+          </div>`;
+      } catch {}
     }
 
     init();
