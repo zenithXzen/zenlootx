@@ -64,7 +64,20 @@ export async function onRequestPost(context) {
       });
     }
 
-    return Response.json({ success: true });
+    // Return the session row ID so client can store it
+    const rowRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/user_sessions?user_id=eq.${userId}&user_agent=eq.${encodeURIComponent(userAgent)}&select=id&order=created_at.desc&limit=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          apikey: env.SUPABASE_SERVICE_KEY,
+        },
+      }
+    );
+    const rows = await rowRes.json();
+    const sessionRowId = rows?.[0]?.id || null;
+
+    return Response.json({ success: true, sessionRowId });
 
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

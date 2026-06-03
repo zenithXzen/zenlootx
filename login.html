@@ -447,6 +447,8 @@
             Authorization: `Bearer ${data.session.access_token}`,
           },
           body: JSON.stringify({ userAgent: ua, deviceName: device, browser }),
+        }).then(r => r.json()).then(d => {
+          if (d.sessionRowId) localStorage.setItem('zlx_session_row', d.sessionRowId);
         }).catch(() => {});
 
         // Success

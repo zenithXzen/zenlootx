@@ -513,6 +513,7 @@
     );
 
     async function logout() {
+      localStorage.removeItem('zlx_session_row');
       await sb.auth.signOut();
       window.location.href = '/login';
     }
@@ -1045,21 +1046,31 @@
       if (event === 'SIGNED_OUT') window.location.href = '/login';
     });
 
-    // Poll every 30s to check if this session was revoked
-    setInterval(async () => {
+    // Realtime session monitor — instant sign-out when revoked
+    async function startSessionMonitor() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = '/login'; return; }
-      const { data } = await sb
-        .from('user_sessions')
-        .select('is_active')
-        .eq('user_agent', navigator.userAgent)
-        .eq('user_id', session.user.id)
-        .single();
-      if (data && data.is_active === false) {
-        await sb.auth.signOut();
-        window.location.href = '/login';
-      }
-    }, 30000);
+      if (!session) return;
+
+      const sessionRowId = localStorage.getItem('zlx_session_row');
+      if (!sessionRowId) return;
+
+      sb.channel('session-monitor')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_sessions',
+          filter: `id=eq.${sessionRowId}`,
+        }, async (payload) => {
+          if (payload.new.is_active === false) {
+            localStorage.removeItem('zlx_session_row');
+            await sb.auth.signOut();
+            window.location.href = '/login';
+          }
+        })
+        .subscribe();
+    }
+
+    startSessionMonitor();
     }
 
     document.getElementById('logoutAllBtn').addEventListener('click', async () => {
