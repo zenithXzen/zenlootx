@@ -324,7 +324,7 @@
       if (!session) { window.location.href = '/login?redirect=/sell'; return; }
 
       currentUser = session.user;
-      initNav(currentUser);
+      await initNav(currentUser);
 
       // Check if already applied
       const { data: existing } = await sb
@@ -795,10 +795,13 @@
     }
 
     // ── Auth-aware nav ──
-    function initNav(user) {
+    async function initNav(user) {
       const username = user.user_metadata?.username || user.email.split('@')[0];
       const initial  = username.charAt(0).toUpperCase();
       const avatar   = user.user_metadata?.avatar_url;
+
+      const { data: _sa } = await sb.from('seller_applications').select('status').eq('user_id', user.id).eq('status','approved').maybeSingle();
+      const isSeller = !!_sa;
 
       document.getElementById('navActions').innerHTML = `
         <div class="user-menu" id="userMenu">
@@ -837,7 +840,7 @@
               Wallet
             </a>
             <div class="dropdown-divider"></div>
-            ${user.app_metadata?.is_seller ? `
+            ${isSeller ? `
             <a href="/create-listing" class="dropdown-item">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L9.568 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/></svg>
               List an item

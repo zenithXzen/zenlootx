@@ -311,13 +311,14 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = '/login?redirect=/create-listing'; return; }
 
-      if (!session.user.app_metadata?.is_seller) {
-        window.location.href = '/sell';
-        return;
-      }
-
       currentUser = session.user;
-      initNav(currentUser);
+
+      const { data: _sa } = await sb.from('seller_applications').select('status').eq('user_id', currentUser.id).eq('status','approved').maybeSingle();
+      const isSeller = !!_sa;
+
+      if (!isSeller) { window.location.href = '/sell'; return; }
+
+      await initNav(currentUser, isSeller);
       bindEvents();
     }
 
@@ -498,7 +499,7 @@
       window.location.href = `/listings/detail?id=${data.id}`;
     }
 
-    function initNav(user) {
+    async function initNav(user, isSeller = false) {
       const username = user.user_metadata?.username || user.email.split('@')[0];
       const initial  = username.charAt(0).toUpperCase();
       const avatar   = user.user_metadata?.avatar_url;
