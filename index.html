@@ -901,17 +901,22 @@
       if (event === 'SIGNED_OUT') window.location.href = '/login';
     });
 
-    // Poll every 5 seconds — if this session is revoked, redirect to login immediately
+    // Poll every 5 seconds — check if this session was remotely revoked
     async function watchSession() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = '/login'; return; }
 
       try {
-        const res = await fetch('/api/check-session', {
-          headers: { Authorization: `Bearer ${session.access_token}` }
-        });
-        const { active } = await res.json();
-        if (!active) {
+        const sessionRowId = localStorage.getItem('zlx_session_row');
+        if (!sessionRowId) return;
+
+        const { data } = await sb
+          .from('user_sessions')
+          .select('is_active')
+          .eq('id', sessionRowId)
+          .maybeSingle();
+
+        if (data && data.is_active === false) {
           localStorage.removeItem('zlx_session_row');
           await sb.auth.signOut({ scope: 'local' });
           window.location.href = '/login';
