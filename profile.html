@@ -132,10 +132,35 @@
     .bio-actions { display: flex; align-items: center; gap: 10px; }
     .bio-char    { font-size: 12px; color: var(--text-faint); margin-left: auto; }
 
-    /* SECTIONS */
-    .section { margin-bottom: 40px; }
-    .section-head { display: flex; align-items: center; margin-bottom: 20px; }
-    .section-head h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+    /* FILTER BAR */
+    .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .filter-label { font-size: 13px; color: var(--text-faint); }
+    select.game-filter {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 12px;
+      font-family: 'Geist', sans-serif; font-size: 13px; color: var(--text-dim);
+      cursor: pointer; outline: none; transition: border-color 0.18s;
+    }
+    select.game-filter:focus { border-color: var(--accent); }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .tab {
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      padding: 11px 20px;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text-dim); cursor: pointer;
+      transition: color 0.16s, border-color 0.16s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     /* LISTING CARDS */
     .listings-grid {
@@ -292,19 +317,20 @@
         </div>
       </div>
 
-      <!-- My Listings -->
-      <div class="section">
-        <div class="section-head">
-          <h2>My Listings</h2>
-        </div>
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="listings">My Listings</button>
+        <button class="tab"        data-tab="reviews">Reviews</button>
+      </div>
+
+      <!-- Listings panel -->
+      <div id="panelListings">
+        <div id="filterBar" style="display:none;margin-bottom:20px;"></div>
         <div id="listingsWrap"></div>
       </div>
 
-      <!-- Reviews -->
-      <div class="section">
-        <div class="section-head">
-          <h2>Reviews</h2>
-        </div>
+      <!-- Reviews panel -->
+      <div id="panelReviews" hidden>
         <div class="empty-state">
           <div class="empty-icon">★</div>
           <h3>No reviews yet</h3>
@@ -357,8 +383,22 @@
 
       renderBio(bio);
       initBioEdit(user);
+      initTabs();
       initNav(user);
       loadListings(user.id);
+    }
+
+    // ── Tabs ──
+    function initTabs() {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.dataset.tab;
+          document.getElementById('panelListings').hidden = target !== 'listings';
+          document.getElementById('panelReviews').hidden  = target !== 'reviews';
+        });
+      });
     }
 
     // ── Bio display ──
@@ -460,6 +500,8 @@
         </div>`;
     }
 
+    let allListings = [];
+
     async function loadListings(userId) {
       const wrap = document.getElementById('listingsWrap');
 
@@ -480,10 +522,10 @@
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      const listings = error ? [] : (data || []);
-      document.getElementById('statListings').textContent = listings.length;
+      allListings = error ? [] : (data || []);
+      document.getElementById('statListings').textContent = allListings.length;
 
-      if (!listings.length) {
+      if (!allListings.length) {
         wrap.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">🏷️</div>
@@ -493,7 +535,45 @@
         return;
       }
 
-      wrap.innerHTML = `<div class="listings-grid">${listings.map(listingCard).join('')}</div>`;
+      buildFilterBar();
+      renderListings('all');
+    }
+
+    function buildFilterBar() {
+      const games   = [...new Set(allListings.map(l => l.game))];
+      const options = [
+        `<option value="all">All games</option>`,
+        ...games.map(g => `<option value="${g}">${GAME_META[g]?.label || g}</option>`)
+      ].join('');
+
+      const bar = document.getElementById('filterBar');
+      bar.innerHTML = `
+        <div class="filter-bar">
+          <span class="filter-label">Game:</span>
+          <select class="game-filter" id="gameFilter">${options}</select>
+        </div>`;
+      bar.style.display = '';
+
+      document.getElementById('gameFilter').addEventListener('change', e => {
+        renderListings(e.target.value);
+      });
+    }
+
+    function renderListings(game) {
+      const filtered = game === 'all' ? allListings : allListings.filter(l => l.game === game);
+      const wrap = document.getElementById('listingsWrap');
+
+      if (!filtered.length) {
+        wrap.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🏷️</div>
+            <h3>No listings for this game</h3>
+            <p>You don't have any active ${GAME_META[game]?.label || game} listings yet.</p>
+          </div>`;
+        return;
+      }
+
+      wrap.innerHTML = `<div class="listings-grid">${filtered.map(listingCard).join('')}</div>`;
     }
 
     // ── Auth-aware nav (full dropdown) ──
