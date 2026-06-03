@@ -307,6 +307,11 @@
     let featuredIndex = 0;
 
     const GAME_LABELS = { genshin:'Genshin Impact', mlbb:'Mobile Legends', valorant:'Valorant' };
+    const GAME_WALLPAPER = {
+      genshin:  '/wallpaper/AETHER AND LUMINE.jpg',
+      mlbb:     '/wallpaper/mlbb.jpg',
+      valorant: '/wallpaper/valorant.jpeg',
+    };
     const GAME_TAG_STYLE = {
       genshin:  'background:rgba(245,185,71,0.12);color:#F5B947;',
       mlbb:     'background:rgba(59,130,246,0.12);color:#60A5FA;',
@@ -430,10 +435,12 @@
     }
 
     function updatePreview() {
-      // Image
+      // Image — uploaded cover first, then game wallpaper, then emoji fallback
       const prev = document.getElementById('prevImg');
       if (imgFiles.length && imgFiles[featuredIndex]) {
         prev.innerHTML = `<img src="${imgFiles[featuredIndex].dataUrl}">`;
+      } else if (selectedGame && GAME_WALLPAPER[selectedGame]) {
+        prev.innerHTML = `<img src="${GAME_WALLPAPER[selectedGame]}" style="opacity:0.7;">`;
       } else {
         prev.innerHTML = '<span>🎮</span>';
       }
