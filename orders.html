@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --danger:#EF4444;--warning:#F5B947;--success:#22C55E;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+    a{text-decoration:none;color:inherit}
+
+    /* NAV */
+    nav{position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:16px}
+    .container{max-width:1000px;margin:0 auto;padding:0 24px}
+    .logo{font-size:20px;font-weight:700;letter-spacing:-0.02em}
+    .logo .green{color:var(--accent)}
+    .nav-right{display:flex;align-items:center;gap:12px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s;white-space:nowrap}
+    .btn-secondary{background:transparent;color:var(--text);border-color:var(--border-hi)}
+    .btn-secondary:hover{background:var(--bg-elevated)}
+    .btn-danger{background:transparent;color:var(--danger);border-color:rgba(239,68,68,0.3)}
+    .btn-danger:hover{background:rgba(239,68,68,0.08)}
+    .btn:disabled{opacity:0.45;cursor:not-allowed;pointer-events:none}
+
+    /* USER DROPDOWN */
+    .user-menu{position:relative}
+    .user-trigger{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text)}
+    .user-trigger:hover{border-color:var(--accent)}
+    .user-avatar-sm{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--bg-base);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+    .user-avatar-sm img{width:100%;height:100%;object-fit:cover}
+    .dropdown-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:10px;min-width:180px;padding:6px;display:none;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+    .dropdown-menu.open{display:block}
+    .dropdown-item{display:block;padding:9px 12px;border-radius:6px;font-size:13px;color:var(--text-dim);cursor:pointer;transition:background 0.14s,color 0.14s}
+    .dropdown-item:hover{background:var(--bg-elevated);color:var(--text)}
+    .dropdown-item.active{color:var(--accent)}
+    .dropdown-sep{height:1px;background:var(--border);margin:4px 0}
+
+    /* PAGE */
+    main{flex:1;padding:40px 0 80px}
+    .page-header{margin-bottom:28px}
+    .page-header h1{font-size:26px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px}
+    .page-header p{font-size:14px;color:var(--text-dim)}
+
+    /* TABS */
+    .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:28px}
+    .tab-btn{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 20px;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text-faint);cursor:pointer;transition:color 0.16s,border-color 0.16s;display:flex;align-items:center;gap:8px}
+    .tab-btn:hover{color:var(--text)}
+    .tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
+    .tab-count{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--bg-elevated);color:var(--text-faint)}
+    .tab-count.has{background:rgba(25,195,125,0.12);color:var(--accent)}
+
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    /* ORDER CARD */
+    .order-list{display:flex;flex-direction:column;gap:14px}
+    .order-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start;transition:border-color 0.16s}
+    .order-card:hover{border-color:var(--border-hi)}
+    .order-game-icon{width:44px;height:44px;border-radius:10px;background:var(--bg-elevated);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .order-main{flex:1;min-width:0}
+    .order-title{font-size:15px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .order-meta{font-size:12px;color:var(--text-faint);display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+    .order-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+    .order-amount{font-size:17px;font-weight:700;letter-spacing:-0.01em}
+    .order-actions{display:flex;gap:8px}
+
+    /* STATUS BADGES */
+    .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;letter-spacing:0.03em;text-transform:uppercase}
+    .badge-pending  {background:rgba(245,185,71,0.12);color:var(--warning);border:1px solid rgba(245,185,71,0.25)}
+    .badge-completed{background:rgba(34,197,94,0.12);color:var(--success);border:1px solid rgba(34,197,94,0.25)}
+    .badge-disputed {background:rgba(239,68,68,0.12);color:var(--danger);border:1px solid rgba(239,68,68,0.25)}
+    .badge-refunded {background:rgba(107,119,111,0.15);color:var(--text-dim);border:1px solid var(--border-hi)}
+    .badge-cancelled{background:rgba(107,119,111,0.15);color:var(--text-faint);border:1px solid var(--border)}
+    .badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+    /* EMPTY STATE */
+    .empty{text-align:center;padding:64px 24px;color:var(--text-faint)}
+    .empty-icon{font-size:44px;margin-bottom:16px;opacity:0.5}
+    .empty h3{font-size:17px;font-weight:600;color:var(--text-dim);margin-bottom:6px}
+    .empty p{font-size:13px;line-height:1.6}
+
+    /* DISPUTE MODAL */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
+    .overlay.open{display:flex}
+    .modal{background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:14px;width:100%;max-width:500px;padding:28px}
+    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+    .modal-title{font-size:18px;font-weight:700}
+    .modal-close{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:20px;line-height:1;padding:2px}
+    .modal-close:hover{color:var(--text)}
+    .modal-body{display:flex;flex-direction:column;gap:16px}
+    .modal-field{display:flex;flex-direction:column;gap:6px}
+    .modal-field label{font-size:13px;font-weight:500;color:var(--text-dim)}
+    .modal-field textarea{background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;color:var(--text);font-family:'Geist',sans-serif;font-size:14px;padding:10px 14px;outline:none;resize:vertical;min-height:120px;transition:border-color 0.16s}
+    .modal-field textarea:focus{border-color:var(--accent)}
+    .modal-field textarea::placeholder{color:var(--text-faint)}
+    .modal-order-info{background:var(--bg-elevated);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text-dim)}
+    .modal-order-info strong{color:var(--text)}
+    .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+    .btn-primary{background:var(--danger);color:#fff;border:none}
+    .btn-primary:hover:not(:disabled){background:#dc2626}
+    .modal-error{font-size:13px;color:var(--danger);display:none}
+    .modal-success{font-size:13px;color:var(--success);display:none}
+
+    /* SKELETON */
+    .skeleton{background:var(--bg-elevated);border-radius:8px;animation:shimmer 1.4s infinite}
+    @keyframes shimmer{0%,100%{opacity:0.6}50%{opacity:1}}
+
+    @media(max-width:600px){
+      .order-card{flex-direction:column;gap:14px}
+      .order-right{flex-direction:row;align-items:center;width:100%}
+      .order-amount{flex:1}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+      <div class="nav-right" id="navRight">
+        <div class="user-menu" id="userMenu" style="display:none">
+          <div class="user-trigger" id="userTrigger">
+            <div class="user-avatar-sm" id="navAvatar"></div>
+            <span id="navUsername">—</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="dropdown-menu" id="userDropdown">
+            <a href="/account" class="dropdown-item">My Account</a>
+            <a href="/orders" class="dropdown-item active">My Orders</a>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item" id="dropdownLogout">Sign out</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <div class="page-header">
+      <h1>My Orders</h1>
+      <p>Track your purchases and sales. File a dispute if something goes wrong.</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="purchases">
+        Purchases <span class="tab-count" id="buyCount">—</span>
+      </button>
+      <button class="tab-btn" data-tab="sales">
+        Sales <span class="tab-count" id="sellCount">—</span>
+      </button>
+    </div>
+
+    <div class="tab-panel active" id="tab-purchases">
+      <div class="order-list" id="purchaseList">
+        <div class="skeleton" style="height:88px;border-radius:12px"></div>
+        <div class="skeleton" style="height:88px;border-radius:12px"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-sales">
+      <div class="order-list" id="saleList">
+        <div class="skeleton" style="height:88px;border-radius:12px"></div>
+        <div class="skeleton" style="height:88px;border-radius:12px"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- DISPUTE MODAL -->
+<div class="overlay" id="disputeOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">File a Dispute</div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-order-info" id="modalOrderInfo"></div>
+      <div class="modal-field">
+        <label for="disputeReason">Describe the issue</label>
+        <textarea id="disputeReason" placeholder="Explain what went wrong — e.g. account credentials were invalid, the seller is unresponsive, item was not as described…"></textarea>
+      </div>
+      <div class="modal-error"  id="modalError"></div>
+      <div class="modal-success" id="modalSuccess"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
+      <button class="btn btn-primary"   id="modalSubmitBtn">Submit Dispute</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://msumlsqfergennhzxqon.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q'
+  );
+
+  const GAME_ICONS = { genshin: '🌸', mlbb: '⚔️', valorant: '🔫' };
+
+  const STATUS_MAP = {
+    holding:   { label: 'Pending',   cls: 'badge-pending'   },
+    released:  { label: 'Completed', cls: 'badge-completed' },
+    disputed:  { label: 'Disputed',  cls: 'badge-disputed'  },
+    refunded:  { label: 'Refunded',  cls: 'badge-refunded'  },
+    cancelled: { label: 'Cancelled', cls: 'badge-cancelled' },
+  };
+
+  function formatDate(d) {
+    return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+  }
+  function formatAmount(n) {
+    return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 0 });
+  }
+
+  function statusBadge(status) {
+    const s = STATUS_MAP[status] || { label: status || 'Unknown', cls: 'badge-cancelled' };
+    return `<span class="badge ${s.cls}"><span class="badge-dot"></span>${s.label}</span>`;
+  }
+
+  function canDispute(order) {
+    return ['holding', 'released'].includes(order.escrow_status) && order.escrow_status !== 'disputed';
+  }
+
+  function renderOrders(orders, role, containerId) {
+    const el = document.getElementById(containerId);
+    if (!orders || orders.length === 0) {
+      el.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">${role === 'buyer' ? '🛍️' : '🏷️'}</div>
+          <h3>No ${role === 'buyer' ? 'purchases' : 'sales'} yet</h3>
+          <p>${role === 'buyer' ? 'Accounts you buy will appear here.' : 'Accounts you sell will appear here.'}</p>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = orders.map(o => {
+      const listing = o.listings || {};
+      const game    = listing.game || '';
+      const title   = listing.title || `Order #${o.id?.slice(0,8) || '—'}`;
+      const other   = role === 'buyer'
+        ? (o.seller_profile?.username || 'Seller')
+        : (o.buyer_profile?.username  || 'Buyer');
+      const otherLabel = role === 'buyer' ? 'Seller' : 'Buyer';
+      const icon = GAME_ICONS[game] || '🎮';
+
+      return `
+        <div class="order-card">
+          <div class="order-game-icon">${icon}</div>
+          <div class="order-main">
+            <div class="order-title">${title}</div>
+            <div class="order-meta">
+              <span>${otherLabel}: <strong style="color:var(--text-dim)">${other}</strong></span>
+              <span>${formatDate(o.created_at)}</span>
+              <span>${statusBadge(o.escrow_status)}</span>
+            </div>
+          </div>
+          <div class="order-right">
+            <div class="order-amount">${formatAmount(o.amount || 0)}</div>
+            <div class="order-actions">
+              ${canDispute(o) ? `<button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="openDispute('${o.id}', '${title.replace(/'/g,"\\'")}', '${formatAmount(o.amount || 0)}')">File Dispute</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Dispute modal
+  let activeOrderId = null;
+
+  function openDispute(orderId, title, amount) {
+    activeOrderId = orderId;
+    document.getElementById('modalOrderInfo').innerHTML =
+      `Order: <strong>${title}</strong> — <strong>${amount}</strong>`;
+    document.getElementById('disputeReason').value = '';
+    document.getElementById('modalError').style.display   = 'none';
+    document.getElementById('modalSuccess').style.display = 'none';
+    document.getElementById('modalSubmitBtn').disabled    = false;
+    document.getElementById('modalSubmitBtn').textContent = 'Submit Dispute';
+    document.getElementById('disputeOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('disputeOverlay').classList.remove('open');
+    activeOrderId = null;
+  }
+
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+  document.getElementById('disputeOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('disputeOverlay')) closeModal();
+  });
+
+  document.getElementById('modalSubmitBtn').addEventListener('click', async () => {
+    const reason = document.getElementById('disputeReason').value.trim();
+    const errEl  = document.getElementById('modalError');
+    const okEl   = document.getElementById('modalSuccess');
+    const btn    = document.getElementById('modalSubmitBtn');
+
+    errEl.style.display = 'none';
+    if (!reason) { errEl.textContent = 'Please describe the issue.'; errEl.style.display = 'block'; return; }
+    if (!activeOrderId) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const { error } = await sb.from('disputes').insert({
+        order_id:    activeOrderId,
+        filed_by:    session.user.id,
+        reason,
+        status:      'open',
+      });
+
+      if (error) throw error;
+
+      // Mark order as disputed
+      await sb.from('orders').update({ escrow_status: 'disputed' }).eq('id', activeOrderId);
+
+      okEl.textContent = 'Dispute submitted. Our team will review it shortly.';
+      okEl.style.display = 'block';
+      btn.textContent = 'Submitted';
+      setTimeout(closeModal, 2500);
+    } catch (e) {
+      errEl.textContent = e.message || 'Failed to submit dispute. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Submit Dispute';
+    }
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // Nav
+  async function initNav(user) {
+    const menu = document.getElementById('userMenu');
+    menu.style.display = '';
+    const username  = user.user_metadata?.username || user.email.split('@')[0];
+    const avatarUrl = user.user_metadata?.avatar_url;
+    document.getElementById('navUsername').textContent = username;
+    const avatarEl = document.getElementById('navAvatar');
+    if (avatarUrl) {
+      avatarEl.innerHTML = `<img src="${avatarUrl}" alt="">`;
+    } else {
+      avatarEl.textContent = username.charAt(0).toUpperCase();
+    }
+    document.getElementById('userTrigger').addEventListener('click', () => {
+      document.getElementById('userDropdown').classList.toggle('open');
+    });
+    document.addEventListener('click', e => {
+      if (!document.getElementById('userMenu').contains(e.target)) {
+        document.getElementById('userDropdown').classList.remove('open');
+      }
+    });
+    document.getElementById('dropdownLogout').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = '/login';
+    });
+  }
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/login'; return; }
+
+    const userId = session.user.id;
+    await initNav(session.user);
+
+    // Fetch purchases (as buyer)
+    const { data: purchases } = await sb
+      .from('orders')
+      .select('*, listings(title, game), seller_profile:profiles!seller_id(username, avatar_url)')
+      .eq('buyer_id', userId)
+      .order('created_at', { ascending: false });
+
+    // Fetch sales (as seller)
+    const { data: sales } = await sb
+      .from('orders')
+      .select('*, listings(title, game), buyer_profile:profiles!buyer_id(username, avatar_url)')
+      .eq('seller_id', userId)
+      .order('created_at', { ascending: false });
+
+    const buyCount  = purchases?.length || 0;
+    const sellCount = sales?.length || 0;
+
+    const buyCountEl  = document.getElementById('buyCount');
+    const sellCountEl = document.getElementById('sellCount');
+    buyCountEl.textContent  = buyCount;
+    sellCountEl.textContent = sellCount;
+    if (buyCount)  buyCountEl.classList.add('has');
+    if (sellCount) sellCountEl.classList.add('has');
+
+    renderOrders(purchases, 'buyer',  'purchaseList');
+    renderOrders(sales,     'seller', 'saleList');
+  }
+
+  init();
+</script>
+
+</body>
+</html>
