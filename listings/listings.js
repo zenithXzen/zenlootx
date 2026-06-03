@@ -50,6 +50,23 @@ document.body.innerHTML = `
     </div>
   </div>
 
+  <div class="game-switcher">
+    <div class="container">
+      <div class="game-switcher-inner">
+        <span class="game-sw-label">Browse</span>
+        <a href="/listings/genshin" class="game-sw-btn ${GAME === 'genshin' ? 'active' : ''}">
+          <span class="game-sw-icon">✦</span> Genshin Impact
+        </a>
+        <a href="/listings/mlbb" class="game-sw-btn ${GAME === 'mlbb' ? 'active' : ''}">
+          <span class="game-sw-icon">⚔</span> Mobile Legends
+        </a>
+        <a href="/listings/valorant" class="game-sw-btn ${GAME === 'valorant' ? 'active' : ''}">
+          <span class="game-sw-icon">◈</span> Valorant
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div class="toolbar">
     <div class="container">
       <div class="toolbar-inner">

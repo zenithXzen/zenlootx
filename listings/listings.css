@@ -28,6 +28,15 @@ nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);ba
 .banner-title { font-size:32px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px; }
 .banner-desc  { font-size:15px;color:var(--text-dim);max-width:560px; }
 
+/* GAME SWITCHER */
+.game-switcher { border-bottom:1px solid var(--border);background:var(--bg-surface);padding:10px 0; }
+.game-switcher-inner { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.game-sw-label { font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-right:4px;flex-shrink:0; }
+.game-sw-btn { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text-dim);border:1px solid var(--border);background:var(--bg-elevated);text-decoration:none;transition:all 0.16s;white-space:nowrap; }
+.game-sw-btn:hover { border-color:var(--border-hi);color:var(--text);background:var(--bg-elevated); }
+.game-sw-btn.active { border-color:var(--accent);color:var(--accent);background:var(--accent-glow); }
+.game-sw-icon { font-size:15px; }
+
 /* TOOLBAR */
 .toolbar { border-bottom:1px solid var(--border);background:var(--bg-surface);padding:14px 0; }
 .toolbar-inner { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap; }
