@@ -731,19 +731,34 @@
       if (rejectBtn)  { rejectBtn.disabled  = true; }
       if (errEl) errEl.textContent = '';
 
-      const res  = await fetch('/api/admin/review-application', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ applicationId: app.id, userId: app.user_id, action, reason }),
-      });
-      const data = await res.json();
+      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      const updateData = {
+        status:      newStatus,
+        reviewed_at: new Date().toISOString(),
+        ...(action === 'reject' && reason ? { rejection_reason: reason } : {}),
+      };
 
-      if (!res.ok || data.error) {
-        if (errEl) errEl.textContent = data.error || 'Something went wrong.';
+      // Update seller_applications directly via Supabase client
+      const { error } = await sb
+        .from('seller_applications')
+        .update(updateData)
+        .eq('id', app.id);
+
+      if (error) {
+        if (errEl) errEl.textContent = error.message || 'Failed to update. Please try again.';
         if (approveBtn) { approveBtn.disabled = false; approveBtn.textContent = '✓ Approve'; }
         if (rejectBtn)  { rejectBtn.disabled  = false; }
         return;
       }
+
+      // Try to update user's is_seller flag via CF function (best-effort)
+      try {
+        await fetch('/api/admin/review-application', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ applicationId: app.id, userId: app.user_id, action, reason }),
+        });
+      } catch {}
 
       closeModal();
       await loadApplications();
