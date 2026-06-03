@@ -382,6 +382,88 @@
       flex-shrink: 0;
     }
 
+    /* SLIDESHOW */
+    .slideshow {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      height: 480px;
+      border: 1px solid var(--border);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .slide.active { opacity: 1; }
+
+    .slide-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        rgba(10,14,12,0.88) 0%,
+        rgba(10,14,12,0.55) 50%,
+        rgba(10,14,12,0.15) 100%
+      );
+    }
+
+    .slide-content {
+      position: absolute;
+      bottom: 48px;
+      left: 48px;
+      max-width: 420px;
+    }
+
+    .slide-content .game-tag { margin-bottom: 12px; }
+
+    .slide-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      line-height: 1.1;
+    }
+
+    .slide-desc {
+      font-size: 15px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .slide-dots {
+      position: absolute;
+      bottom: 20px;
+      right: 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.25);
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .dot.active {
+      background: var(--accent);
+      transform: scale(1.2);
+    }
+
+    @media (max-width: 640px) {
+      .slideshow { height: 380px; }
+      .slide-content { left: 24px; bottom: 36px; max-width: 280px; }
+      .slide-title { font-size: 22px; }
+    }
+
     /* RESPONSIVE */
     @media (max-width: 900px) {
       .games-grid, .listings-grid, .trust-grid { grid-template-columns: 1fr 1fr; }
@@ -450,37 +532,48 @@
     </div>
   </section>
 
-  <!-- GAMES -->
-  <section class="section" id="games">
+  <!-- GAMES anchor kept for nav links -->
+  <div id="games"></div>
+
+  <!-- GAME SLIDESHOW -->
+  <section style="padding: 0 0 80px;">
     <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Featured games</h2>
-        <p class="section-sub">Accounts, items, and top-ups — all in one place.</p>
-      </div>
-      <div class="games-grid">
+      <div class="slideshow" id="slideshow">
 
-        <div class="game-card">
-          <div class="game-icon icon-genshin">✦</div>
-          <span class="game-tag tag-genshin">Genshin Impact</span>
-          <div class="game-name">Genshin Impact</div>
-          <div class="game-desc">High AR accounts, 5-star characters, welkin passes, and rare weapons.</div>
-          <a href="/listings?game=genshin" class="game-link">Browse listings →</a>
+        <div class="slide active" style="background-image: url('/wallpaper/genshin.jpeg'); background-position: center 30%;">
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="game-tag tag-genshin">Genshin Impact</span>
+            <div class="slide-title">Genshin Impact</div>
+            <div class="slide-desc">High adventure rank accounts, limited characters and weapons, unrolled and reroll account and welkin passes.</div>
+            <a href="/listings?game=genshin" class="btn btn-primary">Browse listings</a>
+          </div>
         </div>
 
-        <div class="game-card">
-          <div class="game-icon icon-mlbb">⚔</div>
-          <span class="game-tag tag-mlbb">MLBB</span>
-          <div class="game-name">Mobile Legends: Bang Bang</div>
-          <div class="game-desc">Mythical rank accounts, collector skins, diamonds, and squad packages.</div>
-          <a href="/listings?game=mlbb" class="game-link">Browse listings →</a>
+        <div class="slide" style="background-image: url('/wallpaper/mlbb.jpg'); background-position: center 20%;">
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="game-tag tag-mlbb">MLBB</span>
+            <div class="slide-title">Mobile Legends: Bang Bang</div>
+            <div class="slide-desc">Collector skins, collab skins, epic recall, emotes, max emblem and high rank accounts.</div>
+            <a href="/listings?game=mlbb" class="btn btn-primary">Browse listings</a>
+          </div>
         </div>
 
-        <div class="game-card">
-          <div class="game-icon icon-valorant">◈</div>
-          <span class="game-tag tag-valorant">Valorant</span>
-          <div class="game-name">Valorant</div>
-          <div class="game-desc">Immortal+ ranked accounts, rare knife skins, and battle pass bundles.</div>
-          <a href="/listings?game=valorant" class="game-link">Browse listings →</a>
+        <div class="slide" style="background-image: url('/wallpaper/valorant.jpeg')">
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="game-tag tag-valorant">Valorant</span>
+            <div class="slide-title">Valorant</div>
+            <div class="slide-desc">Premium skins, battlepass and bundle.</div>
+            <a href="/listings?game=valorant" class="btn btn-primary">Browse listings</a>
+          </div>
+        </div>
+
+        <div class="slide-dots">
+          <button class="dot active" data-index="0"></button>
+          <button class="dot" data-index="1"></button>
+          <button class="dot" data-index="2"></button>
         </div>
 
       </div>
@@ -603,6 +696,39 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dots   = document.querySelectorAll('.dot');
+    let current  = 0;
+    let timer;
+
+    function goTo(index) {
+      slides[current].classList.remove('active');
+      dots[current].classList.remove('active');
+      current = index;
+      slides[current].classList.add('active');
+      dots[current].classList.add('active');
+    }
+
+    function next() {
+      goTo((current + 1) % slides.length);
+    }
+
+    function startTimer() {
+      timer = setInterval(next, 5000);
+    }
+
+    dots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        clearInterval(timer);
+        goTo(parseInt(dot.dataset.index));
+        startTimer();
+      });
+    });
+
+    startTimer();
+  </script>
 
 </body>
 </html>
