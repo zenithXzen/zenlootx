@@ -104,11 +104,33 @@
     .skeleton { background:var(--bg-elevated);border-radius:6px;animation:shimmer 1.4s infinite; }
     @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
+    /* LIGHTBOX */
+    .lightbox { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:1000;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation; }
+    .lightbox.open { display:flex; }
+    .lightbox-img-wrap { flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:56px 16px 16px;overflow:hidden; }
+    .lightbox-img-wrap img { max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;user-select:none; }
+    .lightbox-close { position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2; }
+    .lightbox-close:hover { background:rgba(255,255,255,0.22); }
+    .lightbox-nav { position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2; }
+    .lightbox-nav:hover { background:rgba(255,255,255,0.22); }
+    .lightbox-prev { left:12px; }
+    .lightbox-next { right:12px; }
+    .lightbox-nav.hidden { display:none; }
+    .lightbox-counter { position:absolute;bottom:16px;font-size:13px;color:rgba(255,255,255,0.6); }
+    .main-img { cursor:zoom-in; }
+
     footer { border-top:1px solid var(--border);padding:24px 0; }
     .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
     .footer-inner p { font-size:13px;color:var(--text-faint); }
 
-    @media (max-width:900px) { .detail-grid { grid-template-columns:1fr; } .buy-panel { position:static; } }
+    @media (max-width:900px) {
+      .detail-grid { grid-template-columns:1fr; }
+      .buy-panel { position:static; }
+      .main-img { height:auto !important; aspect-ratio:4/3; }
+      .main-img img { object-fit:contain; }
+      .thumb-row { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      .container { padding:0 16px; }
+    }
   </style>
 </head>
 <body>
@@ -286,13 +308,24 @@
 
       loadSeller(l.seller_id);
 
-      // Thumbnail switching
-      document.querySelectorAll('.thumb').forEach(t => {
+      // Collect all images for lightbox
+      const allImages = images.length ? images : [];
+      let currentLbIndex = 0;
+
+      // Thumbnail switching + track index for lightbox
+      document.querySelectorAll('.thumb').forEach((t, i) => {
         t.addEventListener('click', () => {
           document.querySelectorAll('.thumb').forEach(x => x.classList.remove('active'));
           t.classList.add('active');
           document.getElementById('mainImg').innerHTML = `<img src="${t.dataset.img}" alt="">`;
+          currentLbIndex = i;
         });
+      });
+
+      // Open lightbox on main image tap
+      document.getElementById('mainImg').addEventListener('click', () => {
+        if (!allImages.length) return;
+        openLightbox(allImages, currentLbIndex);
       });
 
       // Buy button
@@ -407,5 +440,46 @@
     load();
   </script>
 
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lbClose">✕</button>
+    <button class="lightbox-nav lightbox-prev hidden" id="lbPrev">‹</button>
+    <div class="lightbox-img-wrap">
+      <img id="lbImg" src="" alt="">
+    </div>
+    <button class="lightbox-nav lightbox-next hidden" id="lbNext">›</button>
+    <div class="lightbox-counter" id="lbCounter"></div>
+  </div>
+
+  <script>
+    let lbImages = [], lbIndex = 0;
+
+    function openLightbox(images, startIndex) {
+      lbImages = images; lbIndex = startIndex;
+      showLbImage();
+      document.getElementById('lightbox').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    function showLbImage() {
+      document.getElementById('lbImg').src = lbImages[lbIndex];
+      document.getElementById('lbCounter').textContent = lbImages.length > 1 ? `${lbIndex + 1} / ${lbImages.length}` : '';
+      document.getElementById('lbPrev').classList.toggle('hidden', lbIndex === 0);
+      document.getElementById('lbNext').classList.toggle('hidden', lbIndex === lbImages.length - 1);
+    }
+    document.getElementById('lbClose').addEventListener('click', closeLightbox);
+    document.getElementById('lbPrev').addEventListener('click', () => { lbIndex--; showLbImage(); });
+    document.getElementById('lbNext').addEventListener('click', () => { lbIndex++; showLbImage(); });
+    document.getElementById('lightbox').addEventListener('click', e => { if (e.target.id === 'lightbox') closeLightbox(); });
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('lightbox').classList.contains('open')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft'  && lbIndex > 0) { lbIndex--; showLbImage(); }
+      if (e.key === 'ArrowRight' && lbIndex < lbImages.length - 1) { lbIndex++; showLbImage(); }
+    });
+  </script>
 </body>
 </html>
