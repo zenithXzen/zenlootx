@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:     #0A0E0C;
+      --bg-surface:  #121814;
+      --bg-elevated: #1A211C;
+      --border:      #232B26;
+      --border-hi:   #33403A;
+      --accent:      #19C37D;
+      --accent-hover:#2FD98F;
+      --accent-glow: rgba(25,195,125,0.15);
+      --text:        #E8EDE9;
+      --text-dim:    #9BA8A0;
+      --text-faint:  #6B776F;
+      --danger:      #EF4444;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      background: var(--bg-base);
+      color: var(--text);
+      font-family: 'Geist', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* NAV */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Geist', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .logo .green { color: var(--accent); }
+
+    .nav-right {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+    .nav-right a { color: var(--accent); font-weight: 500; }
+    .nav-right a:hover { color: var(--accent-hover); }
+
+    /* MAIN */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .card-header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .card-header p {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* FORM */
+    .form {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+
+    input {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-family: 'Geist', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      width: 100%;
+    }
+
+    input::placeholder { color: var(--text-faint); }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    .forgot {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .forgot a {
+      font-size: 13px;
+      color: var(--text-faint);
+      transition: color 0.16s;
+    }
+    .forgot a:hover { color: var(--text-dim); }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg-base);
+      font-family: 'Geist', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .btn-submit:hover { background: var(--accent-hover); }
+    .btn-submit:active { transform: scale(0.99); }
+
+    .form-footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-faint);
+      margin-top: 4px;
+    }
+    .form-footer a { color: var(--accent); font-weight: 500; }
+    .form-footer a:hover { color: var(--accent-hover); }
+
+    /* ERROR MESSAGE */
+    .error-msg {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 13px;
+      color: var(--danger);
+    }
+    .error-msg.visible { display: block; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+    footer a { color: var(--text-faint); transition: color 0.16s; }
+    footer a:hover { color: var(--text-dim); }
+
+    @media (max-width: 480px) {
+      .form { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+    <div class="nav-right">
+      No account? <a href="/register">Sign up</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="card">
+      <div class="card-header">
+        <h1>Welcome back</h1>
+        <p>Sign in to your ZenLootX account.</p>
+      </div>
+
+      <form class="form" id="loginForm" novalidate>
+
+        <div class="error-msg" id="errorMsg">
+          Incorrect credentials. Check your email, username, and password.
+        </div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="your_username"
+            autocomplete="username"
+            required
+          >
+          <span class="field-hint">Your unique ZenLootX username.</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          >
+          <div class="forgot">
+            <a href="/forgot-password">Forgot password?</a>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">Sign in</button>
+
+        <div class="form-footer">
+          Don't have an account? <a href="/register">Create one</a>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · © 2026 ZenLootX
+  </footer>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const email    = document.getElementById('email');
+      const username = document.getElementById('username');
+      const password = document.getElementById('password');
+
+      let valid = true;
+
+      [email, username, password].forEach(el => el.classList.remove('error'));
+      errorMsg.classList.remove('visible');
+
+      if (!email.value.trim() || !email.value.includes('@')) {
+        email.classList.add('error');
+        valid = false;
+      }
+      if (!username.value.trim()) {
+        username.classList.add('error');
+        valid = false;
+      }
+      if (!password.value) {
+        password.classList.add('error');
+        valid = false;
+      }
+
+      if (!valid) {
+        errorMsg.textContent = 'Please fill in all fields correctly.';
+        errorMsg.classList.add('visible');
+        return;
+      }
+
+      // TODO: wire up to your auth backend (Supabase)
+      errorMsg.textContent = 'Incorrect credentials. Check your email, username, and password.';
+      errorMsg.classList.add('visible');
+    });
+  </script>
+
+</body>
+</html>
