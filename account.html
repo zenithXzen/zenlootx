@@ -212,6 +212,17 @@
     .meta-label { font-size: 12px; color: var(--text-faint); }
     .meta-value { font-size: 13px; font-weight: 500; color: var(--text-dim); }
 
+    /* TIER PROGRESSION */
+    .tier-progress-wrap { display:flex; align-items:center; gap:16px; }
+    .tier-prog-side { display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; }
+    .tier-prog-label { font-size:11px; color:var(--text-faint); font-weight:500; letter-spacing:0.04em; text-transform:uppercase; }
+    .tier-prog-middle { flex:1; display:flex; flex-direction:column; gap:8px; }
+    .tier-prog-bar-wrap { background:var(--bg-elevated); border-radius:999px; height:10px; overflow:hidden; border:1px solid var(--border); }
+    .tier-prog-bar { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent-hover)); transition:width 0.8s ease; min-width:4px; }
+    .tier-prog-text { font-size:12px; color:var(--text-faint); text-align:center; }
+    .tier-prog-text strong { color:var(--text-dim); }
+    .tier-prog-next-locked { filter:grayscale(0.4); opacity:0.7; }
+
     /* TIER BADGE */
     .tier-badge {
       display: inline-flex; align-items: center; gap: 7px;
@@ -428,6 +439,34 @@
                 </div>
               </div>
 
+            </div>
+          </div>
+
+          <!-- Trophy Progression -->
+          <div class="section-card" id="tierProgressCard" style="display:none">
+            <div class="section-head">
+              <div>
+                <h2>Trophy Progression</h2>
+                <p>Your progress toward the next tier.</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="tier-progress-wrap">
+                <div class="tier-prog-side">
+                  <div id="progCurrentBadge"></div>
+                  <div class="tier-prog-label">Current</div>
+                </div>
+                <div class="tier-prog-middle">
+                  <div class="tier-prog-bar-wrap">
+                    <div class="tier-prog-bar" id="tierProgBar"></div>
+                  </div>
+                  <div class="tier-prog-text" id="tierProgText"></div>
+                </div>
+                <div class="tier-prog-side">
+                  <div id="progNextBadge"></div>
+                  <div class="tier-prog-label">Next</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1406,24 +1445,48 @@
 
     async function loadTier(userId) {
       try {
-        const { data, error } = await sb
-          .from('transactions')
-          .select('amount')
-          .eq('user_id', userId);
-
+        const { data, error } = await sb.from('transactions').select('amount').eq('user_id', userId);
         const total = error || !data ? 0 : data.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-        const t = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
+        const t     = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
+        const next  = TIERS.find(n => n.tier === t.tier + 1);
 
+        // Current tier badge
         const el = document.getElementById('userTierBadge');
-        if (!el) return;
-        el.innerHTML = `
-          <div class="tier-badge tier-${t.tier}">
-            ${trophySVG(t.trophy)}
-            <div class="tier-badge-info">
-              <span class="tier-badge-num">TIER ${t.tier}</span>
-              <span class="tier-badge-name">${t.name}</span>
-            </div>
-          </div>`;
+        if (el) {
+          el.innerHTML = `
+            <div class="tier-badge tier-${t.tier}">
+              ${trophySVG(t.trophy)}
+              <div class="tier-badge-info">
+                <span class="tier-badge-num">TIER ${t.tier}</span>
+                <span class="tier-badge-name">${t.name}</span>
+              </div>
+            </div>`;
+        }
+
+        // Trophy progression (only if not max tier)
+        if (next) {
+          const card = document.getElementById('tierProgressCard');
+          if (card) card.style.display = '';
+
+          const pct  = Math.min(100, Math.round(((total - t.min) / (next.min - t.min)) * 100));
+          const need = Math.max(0, next.min - total);
+
+          document.getElementById('tierProgBar').style.width = pct + '%';
+          document.getElementById('tierProgText').innerHTML =
+            `<strong>₱${need.toLocaleString()}</strong> more to reach ${next.name}`;
+
+          document.getElementById('progCurrentBadge').innerHTML = `
+            <div class="tier-badge tier-${t.tier}" style="flex-direction:column;padding:10px 14px;gap:6px;text-align:center;">
+              ${trophySVG(t.trophy)}
+              <span class="tier-badge-num" style="font-size:10px;">TIER ${t.tier}</span>
+            </div>`;
+
+          document.getElementById('progNextBadge').innerHTML = `
+            <div class="tier-badge tier-${next.tier} tier-prog-next-locked" style="flex-direction:column;padding:10px 14px;gap:6px;text-align:center;">
+              ${trophySVG(next.trophy)}
+              <span class="tier-badge-num" style="font-size:10px;">TIER ${next.tier}</span>
+            </div>`;
+        }
       } catch {}
     }
 
