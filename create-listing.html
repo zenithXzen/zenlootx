@@ -213,7 +213,7 @@
             <div class="form-section-body">
               <div class="field">
                 <label>Title <span style="color:var(--danger)">*</span></label>
-                <input type="text" id="f_title" placeholder="e.g. AR 60 Genshin Account — C2 Raiden, C1 Hu Tao" maxlength="100">
+                <input type="text" id="f_title" placeholder="Enter a title for your listing" maxlength="100">
                 <span class="hint" id="titleCount">0 / 100</span>
               </div>
               <div class="field-row">
@@ -335,6 +335,16 @@
           document.querySelectorAll('.game-opt').forEach(e => e.classList.remove('selected'));
           el.classList.add('selected');
           selectedGame = el.dataset.game;
+
+          // Genshin doesn't support item trading — hide Items type
+          const itemsOpt = document.querySelector('.type-opt[data-type="items"]');
+          if (selectedGame === 'genshin') {
+            itemsOpt.style.display = 'none';
+            if (selectedType === 'items') { selectedType = null; itemsOpt.classList.remove('selected'); }
+          } else {
+            itemsOpt.style.display = '';
+          }
+
           updatePreview();
         });
       });
