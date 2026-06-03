@@ -284,13 +284,16 @@
 
             <div class="panel-price">${price} <span>${l.currency || 'USD'}</span></div>
 
-            <div class="seller-box" id="sellerBox">
+            <a href="/public-profile?id=${l.seller_id}" class="seller-box" id="sellerBox" style="text-decoration:none;display:flex;align-items:center;gap:12px;">
               <div class="seller-av-lg" id="sellerAv">?</div>
-              <div>
-                <div class="seller-info-name" id="sellerName">Loading…</div>
-                <div class="seller-info-sub">Seller</div>
+              <div style="flex:1;min-width:0;">
+                <div class="seller-info-name" id="sellerName">Seller</div>
+                <div class="seller-info-sub" style="display:flex;align-items:center;gap:5px;">
+                  View profile
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </div>
               </div>
-            </div>
+            </a>
 
             <div class="escrow-note">
               🔒 <strong>Escrow protected.</strong> Your payment is held safely until you confirm the account or items are as described.
@@ -341,6 +344,8 @@
     }
 
     async function loadSeller(sellerId) {
+      // Seller box is already a working link to the public profile.
+      // This enriches it with real name + avatar once the API responds.
       try {
         const res = await fetch(`/api/public/profile?id=${sellerId}`);
         if (!res.ok) return;
@@ -348,23 +353,13 @@
 
         const av   = document.getElementById('sellerAv');
         const name = document.getElementById('sellerName');
-        const box  = document.getElementById('sellerBox');
 
         if (av) {
           av.innerHTML = seller.avatar_url
             ? `<img src="${seller.avatar_url}" alt="${seller.username}">`
-            : seller.username.charAt(0).toUpperCase();
+            : `<span>${seller.username.charAt(0).toUpperCase()}</span>`;
         }
         if (name) name.textContent = seller.username;
-
-        // Make the seller box clickable — opens public profile
-        if (box) {
-          box.style.cursor = 'pointer';
-          box.title = `View ${seller.username}'s profile`;
-          box.addEventListener('click', () => {
-            window.location.href = `/public-profile?id=${sellerId}`;
-          });
-        }
       } catch {}
     }
 
