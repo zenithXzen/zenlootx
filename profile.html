@@ -182,9 +182,38 @@
     .modal-success h3  { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
     .modal-success p   { font-size: 14px; color: var(--text-dim); }
 
-    .profile-stats { display: flex; gap: 28px; margin-bottom: 20px; }
+    .profile-stats { display: flex; gap: 28px; margin-bottom: 20px; align-items: flex-end; }
     .stat-num   { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
     .stat-label { font-size: 12px; color: var(--text-faint); margin-top: 3px; }
+
+    /* TIER TROPHY */
+    .tier-trophy {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 16px 8px 10px; border-radius: 12px;
+      border: 1px solid transparent; margin-left: 8px;
+    }
+    .tier-trophy svg { width: 36px; height: 36px; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
+    .tier-trophy-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .tier-trophy-num  { font-size: 15px; font-weight: 800; letter-spacing: 0.04em; }
+    .tier-trophy-name { font-size: 11px; font-weight: 500; opacity: 0.75; }
+
+    .tt-1  { background:linear-gradient(135deg,#2D3139,#3D4451);border-color:#4B5563;color:#9CA3AF }
+    .tt-2  { background:linear-gradient(135deg,#1F2937,#374151);border-color:#4B5563;color:#D1D5DB }
+    .tt-3  { background:linear-gradient(135deg,#431407,#78350F);border-color:#92400E;color:#FCD34D }
+    .tt-4  { background:linear-gradient(135deg,#374151,#6B7280);border-color:#9CA3AF;color:#F3F4F6 }
+    .tt-5  { background:linear-gradient(135deg,#713F12,#92400E);border-color:#D97706;color:#FDE68A }
+    .tt-6  { background:linear-gradient(135deg,#0C4A6E,#075985);border-color:#0EA5E9;color:#BAE6FD }
+    .tt-7  { background:linear-gradient(135deg,#064E3B,#065F46);border-color:#059669;color:#6EE7B7 }
+    .tt-8  { background:linear-gradient(135deg,#1E3A8A,#1D4ED8);border-color:#3B82F6;color:#BFDBFE }
+    .tt-9  { background:linear-gradient(135deg,#881337,#9F1239);border-color:#E11D48;color:#FDA4AF }
+    .tt-10 {
+      background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+      border-color:transparent;color:#fff;
+      animation:diamondShift 4s ease infinite;background-size:200% 200%;position:relative;overflow:hidden;
+    }
+    .tt-10::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);animation:shimmer 2.5s infinite}
+    @keyframes diamondShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
 
     .bio-display { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
     .bio-text        { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
@@ -384,6 +413,7 @@
               <div class="stat-num"   id="statReviews">—</div>
               <div class="stat-label">Reviews</div>
             </div>
+            <div id="profileTierTrophy"></div>
           </div>
 
           <!-- Bio -->
@@ -528,6 +558,7 @@
       initReportModal(user);
       await initNav(user);
       loadListings(user.id);
+      loadTierTrophy(user.id);
     }
 
     // ── Report modal ──
@@ -880,6 +911,49 @@
       const { data } = await sb.from('profiles').select('is_banned').eq('id', userId).single();
       if (data?.is_banned) { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
       return false;
+    }
+
+    // TIER TROPHY
+    const TIERS = [
+      {tier:1, name:'Stone',    min:0,      color:'#9CA3AF'},
+      {tier:2, name:'Iron',     min:500,    color:'#D1D5DB'},
+      {tier:3, name:'Bronze',   min:2000,   color:'#F59E0B'},
+      {tier:4, name:'Silver',   min:5000,   color:'#E5E7EB'},
+      {tier:5, name:'Gold',     min:10000,  color:'#FDE68A'},
+      {tier:6, name:'Platinum', min:25000,  color:'#BAE6FD'},
+      {tier:7, name:'Emerald',  min:50000,  color:'#6EE7B7'},
+      {tier:8, name:'Sapphire', min:100000, color:'#93C5FD'},
+      {tier:9, name:'Ruby',     min:250000, color:'#FDA4AF'},
+      {tier:10,name:'Diamond',  min:500000, color:'url(#dg)'},
+    ];
+
+    async function loadTierTrophy(userId) {
+      try {
+        const { data } = await sb.from('transactions').select('amount').eq('user_id', userId);
+        const total = data?.reduce((s,r) => s + (parseFloat(r.amount)||0), 0) || 0;
+        const t = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
+        const isGrad = t.color.startsWith('url');
+        const el = document.getElementById('profileTierTrophy');
+        if (!el) return;
+        el.innerHTML = `
+          <div class="tier-trophy tt-${t.tier}">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              ${isGrad ? `<defs><linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#a78bfa"/>
+                <stop offset="33%" stop-color="#38bdf8"/>
+                <stop offset="66%" stop-color="#34d399"/>
+                <stop offset="100%" stop-color="#fbbf24"/>
+              </linearGradient></defs>` : ''}
+              <path fill="${t.color}" d="M7 3h10v2H7zM5 5h14l-1 8H6zm1 9h12l-2 3H8zm2 3h6l-3 2z"/>
+              <rect fill="${t.color}" x="9" y="18" width="6" height="1.5" rx="0.5"/>
+              <rect fill="${t.color}" x="8" y="19.5" width="8" height="1" rx="0.5"/>
+            </svg>
+            <div class="tier-trophy-info">
+              <span class="tier-trophy-num">TIER ${t.tier}</span>
+              <span class="tier-trophy-name">${t.name}</span>
+            </div>
+          </div>`;
+      } catch {}
     }
 
     init().then(() => initPush());
