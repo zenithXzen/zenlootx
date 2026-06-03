@@ -313,9 +313,9 @@
     // State collected across steps
     const formData = {
       fullName: '', phone: '', country: '', dob: '',
-      idType: '', idFrontFile: null, idBackFile: null,
+      idType: '', idFrontFile: null, idBackFile: null, idVerificationFile: null,
       bio: '',
-      agreeTerms: false,
+      agreeTerms: false, agreePledge: false,
     };
 
     // ── Init ──
@@ -501,8 +501,26 @@
               </div>
             </div>
 
+            <div class="field">
+              <label>Verification photo <span style="color:var(--danger)">*</span></label>
+              <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:10px;">
+                📸 Take a photo of yourself holding your ID. In the same photo, include a piece of paper with:
+                <ul style="margin-top:8px;margin-left:4px;display:flex;flex-direction:column;gap:4px;">
+                  <li style="padding-left:16px;position:relative;"><span style="position:absolute;left:0;">–</span> Today's date (handwritten)</li>
+                  <li style="padding-left:16px;position:relative;"><span style="position:absolute;left:0;">–</span> The word <strong style="color:var(--text);">ZenLootX</strong> (handwritten, or show our website open in the background)</li>
+                </ul>
+              </div>
+              <div class="file-upload-zone ${formData.idVerificationFile ? 'has-file' : ''}" id="verificationZone">
+                <input type="file" id="f_idVerification" accept="image/jpeg,image/png,image/webp">
+                <div class="upload-icon">🤳</div>
+                <div class="upload-text">${formData.idVerificationFile ? 'File selected' : 'Click to upload your verification photo'}</div>
+                <div class="upload-hint">JPG, PNG or WebP · Max 5MB · Must show your face, ID, date, and ZenLootX</div>
+                ${formData.idVerificationFile ? `<div class="upload-filename">${formData.idVerificationFile.name}</div>` : ''}
+              </div>
+            </div>
+
             <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text-dim);line-height:1.55;">
-              🔒 Your ID is encrypted and stored securely. It is only used to verify your identity and will not be shared with buyers.
+              🔒 Your ID and photos are encrypted and stored securely. They are only used to verify your identity and will never be shared with buyers.
             </div>
             <div class="step-error" id="stepError"></div>
           </div>
@@ -528,12 +546,38 @@
               <span class="hint" id="bioCount">${formData.bio.length} / 300</span>
             </div>
 
+            <!-- Seller pledge -->
+            <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:18px 20px;">
+              <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+                As a seller, you are strictly prohibited from:
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-dim);line-height:1.55;">
+                  <span style="color:var(--danger);font-weight:700;flex-shrink:0;">✕</span>
+                  <span><strong style="color:var(--text);">Retrieving an account after sale.</strong> Once an account is sold and the buyer confirms, you must not attempt to recover, reclaim, or regain access to it under any circumstances.</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-dim);line-height:1.55;">
+                  <span style="color:var(--danger);font-weight:700;flex-shrink:0;">✕</span>
+                  <span><strong style="color:var(--text);">Chargebacking top-ups.</strong> Reversing or disputing a payment for top-ups or in-game currency after they have been delivered is strictly forbidden.</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-dim);line-height:1.55;">
+                  <span style="color:var(--danger);font-weight:700;flex-shrink:0;">✕</span>
+                  <span><strong style="color:var(--text);">Scamming or deceiving buyers.</strong> Any form of fraud, misrepresentation, or intentional deception toward a buyer will result in an immediate permanent ban and may be reported to authorities.</span>
+                </div>
+              </div>
+            </div>
+
             <div class="field">
               <label>Agreements <span style="color:var(--danger)">*</span></label>
               <div class="terms-checks">
                 <div class="terms-row">
                   <input type="checkbox" id="agreeTerms" ${formData.agreeTerms ? 'checked' : ''}>
                   <label for="agreeTerms">I agree to the <a href="/terms" target="_blank">ZenLootX Seller Terms</a> and understand that listing fraud or scamming will result in a permanent ban.</label>
+                </div>
+                <div class="terms-row">
+                  <input type="checkbox" id="agreePledge" ${formData.agreePledge ? 'checked' : ''}>
+                  <label for="agreePledge">I understand that I must <strong>not</strong> retrieve a sold account, chargeback top-ups, or scam any buyer on ZenLootX. I accept full responsibility for my actions as a seller.</label>
                 </div>
                 <div class="terms-row">
                   <input type="checkbox" id="agreeAge" ${formData.agreeAge ? 'checked' : ''}>
@@ -580,6 +624,13 @@
           if (file.size > 5 * 1024 * 1024) { showStepError('Back ID file must be under 5MB.'); e.target.value=''; return; }
           formData.idBackFile = file;
           updateUploadZone('backZone', file);
+        });
+        document.getElementById('f_idVerification').addEventListener('change', e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) { showStepError('Verification photo must be under 5MB.'); e.target.value=''; return; }
+          formData.idVerificationFile = file;
+          updateUploadZone('verificationZone', file);
         });
       }
 
@@ -641,8 +692,9 @@
 
     function validateStep2() {
       formData.idType = document.getElementById('f_idType').value;
-      if (!formData.idType)      { showStepError('Please select your ID type.'); return false; }
-      if (!formData.idFrontFile) { showStepError('Please upload the front of your ID.'); return false; }
+      if (!formData.idType)             { showStepError('Please select your ID type.'); return false; }
+      if (!formData.idFrontFile)        { showStepError('Please upload the front of your ID.'); return false; }
+      if (!formData.idVerificationFile) { showStepError('Please upload your verification photo (holding your ID with date and ZenLootX).'); return false; }
       return true;
     }
 
@@ -651,12 +703,14 @@
       clearStepError();
 
       // Collect step 3 data
-      formData.bio        = document.getElementById('f_bio').value.trim();
-      formData.agreeTerms = document.getElementById('agreeTerms').checked;
-      formData.agreeAge   = document.getElementById('agreeAge').checked;
+      formData.bio         = document.getElementById('f_bio').value.trim();
+      formData.agreeTerms  = document.getElementById('agreeTerms').checked;
+      formData.agreePledge = document.getElementById('agreePledge').checked;
+      formData.agreeAge    = document.getElementById('agreeAge').checked;
 
-      if (!formData.agreeTerms) { showStepError('You must agree to the Seller Terms to continue.'); return; }
-      if (!formData.agreeAge)   { showStepError('Please confirm that your information is accurate.'); return; }
+      if (!formData.agreeTerms)  { showStepError('You must agree to the Seller Terms to continue.'); return; }
+      if (!formData.agreePledge) { showStepError('You must acknowledge the seller conduct rules to continue.'); return; }
+      if (!formData.agreeAge)    { showStepError('Please confirm that your information is accurate.'); return; }
 
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled    = true;
@@ -692,19 +746,35 @@
         idBackPath = path;
       }
 
+      let idVerificationPath = null;
+      submitBtn.textContent = 'Uploading verification photo…';
+      if (formData.idVerificationFile) {
+        const ext  = formData.idVerificationFile.name.split('.').pop();
+        const path = `${currentUser.id}/verification.${ext}`;
+        const { error } = await sb.storage.from('id_documents').upload(path, formData.idVerificationFile, { upsert: true, contentType: formData.idVerificationFile.type });
+        if (error) {
+          showStepError('Failed to upload verification photo. Please try again.');
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Submit application';
+          return;
+        }
+        idVerificationPath = path;
+      }
+
       submitBtn.textContent = 'Submitting…';
 
       const { error: insertError } = await sb.from('seller_applications').insert({
-        user_id:       currentUser.id,
-        full_name:     formData.fullName,
-        phone:         formData.phone,
-        country:       formData.country,
-        date_of_birth: formData.dob,
-        id_type:       formData.idType,
-        id_front_path: idFrontPath,
-        id_back_path:  idBackPath,
-        bio:           formData.bio || null,
-        status:        'pending',
+        user_id:              currentUser.id,
+        full_name:            formData.fullName,
+        phone:                formData.phone,
+        country:              formData.country,
+        date_of_birth:        formData.dob,
+        id_type:              formData.idType,
+        id_front_path:        idFrontPath,
+        id_back_path:         idBackPath,
+        id_verification_path: idVerificationPath,
+        bio:                  formData.bio || null,
+        status:               'pending',
       });
 
       if (insertError) {
@@ -748,6 +818,28 @@
             <a href="/account" class="dropdown-item">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
               My account
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/orders" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>
+              Orders
+            </a>
+            <a href="/messages" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"/></svg>
+              Messages
+            </a>
+            <a href="/notifications" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+              Notifications
+            </a>
+            <a href="/wallet" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/></svg>
+              Wallet
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/sell" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"/></svg>
+              Become a seller
             </a>
             <div class="dropdown-divider"></div>
             <button class="dropdown-item danger" id="logoutBtn">
