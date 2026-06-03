@@ -87,7 +87,6 @@ document.body.innerHTML = `
             <input type="number" class="price-input" id="maxPrice" placeholder="Max" min="0">
             <button class="clear-price" id="clearPrice" style="display:none;">✕</button>
           </div>
-          <span class="result-count" id="resultCount"></span>
           <select class="sort-select" id="currencySelect" title="Display currency">
             <option value="PHP">PHP</option>
             <option value="USD">USD</option>
@@ -319,7 +318,6 @@ function renderCard(listing) {
 
 async function render() {
   const grid  = document.getElementById('listingsGrid');
-  const count = document.getElementById('resultCount');
 
   // Fetch once from DB, then filter client-side
   if (allListings === null) {
@@ -332,7 +330,6 @@ async function render() {
   const clearBtn = document.getElementById('clearPrice');
   if (clearBtn) clearBtn.style.display = (minPrice !== '' || maxPrice !== '') ? 'inline' : 'none';
 
-  count.textContent = listings.length > 0 ? `${listings.length} listing${listings.length === 1 ? '' : 's'}` : '';
 
   if (listings.length === 0) {
     const hasPriceFilter = minPrice !== '' || maxPrice !== '';
