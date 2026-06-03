@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Become a Seller — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:     #0A0E0C;
+      --bg-surface:  #121814;
+      --bg-elevated: #1A211C;
+      --border:      #232B26;
+      --border-hi:   #33403A;
+      --accent:      #19C37D;
+      --accent-hover:#2FD98F;
+      --accent-glow: rgba(25,195,125,0.15);
+      --text:        #E8EDE9;
+      --text-dim:    #9BA8A0;
+      --text-faint:  #6B776F;
+      --danger:      #EF4444;
+      --warning:     #F5B947;
+      --success:     #22C55E;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-base); color: var(--text);
+      font-family: 'Geist', sans-serif; font-size: 15px; line-height: 1.6;
+      -webkit-font-smoothing: antialiased; min-height: 100vh; display: flex; flex-direction: column;
+    }
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); background: rgba(10,14,12,0.88); backdrop-filter: blur(14px); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; gap: 24px; }
+    .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; flex-shrink: 0; }
+    .logo .green { color: var(--accent); }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all 0.18s; text-decoration: none; white-space: nowrap; }
+    .btn-primary   { background: var(--accent); color: var(--bg-base); border-color: var(--accent); }
+    .btn-primary:hover   { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-secondary { background: transparent; color: var(--text); border-color: var(--border-hi); }
+    .btn-secondary:hover { background: var(--bg-elevated); }
+    .btn:disabled  { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    /* NAV DROPDOWN */
+    .user-menu { position: relative; }
+    .user-btn { display: flex; align-items: center; gap: 8px; background: var(--bg-elevated); border: 1px solid var(--border-hi); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500; color: var(--text); transition: border-color 0.18s; }
+    .user-btn:hover { border-color: var(--accent); }
+    .user-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-glow); border: 1.5px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; overflow: hidden; }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .user-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; min-width: 200px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 200; }
+    .user-dropdown.open { display: block; }
+    .dropdown-email { padding: 12px 16px; font-size: 12px; color: var(--text-faint); border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dropdown-item { display: flex; align-items: center; gap: 8px; padding: 11px 16px; font-size: 14px; color: var(--text-dim); cursor: pointer; transition: background 0.16s, color 0.16s; text-decoration: none; width: 100%; background: none; border: none; font-family: 'Geist', sans-serif; text-align: left; }
+    .dropdown-item:hover { background: var(--bg-elevated); color: var(--text); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+    .dropdown-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    main { flex: 1; padding: 56px 0 80px; }
+
+    /* HERO */
+    .hero { text-align: center; margin-bottom: 52px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-glow); border: 1px solid rgba(25,195,125,0.25); border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 20px; }
+    .hero h1 { font-size: 38px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 12px; }
+    .hero p  { font-size: 16px; color: var(--text-dim); max-width: 500px; margin: 0 auto; line-height: 1.7; }
+
+    /* PROGRESS */
+    .progress-wrap { max-width: 560px; margin: 0 auto 40px; }
+    .progress-steps { display: flex; align-items: center; gap: 0; }
+    .progress-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+    .progress-step:not(:last-child)::after {
+      content: ''; position: absolute; top: 16px; left: 50%; width: 100%; height: 2px;
+      background: var(--border); z-index: 0;
+      transition: background 0.3s;
+    }
+    .progress-step.done:not(:last-child)::after { background: var(--accent); }
+    .step-circle {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--bg-base);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: var(--text-faint);
+      z-index: 1; transition: all 0.25s; position: relative;
+    }
+    .progress-step.active .step-circle { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+    .progress-step.done   .step-circle { border-color: var(--accent); background: var(--accent); color: var(--bg-base); }
+    .step-label { font-size: 12px; font-weight: 500; color: var(--text-faint); margin-top: 8px; white-space: nowrap; transition: color 0.25s; }
+    .progress-step.active .step-label { color: var(--text); }
+    .progress-step.done   .step-label { color: var(--accent); }
+
+    /* FORM CARD */
+    .form-wrap { max-width: 560px; margin: 0 auto; }
+    .form-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+
+    .form-head { padding: 24px 28px; border-bottom: 1px solid var(--border); }
+    .form-head h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .form-head p  { font-size: 13px; color: var(--text-dim); }
+
+    .form-body { padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+    .field .hint  { font-size: 12px; color: var(--text-faint); }
+
+    input, select, textarea {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      font-family: 'Geist', sans-serif; font-size: 14px; color: var(--text);
+      outline: none; width: 100%;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+    select { cursor: pointer; }
+    select option { background: var(--bg-elevated); }
+    textarea { resize: vertical; min-height: 90px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .field-error { font-size: 12px; color: var(--danger); display: none; }
+    .field-error.visible { display: block; }
+
+    /* GAME CHECKBOXES */
+    .game-checks { display: flex; flex-direction: column; gap: 10px; }
+    .game-check {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 8px; padding: 13px 16px; cursor: pointer;
+      transition: border-color 0.16s;
+    }
+    .game-check:hover { border-color: var(--border-hi); }
+    .game-check.checked { border-color: var(--accent); background: var(--accent-glow); }
+    .game-check input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+    .game-check-icon { font-size: 20px; }
+    .game-check-label { font-size: 14px; font-weight: 500; }
+    .game-check-sub   { font-size: 12px; color: var(--text-faint); }
+
+    /* TERMS CHECKBOXES */
+    .terms-checks { display: flex; flex-direction: column; gap: 12px; }
+    .terms-row { display: flex; align-items: flex-start; gap: 10px; }
+    .terms-row input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+    .terms-row label { font-size: 13px; color: var(--text-dim); line-height: 1.5; cursor: pointer; }
+    .terms-row a { color: var(--accent); }
+    .terms-row a:hover { text-decoration: underline; }
+
+    /* FILE UPLOAD */
+    .file-upload-zone {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 28px 20px; text-align: center; cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+      position: relative;
+    }
+    .file-upload-zone:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .file-upload-zone.has-file { border-color: var(--accent); background: var(--accent-glow); border-style: solid; }
+    .file-upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 28px; margin-bottom: 10px; }
+    .upload-text { font-size: 13px; color: var(--text-dim); }
+    .upload-hint { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+    .upload-filename { font-size: 13px; font-weight: 600; color: var(--accent); margin-top: 6px; }
+
+    .file-preview { margin-top: 10px; }
+    .file-preview img { max-height: 120px; border-radius: 8px; border: 1px solid var(--border); object-fit: contain; background: var(--bg-elevated); }
+
+    /* FORM FOOTER */
+    .form-foot { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .form-foot-note { font-size: 12px; color: var(--text-faint); }
+
+    .step-error { font-size: 13px; color: var(--danger); background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 10px 14px; display: none; }
+    .step-error.visible { display: block; }
+
+    /* STATUS STATES */
+    .status-card {
+      max-width: 480px; margin: 0 auto;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 48px 32px; text-align: center;
+    }
+    .status-icon { font-size: 48px; margin-bottom: 20px; }
+    .status-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+    .status-card p  { font-size: 14px; color: var(--text-dim); max-width: 360px; margin: 0 auto 24px; line-height: 1.7; }
+    .status-pending { border-color: rgba(245,185,71,0.3); }
+    .status-pending .status-icon { filter: drop-shadow(0 0 12px rgba(245,185,71,0.3)); }
+
+    /* WHY NOTICE */
+    .why-notice {
+      max-width: 680px; margin: 0 auto 44px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px 32px;
+    }
+    .why-head {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 15px; font-weight: 600; margin-bottom: 12px;
+    }
+    .why-desc {
+      font-size: 14px; color: var(--text-dim); line-height: 1.7;
+      margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 20px;
+    }
+    .why-points { display: flex; flex-direction: column; gap: 18px; }
+    .why-point  { display: flex; align-items: flex-start; gap: 14px; }
+    .why-point-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .why-point-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .why-point-sub   { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 20px 0; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-inner p, .footer-inner a { font-size: 13px; color: var(--text-faint); }
+    .footer-inner a:hover { color: var(--text-dim); }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 28px; }
+      .field-row { grid-template-columns: 1fr; }
+      .step-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+        <div id="navActions">
+          <a href="/login"    class="btn btn-secondary">Sign in</a>
+          <a href="/register" class="btn btn-primary">Get started</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <div class="hero">
+        <div class="hero-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72"/>
+          </svg>
+          Seller onboarding
+        </div>
+        <h1>Become a Seller</h1>
+        <p>List your game accounts, items, and top-ups on ZenLootX. Secure escrow on every deal.</p>
+      </div>
+
+      <!-- Why we ask notice -->
+      <div class="why-notice" id="whyNotice">
+        <div class="why-head">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="18" height="18" style="color:var(--accent);flex-shrink:0;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+          </svg>
+          <span>Why we ask for this information</span>
+        </div>
+        <p class="why-desc">To protect every buyer on ZenLootX, all sellers must complete a one-time verification before listing. This keeps fraudsters out and gives buyers confidence that they are dealing with a real, accountable person.</p>
+        <div class="why-points">
+          <div class="why-point">
+            <div class="why-point-icon">🔒</div>
+            <div>
+              <div class="why-point-title">Your data is private</div>
+              <div class="why-point-sub">Your personal information and ID are stored securely and encrypted. They are never visible to buyers, other sellers, or any third party.</div>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-point-icon">🚫</div>
+            <div>
+              <div class="why-point-title">We will never sell your information</div>
+              <div class="why-point-sub">ZenLootX does not sell, rent, or share your personal data with advertisers or outside companies — ever. Your information is used solely to verify your identity.</div>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-point-icon">🛡️</div>
+            <div>
+              <div class="why-point-title">Buyer protection starts with you</div>
+              <div class="why-point-sub">Verified sellers build trust. When buyers see a verified badge, they know the seller has passed our review — making every transaction safer for everyone.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- App states: form | pending | approved -->
+      <div id="appContent"></div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p>© 2026 ZenLootX</p>
+        <div style="display:flex;gap:20px;">
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://msumlsqfergennhzxqon.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let currentStep = 1;
+    const TOTAL_STEPS = 3;
+
+    // State collected across steps
+    const formData = {
+      fullName: '', phone: '', country: '', dob: '',
+      idType: '', idFrontFile: null, idBackFile: null,
+      bio: '',
+      agreeTerms: false,
+    };
+
+    // ── Init ──
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = '/login?redirect=/sell'; return; }
+
+      currentUser = session.user;
+      initNav(currentUser);
+
+      // Check if already applied
+      const { data: existing } = await sb
+        .from('seller_applications')
+        .select('status')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (existing) {
+        document.getElementById('whyNotice').style.display = 'none';
+        renderStatusState(existing.status);
+        return;
+      }
+
+      renderForm();
+    }
+
+    // ── Status states ──
+    function renderStatusState(status) {
+      const content = document.getElementById('appContent');
+      if (status === 'pending') {
+        content.innerHTML = `
+          <div class="status-card status-pending">
+            <div class="status-icon">⏳</div>
+            <h2>Application under review</h2>
+            <p>We've received your seller application and are reviewing it. You'll be notified once it's approved. This usually takes 1–2 business days.</p>
+            <a href="/" class="btn btn-secondary">Back to home</a>
+          </div>`;
+      } else if (status === 'approved') {
+        content.innerHTML = `
+          <div class="status-card">
+            <div class="status-icon">✅</div>
+            <h2>You're a verified seller</h2>
+            <p>Your seller account is active. You can create listings and start selling on ZenLootX.</p>
+            <a href="/profile" class="btn btn-primary">Go to my profile</a>
+          </div>`;
+      } else if (status === 'rejected') {
+        content.innerHTML = `
+          <div class="status-card">
+            <div class="status-icon">❌</div>
+            <h2>Application not approved</h2>
+            <p>Your application was not approved. Please contact support if you believe this is a mistake, or re-apply with valid information.</p>
+            <a href="mailto:support@zenlootexchange.com" class="btn btn-secondary">Contact support</a>
+          </div>`;
+      }
+    }
+
+    // ── Progress indicator ──
+    function renderProgress() {
+      const labels = ['Personal Info', 'ID Verification', 'Seller Setup'];
+      return `
+        <div class="progress-wrap">
+          <div class="progress-steps">
+            ${labels.map((label, i) => {
+              const n = i + 1;
+              const cls = n < currentStep ? 'done' : n === currentStep ? 'active' : '';
+              const icon = n < currentStep
+                ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`
+                : n;
+              return `
+                <div class="progress-step ${cls}">
+                  <div class="step-circle">${icon}</div>
+                  <div class="step-label">${label}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
+    // ── Render form ──
+    function renderForm() {
+      const content = document.getElementById('appContent');
+      content.innerHTML = renderProgress() + `<div class="form-wrap" id="formWrap"></div>`;
+      renderStep();
+    }
+
+    function renderStep() {
+      // Update progress
+      document.querySelector('.progress-wrap').outerHTML = renderProgress();
+      // Re-insert progress since we replaced it
+      const content = document.getElementById('appContent');
+      content.innerHTML = renderProgress() + `<div class="form-wrap" id="formWrap"></div>`;
+
+      const wrap = document.getElementById('formWrap');
+      if (currentStep === 1) wrap.innerHTML = stepOneHTML();
+      if (currentStep === 2) wrap.innerHTML = stepTwoHTML();
+      if (currentStep === 3) wrap.innerHTML = stepThreeHTML();
+      bindStepEvents();
+    }
+
+    // ── Step 1: Personal Info ──
+    function stepOneHTML() {
+      return `
+        <div class="form-card">
+          <div class="form-head">
+            <h2>Personal Information</h2>
+            <p>This information is kept private and used for verification only.</p>
+          </div>
+          <div class="form-body">
+            <div class="field">
+              <label>Full name <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="f_fullName" placeholder="As it appears on your ID" value="${formData.fullName}" maxlength="100">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Phone number <span style="color:var(--danger)">*</span></label>
+                <input type="tel" id="f_phone" placeholder="+63 912 345 6789" value="${formData.phone}" maxlength="20">
+              </div>
+              <div class="field">
+                <label>Date of birth <span style="color:var(--danger)">*</span></label>
+                <input type="date" id="f_dob" value="${formData.dob}">
+              </div>
+            </div>
+            <div class="field">
+              <label>Country / Region <span style="color:var(--danger)">*</span></label>
+              <select id="f_country">
+                <option value="">Select your country</option>
+                ${COUNTRIES.map(c => `<option value="${c}" ${formData.country === c ? 'selected' : ''}>${c}</option>`).join('')}
+              </select>
+            </div>
+            <div class="step-error" id="stepError"></div>
+          </div>
+          <div class="form-foot">
+            <span class="form-foot-note">Step 1 of ${TOTAL_STEPS}</span>
+            <button class="btn btn-primary" id="nextBtn">Continue →</button>
+          </div>
+        </div>`;
+    }
+
+    // ── Step 2: ID Verification ──
+    function stepTwoHTML() {
+      return `
+        <div class="form-card">
+          <div class="form-head">
+            <h2>ID Verification</h2>
+            <p>Upload a clear photo of a valid government-issued ID. Files are stored securely and never shared.</p>
+          </div>
+          <div class="form-body">
+            <div class="field">
+              <label>ID type <span style="color:var(--danger)">*</span></label>
+              <select id="f_idType">
+                <option value="">Select ID type</option>
+                <option value="passport"        ${formData.idType==='passport'?'selected':''}>Passport</option>
+                <option value="drivers_license" ${formData.idType==='drivers_license'?'selected':''}>Driver's License</option>
+                <option value="national_id"     ${formData.idType==='national_id'?'selected':''}>National ID (PhilSys)</option>
+                <option value="sss"             ${formData.idType==='sss'?'selected':''}>SSS ID</option>
+                <option value="pagibig"         ${formData.idType==='pagibig'?'selected':''}>Pag-IBIG ID</option>
+                <option value="philhealth"      ${formData.idType==='philhealth'?'selected':''}>PhilHealth ID</option>
+                <option value="voters_id"       ${formData.idType==='voters_id'?'selected':''}>Voter's ID</option>
+                <option value="postal_id"       ${formData.idType==='postal_id'?'selected':''}>Postal ID</option>
+                <option value="other"           ${formData.idType==='other'?'selected':''}>Other government ID</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Front of ID <span style="color:var(--danger)">*</span></label>
+              <div class="file-upload-zone ${formData.idFrontFile ? 'has-file' : ''}" id="frontZone">
+                <input type="file" id="f_idFront" accept="image/jpeg,image/png,image/webp,application/pdf">
+                <div class="upload-icon">🪪</div>
+                <div class="upload-text">${formData.idFrontFile ? 'File selected' : 'Click to upload front of ID'}</div>
+                <div class="upload-hint">JPG, PNG, WebP or PDF · Max 5MB</div>
+                ${formData.idFrontFile ? `<div class="upload-filename">${formData.idFrontFile.name}</div>` : ''}
+              </div>
+            </div>
+
+            <div class="field" id="backField">
+              <label>Back of ID <span style="color:var(--text-faint);font-weight:400;">(not required for passport)</span></label>
+              <div class="file-upload-zone ${formData.idBackFile ? 'has-file' : ''}" id="backZone">
+                <input type="file" id="f_idBack" accept="image/jpeg,image/png,image/webp,application/pdf">
+                <div class="upload-icon">🪪</div>
+                <div class="upload-text">${formData.idBackFile ? 'File selected' : 'Click to upload back of ID'}</div>
+                <div class="upload-hint">JPG, PNG, WebP or PDF · Max 5MB</div>
+                ${formData.idBackFile ? `<div class="upload-filename">${formData.idBackFile.name}</div>` : ''}
+              </div>
+            </div>
+
+            <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text-dim);line-height:1.55;">
+              🔒 Your ID is encrypted and stored securely. It is only used to verify your identity and will not be shared with buyers.
+            </div>
+            <div class="step-error" id="stepError"></div>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-secondary" id="backBtn">← Back</button>
+            <button class="btn btn-primary"   id="nextBtn">Continue →</button>
+          </div>
+        </div>`;
+    }
+
+    // ── Step 3: Seller Setup ──
+    function stepThreeHTML() {
+      return `
+        <div class="form-card">
+          <div class="form-head">
+            <h2>Seller Setup</h2>
+            <p>Tell buyers what you're selling and agree to the seller terms.</p>
+          </div>
+          <div class="form-body">
+            <div class="field">
+              <label>Seller bio <span style="color:var(--text-faint);font-weight:400;">(optional)</span></label>
+              <textarea id="f_bio" placeholder="Tell buyers about yourself — your experience, what you sell, response time…" maxlength="300">${formData.bio}</textarea>
+              <span class="hint" id="bioCount">${formData.bio.length} / 300</span>
+            </div>
+
+            <div class="field">
+              <label>Agreements <span style="color:var(--danger)">*</span></label>
+              <div class="terms-checks">
+                <div class="terms-row">
+                  <input type="checkbox" id="agreeTerms" ${formData.agreeTerms ? 'checked' : ''}>
+                  <label for="agreeTerms">I agree to the <a href="/terms" target="_blank">ZenLootX Seller Terms</a> and understand that listing fraud or scamming will result in a permanent ban.</label>
+                </div>
+                <div class="terms-row">
+                  <input type="checkbox" id="agreeAge" ${formData.agreeAge ? 'checked' : ''}>
+                  <label for="agreeAge">I confirm that all information I provided is accurate and truthful.</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-error" id="stepError"></div>
+          </div>
+          <div class="form-foot">
+            <button class="btn btn-secondary" id="backBtn">← Back</button>
+            <button class="btn btn-primary"   id="submitBtn">Submit application</button>
+          </div>
+        </div>`;
+    }
+
+    // ── Bind events per step ──
+    function bindStepEvents() {
+      const nextBtn   = document.getElementById('nextBtn');
+      const backBtn   = document.getElementById('backBtn');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (backBtn)   backBtn.addEventListener('click',   () => { currentStep--; renderStep(); });
+      if (nextBtn)   nextBtn.addEventListener('click',   () => advanceStep());
+      if (submitBtn) submitBtn.addEventListener('click', () => submitApplication());
+
+      if (currentStep === 1) {
+        // nothing extra
+      }
+
+      if (currentStep === 2) {
+        // File upload listeners
+        document.getElementById('f_idFront').addEventListener('change', e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) { showStepError('Front ID file must be under 5MB.'); e.target.value=''; return; }
+          formData.idFrontFile = file;
+          updateUploadZone('frontZone', file);
+        });
+        document.getElementById('f_idBack').addEventListener('change', e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) { showStepError('Back ID file must be under 5MB.'); e.target.value=''; return; }
+          formData.idBackFile = file;
+          updateUploadZone('backZone', file);
+        });
+      }
+
+      if (currentStep === 3) {
+        const bioInput = document.getElementById('f_bio');
+        bioInput.addEventListener('input', () => {
+          document.getElementById('bioCount').textContent = `${bioInput.value.length} / 300`;
+        });
+      }
+    }
+
+    function updateUploadZone(zoneId, file) {
+      const zone = document.getElementById(zoneId);
+      zone.classList.add('has-file');
+      zone.querySelector('.upload-text').textContent = 'File selected';
+      const existing = zone.querySelector('.upload-filename');
+      if (existing) existing.textContent = file.name;
+      else {
+        const el = document.createElement('div');
+        el.className = 'upload-filename';
+        el.textContent = file.name;
+        zone.appendChild(el);
+      }
+    }
+
+    function showStepError(msg) {
+      const el = document.getElementById('stepError');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+    function clearStepError() {
+      const el = document.getElementById('stepError');
+      if (el) el.classList.remove('visible');
+    }
+
+    // ── Validation + advance ──
+    function advanceStep() {
+      clearStepError();
+      if (currentStep === 1 && !validateStep1()) return;
+      if (currentStep === 2 && !validateStep2()) return;
+      currentStep++;
+      renderStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep1() {
+      formData.fullName = document.getElementById('f_fullName').value.trim();
+      formData.phone    = document.getElementById('f_phone').value.trim();
+      formData.dob      = document.getElementById('f_dob').value;
+      formData.country  = document.getElementById('f_country').value;
+
+      if (!formData.fullName) { showStepError('Please enter your full name.'); return false; }
+      if (!formData.phone)    { showStepError('Please enter your phone number.'); return false; }
+      if (!formData.dob)      { showStepError('Please enter your date of birth.'); return false; }
+      if (!formData.country) { showStepError('Please select your country.'); return false; }
+      return true;
+    }
+
+    function validateStep2() {
+      formData.idType = document.getElementById('f_idType').value;
+      if (!formData.idType)      { showStepError('Please select your ID type.'); return false; }
+      if (!formData.idFrontFile) { showStepError('Please upload the front of your ID.'); return false; }
+      return true;
+    }
+
+    // ── Submit ──
+    async function submitApplication() {
+      clearStepError();
+
+      // Collect step 3 data
+      formData.bio        = document.getElementById('f_bio').value.trim();
+      formData.agreeTerms = document.getElementById('agreeTerms').checked;
+      formData.agreeAge   = document.getElementById('agreeAge').checked;
+
+      if (!formData.agreeTerms) { showStepError('You must agree to the Seller Terms to continue.'); return; }
+      if (!formData.agreeAge)   { showStepError('Please confirm that your information is accurate.'); return; }
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled    = true;
+      submitBtn.textContent = 'Uploading ID…';
+
+      // Upload front ID
+      let idFrontPath = null;
+      let idBackPath  = null;
+
+      if (formData.idFrontFile) {
+        const ext  = formData.idFrontFile.name.split('.').pop();
+        const path = `${currentUser.id}/front.${ext}`;
+        const { error } = await sb.storage.from('id_documents').upload(path, formData.idFrontFile, { upsert: true, contentType: formData.idFrontFile.type });
+        if (error) {
+          showStepError('Failed to upload front ID. Please try again.');
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Submit application';
+          return;
+        }
+        idFrontPath = path;
+      }
+
+      if (formData.idBackFile) {
+        const ext  = formData.idBackFile.name.split('.').pop();
+        const path = `${currentUser.id}/back.${ext}`;
+        const { error } = await sb.storage.from('id_documents').upload(path, formData.idBackFile, { upsert: true, contentType: formData.idBackFile.type });
+        if (error) {
+          showStepError('Failed to upload back ID. Please try again.');
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Submit application';
+          return;
+        }
+        idBackPath = path;
+      }
+
+      submitBtn.textContent = 'Submitting…';
+
+      const { error: insertError } = await sb.from('seller_applications').insert({
+        user_id:       currentUser.id,
+        full_name:     formData.fullName,
+        phone:         formData.phone,
+        country:       formData.country,
+        date_of_birth: formData.dob,
+        id_type:       formData.idType,
+        id_front_path: idFrontPath,
+        id_back_path:  idBackPath,
+        bio:           formData.bio || null,
+        status:        'pending',
+      });
+
+      if (insertError) {
+        showStepError('Something went wrong. Please try again.');
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Submit application';
+        return;
+      }
+
+      // Show success
+      document.getElementById('appContent').innerHTML = `
+        <div class="status-card">
+          <div class="status-icon">🎉</div>
+          <h2>Application submitted!</h2>
+          <p>We've received your seller application and will review it within 1–2 business days. You'll get an email once it's approved.</p>
+          <a href="/" class="btn btn-primary">Back to home</a>
+        </div>`;
+    }
+
+    // ── Auth-aware nav ──
+    function initNav(user) {
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const initial  = username.charAt(0).toUpperCase();
+      const avatar   = user.user_metadata?.avatar_url;
+
+      document.getElementById('navActions').innerHTML = `
+        <div class="user-menu" id="userMenu">
+          <button class="user-btn" id="userBtn">
+            <div class="user-avatar">${avatar ? `<img src="${avatar}">` : initial}</div>
+            ${username}
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <div class="dropdown-email">${user.email}</div>
+            <a href="/profile" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+              View Profile
+            </a>
+            <a href="/account" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+              My account
+            </a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger" id="logoutBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"/></svg>
+              Sign out
+            </button>
+          </div>
+        </div>`;
+
+      document.getElementById('userBtn').addEventListener('click', () => document.getElementById('userDropdown').classList.toggle('open'));
+      document.addEventListener('click', e => {
+        const m = document.getElementById('userMenu');
+        if (m && !m.contains(e.target)) document.getElementById('userDropdown').classList.remove('open');
+      });
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        localStorage.removeItem('zlx_session_row');
+        await sb.auth.signOut();
+        window.location.href = '/login';
+      });
+    }
+
+    const COUNTRIES = [
+      'Philippines','United States','Canada','United Kingdom','Australia',
+      'Singapore','Malaysia','Indonesia','Thailand','Vietnam','Japan','South Korea',
+      'Hong Kong','Taiwan','India','Brazil','Mexico','Germany','France','Netherlands',
+      'Spain','Italy','Sweden','Norway','Denmark','Finland','New Zealand','South Africa',
+      'United Arab Emirates','Saudi Arabia','Other',
+    ];
+
+    init();
+  </script>
+
+</body>
+</html>

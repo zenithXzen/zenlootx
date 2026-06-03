@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --danger:#EF4444;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:1200px;margin:0 auto;padding:0 24px; }
+
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:24px; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em; }
+    .logo .green { color:var(--accent); }
+
+    main { flex:1;padding:56px 0 80px; }
+
+    .page-layout { display:grid;grid-template-columns:220px 1fr;gap:48px;align-items:start; }
+
+    .toc { position:sticky;top:88px; }
+    .toc-title { font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px; }
+    .toc-list { list-style:none;display:flex;flex-direction:column;gap:2px; }
+    .toc-list a { font-size:13px;color:var(--text-faint);padding:5px 10px;border-radius:6px;display:block;transition:color 0.16s,background 0.16s; }
+    .toc-list a:hover { color:var(--text-dim);background:var(--bg-elevated); }
+
+    .doc-header { margin-bottom:40px; }
+    .doc-header h1 { font-size:32px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px; }
+    .doc-meta { font-size:13px;color:var(--text-faint); }
+
+    .doc-intro { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:40px;font-size:14px;color:var(--text-dim);line-height:1.7; }
+
+    .doc-section { margin-bottom:44px; }
+    .doc-section h2 { font-size:18px;font-weight:600;letter-spacing:-0.01em;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border); }
+    .doc-section p  { font-size:14px;color:var(--text-dim);line-height:1.75;margin-bottom:14px; }
+    .doc-section p:last-child { margin-bottom:0; }
+    .doc-section ul { list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:14px; }
+    .doc-section ul li { font-size:14px;color:var(--text-dim);line-height:1.65;padding-left:18px;position:relative; }
+    .doc-section ul li::before { content:'–';position:absolute;left:0;color:var(--text-faint); }
+    .doc-section strong { color:var(--text);font-weight:600; }
+    .doc-section a { color:var(--accent); }
+    .doc-section a:hover { text-decoration:underline; }
+
+    .highlight-box { background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--text-dim);line-height:1.65;margin-bottom:14px; }
+
+    .data-table { width:100%;border-collapse:collapse;margin-bottom:14px; }
+    .data-table th { text-align:left;font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;padding:10px 14px;background:var(--bg-elevated);border-bottom:1px solid var(--border); }
+    .data-table td { font-size:13px;color:var(--text-dim);padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6; }
+    .data-table tr:last-child td { border-bottom:none; }
+
+    footer { border-top:1px solid var(--border);padding:20px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+    .footer-inner p, .footer-inner a { font-size:13px;color:var(--text-faint); }
+    .footer-inner a:hover { color:var(--text-dim); }
+
+    @media (max-width:768px) {
+      .page-layout { grid-template-columns:1fr; }
+      .toc { display:none; }
+      .data-table { display:block;overflow-x:auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+        <a href="/" style="font-size:13px;color:var(--text-faint);">← Back to home</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div class="page-layout">
+
+        <aside class="toc">
+          <div class="toc-title">On this page</div>
+          <ul class="toc-list">
+            <li><a href="#overview">1. Overview</a></li>
+            <li><a href="#collect">2. What We Collect</a></li>
+            <li><a href="#use">3. How We Use It</a></li>
+            <li><a href="#storage">4. Storage & Security</a></li>
+            <li><a href="#sharing">5. What We Share</a></li>
+            <li><a href="#retention">6. Data Retention</a></li>
+            <li><a href="#rights">7. Your Rights</a></li>
+            <li><a href="#cookies">8. Cookies</a></li>
+            <li><a href="#children">9. Children</a></li>
+            <li><a href="#changes">10. Changes</a></li>
+            <li><a href="#contact">11. Contact</a></li>
+          </ul>
+        </aside>
+
+        <div>
+          <div class="doc-header">
+            <h1>Privacy Policy</h1>
+            <div class="doc-meta">Last updated: June 3, 2026</div>
+          </div>
+
+          <div class="doc-intro">
+            At ZenLootX, your privacy matters. This policy explains what information we collect, how we use it, and what we will never do with it. We keep it simple and honest.
+          </div>
+
+          <div class="doc-section" id="overview">
+            <h2>1. Overview</h2>
+            <p>ZenLootX ("we," "us," "our") operates the website at <a href="https://zenlootexchange.com">zenlootexchange.com</a>. We are committed to protecting the personal information of every user on our platform — buyers and sellers alike.</p>
+            <div class="highlight-box">
+              <strong>The short version:</strong> We collect only what we need to operate the marketplace safely. We do not sell your data. We do not share it with advertisers. Your ID documents are private and only used for seller verification.
+            </div>
+          </div>
+
+          <div class="doc-section" id="collect">
+            <h2>2. What We Collect</h2>
+            <p>We collect different types of information depending on how you use ZenLootX:</p>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>What it includes</th>
+                  <th>Who it applies to</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Account info</strong></td>
+                  <td>Username, email address, password (hashed)</td>
+                  <td>All users</td>
+                </tr>
+                <tr>
+                  <td><strong>Profile info</strong></td>
+                  <td>Profile photo, bio, member since date</td>
+                  <td>All users</td>
+                </tr>
+                <tr>
+                  <td><strong>Verification info</strong></td>
+                  <td>Full name, phone number, date of birth, country, government-issued ID (front and back)</td>
+                  <td>Sellers only</td>
+                </tr>
+                <tr>
+                  <td><strong>Transaction info</strong></td>
+                  <td>Listings created, orders placed, payment amounts, escrow status</td>
+                  <td>Buyers and sellers</td>
+                </tr>
+                <tr>
+                  <td><strong>Communication info</strong></td>
+                  <td>Messages sent through the platform between users</td>
+                  <td>All users</td>
+                </tr>
+                <tr>
+                  <td><strong>Technical info</strong></td>
+                  <td>IP address, browser type, device info, session activity</td>
+                  <td>All users</td>
+                </tr>
+                <tr>
+                  <td><strong>Reports</strong></td>
+                  <td>Report reason and details when a user reports another user</td>
+                  <td>All users</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>We do not collect sensitive financial details (such as full card numbers) directly — payment processing is handled by our payment partner.</p>
+          </div>
+
+          <div class="doc-section" id="use">
+            <h2>3. How We Use Your Information</h2>
+            <p>We use the information we collect for the following purposes:</p>
+            <ul>
+              <li>To create and manage your account</li>
+              <li>To verify seller identity and maintain marketplace trust</li>
+              <li>To process transactions and manage escrow</li>
+              <li>To communicate with you about your account, orders, or support requests</li>
+              <li>To investigate disputes, fraud, and reported violations</li>
+              <li>To improve the security and performance of the Platform</li>
+              <li>To send important service notifications (not marketing spam)</li>
+            </ul>
+            <p>We will never use your information for purposes beyond what is listed here without asking for your explicit consent first.</p>
+          </div>
+
+          <div class="doc-section" id="storage">
+            <h2>4. Storage & Security</h2>
+            <p>Your data is stored on secure servers provided by Supabase, a trusted infrastructure provider. All data is encrypted in transit (HTTPS) and at rest.</p>
+            <p><strong>ID documents</strong> submitted during seller verification are stored in a private, encrypted storage bucket. They are not publicly accessible and cannot be viewed by other users, buyers, or sellers — only by ZenLootX administrators during the review process.</p>
+            <p>We take security seriously, but no system is completely immune to breaches. If a security incident occurs that affects your data, we will notify you as required by applicable law.</p>
+          </div>
+
+          <div class="doc-section" id="sharing">
+            <h2>5. What We Share (and What We Don't)</h2>
+            <p><strong>We do not sell your personal data.</strong> We do not share your personal information with advertisers, data brokers, or marketing companies — ever.</p>
+            <p>We may share limited information only in the following circumstances:</p>
+            <ul>
+              <li><strong>With service providers:</strong> We use third-party services (Supabase for the database, Resend for email, Cloudflare for hosting) that process data on our behalf. These providers are bound by data processing agreements and cannot use your data for their own purposes.</li>
+              <li><strong>For legal reasons:</strong> If we are required by law, court order, or government authority to disclose information, we will comply. We will notify you where legally permitted to do so.</li>
+              <li><strong>To protect users:</strong> In cases of fraud, scamming, or threats of harm, we may share relevant information with law enforcement or the affected parties.</li>
+            </ul>
+            <p>Between buyers and sellers on the Platform, only your <strong>username and profile information</strong> are visible. Your email, phone number, ID documents, and full name are never shown to other users.</p>
+          </div>
+
+          <div class="doc-section" id="retention">
+            <h2>6. Data Retention</h2>
+            <p>We keep your data for as long as your account is active or as long as needed to provide our services. If you close your account:</p>
+            <ul>
+              <li>Your public profile and listings are removed</li>
+              <li>Transaction records are retained for up to 3 years for legal and dispute purposes</li>
+              <li>ID documents submitted for seller verification are deleted within 90 days of account closure</li>
+              <li>Logs and security data may be retained for up to 1 year</li>
+            </ul>
+          </div>
+
+          <div class="doc-section" id="rights">
+            <h2>7. Your Rights</h2>
+            <p>You have the following rights regarding your personal data:</p>
+            <ul>
+              <li><strong>Access:</strong> You can request a copy of the personal data we hold about you</li>
+              <li><strong>Correction:</strong> You can update your account information at any time through the Account settings page</li>
+              <li><strong>Deletion:</strong> You can request that we delete your account and personal data</li>
+              <li><strong>Portability:</strong> You can request your data in a structured, machine-readable format</li>
+              <li><strong>Objection:</strong> You can object to certain uses of your data</li>
+            </ul>
+            <p>To exercise any of these rights, contact us at <a href="mailto:support@zenlootexchange.com">support@zenlootexchange.com</a>. We will respond within 30 days.</p>
+          </div>
+
+          <div class="doc-section" id="cookies">
+            <h2>8. Cookies</h2>
+            <p>ZenLootX uses minimal cookies. We use session cookies to keep you logged in and to maintain your preferences. We do not use advertising cookies or tracking pixels.</p>
+            <p>You can disable cookies in your browser settings, but some features of the Platform may not work correctly without them.</p>
+          </div>
+
+          <div class="doc-section" id="children">
+            <h2>9. Children</h2>
+            <p>ZenLootX is not directed at children. We do not knowingly collect personal information from minors. If you believe a minor has created an account, please contact us and we will promptly remove the account.</p>
+          </div>
+
+          <div class="doc-section" id="changes">
+            <h2>10. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. When we do, we will update the "Last updated" date at the top of this page. We encourage you to review this page periodically.</p>
+            <p>For significant changes, we will notify registered users via email.</p>
+          </div>
+
+          <div class="doc-section" id="contact">
+            <h2>11. Contact</h2>
+            <p>If you have questions, concerns, or requests about your privacy, contact us:</p>
+            <ul>
+              <li><strong>Email:</strong> <a href="mailto:support@zenlootexchange.com">support@zenlootexchange.com</a></li>
+              <li><strong>Website:</strong> <a href="https://zenlootexchange.com">zenlootexchange.com</a></li>
+            </ul>
+            <p>This Privacy Policy is governed by the laws of the Republic of the Philippines.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p>© 2026 ZenLootX</p>
+        <div style="display:flex;gap:20px;">
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

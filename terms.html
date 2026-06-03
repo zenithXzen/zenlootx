@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --danger:#EF4444;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:1200px;margin:0 auto;padding:0 24px; }
+
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:24px; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em; }
+    .logo .green { color:var(--accent); }
+
+    main { flex:1;padding:56px 0 80px; }
+
+    .page-layout { display:grid;grid-template-columns:220px 1fr;gap:48px;align-items:start; }
+
+    /* SIDEBAR TOC */
+    .toc { position:sticky;top:88px; }
+    .toc-title { font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px; }
+    .toc-list { list-style:none;display:flex;flex-direction:column;gap:2px; }
+    .toc-list a { font-size:13px;color:var(--text-faint);padding:5px 10px;border-radius:6px;display:block;transition:color 0.16s,background 0.16s; }
+    .toc-list a:hover { color:var(--text-dim);background:var(--bg-elevated); }
+
+    /* CONTENT */
+    .doc-header { margin-bottom:40px; }
+    .doc-header h1 { font-size:32px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px; }
+    .doc-meta { font-size:13px;color:var(--text-faint); }
+
+    .doc-intro { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:40px;font-size:14px;color:var(--text-dim);line-height:1.7; }
+
+    .doc-section { margin-bottom:44px; }
+    .doc-section h2 { font-size:18px;font-weight:600;letter-spacing:-0.01em;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border); }
+    .doc-section p  { font-size:14px;color:var(--text-dim);line-height:1.75;margin-bottom:14px; }
+    .doc-section p:last-child { margin-bottom:0; }
+    .doc-section ul { list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:14px; }
+    .doc-section ul li { font-size:14px;color:var(--text-dim);line-height:1.65;padding-left:18px;position:relative; }
+    .doc-section ul li::before { content:'–';position:absolute;left:0;color:var(--text-faint); }
+    .doc-section strong { color:var(--text);font-weight:600; }
+    .doc-section a { color:var(--accent); }
+    .doc-section a:hover { text-decoration:underline; }
+
+    .highlight-box { background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--text-dim);line-height:1.65;margin-bottom:14px; }
+
+    footer { border-top:1px solid var(--border);padding:20px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+    .footer-inner p, .footer-inner a { font-size:13px;color:var(--text-faint); }
+    .footer-inner a:hover { color:var(--text-dim); }
+
+    @media (max-width:768px) {
+      .page-layout { grid-template-columns:1fr; }
+      .toc { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+        <a href="/" style="font-size:13px;color:var(--text-faint);">← Back to home</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div class="page-layout">
+
+        <!-- Sidebar TOC -->
+        <aside class="toc">
+          <div class="toc-title">On this page</div>
+          <ul class="toc-list">
+            <li><a href="#acceptance">1. Acceptance</a></li>
+            <li><a href="#service">2. Our Service</a></li>
+            <li><a href="#accounts">3. User Accounts</a></li>
+            <li><a href="#sellers">4. Sellers</a></li>
+            <li><a href="#buyers">5. Buyers</a></li>
+            <li><a href="#listings">6. Listings</a></li>
+            <li><a href="#transactions">7. Transactions & Escrow</a></li>
+            <li><a href="#prohibited">8. Prohibited Activities</a></li>
+            <li><a href="#disputes">9. Disputes</a></li>
+            <li><a href="#liability">10. Limitation of Liability</a></li>
+            <li><a href="#termination">11. Termination</a></li>
+            <li><a href="#changes">12. Changes to Terms</a></li>
+            <li><a href="#contact">13. Contact</a></li>
+          </ul>
+        </aside>
+
+        <!-- Document -->
+        <div>
+          <div class="doc-header">
+            <h1>Terms of Service</h1>
+            <div class="doc-meta">Last updated: June 3, 2026</div>
+          </div>
+
+          <div class="doc-intro">
+            Please read these Terms of Service carefully before using ZenLootX. By creating an account or using our platform, you agree to be bound by these terms. If you do not agree, do not use ZenLootX.
+          </div>
+
+          <div class="doc-section" id="acceptance">
+            <h2>1. Acceptance of Terms</h2>
+            <p>By accessing or using ZenLootX ("the Platform," "we," "us," or "our"), you confirm that you have read, understood, and agree to these Terms of Service, as well as our <a href="/privacy">Privacy Policy</a>. These terms apply to all visitors, buyers, sellers, and any other users of the Platform.</p>
+            <p>If you are using the Platform on behalf of an organization, you represent that you have the authority to bind that organization to these terms.</p>
+          </div>
+
+          <div class="doc-section" id="service">
+            <h2>2. Our Service</h2>
+            <p>ZenLootX is an online marketplace that connects buyers and sellers of digital gaming assets, including but not limited to game accounts, in-game items, currencies, and top-up services for games such as Genshin Impact, Mobile Legends: Bang Bang, and Valorant.</p>
+            <p>ZenLootX acts as a <strong>platform intermediary only</strong>. We are not a party to transactions between buyers and sellers. We do not own, create, or guarantee any listing on the Platform.</p>
+            <p>We provide an escrow service to protect both parties during a transaction. Funds are held securely until the buyer confirms receipt of the agreed item or account.</p>
+          </div>
+
+          <div class="doc-section" id="accounts">
+            <h2>3. User Accounts</h2>
+            <p>To use most features of ZenLootX, you must register for an account. When registering, you agree to:</p>
+            <ul>
+              <li>Provide accurate, current, and complete information</li>
+              <li>Maintain the security of your password and not share it with anyone</li>
+              <li>Notify us immediately of any unauthorized access to your account</li>
+              <li>Be responsible for all activity that occurs under your account</li>
+            </ul>
+            <p>You may not create more than one account. Accounts found to be duplicates may be suspended.</p>
+          </div>
+
+          <div class="doc-section" id="sellers">
+            <h2>4. Sellers</h2>
+            <p>To become a seller on ZenLootX, you must complete our seller verification process, which includes submitting personal information and a valid government-issued ID. This is required to protect buyers and maintain a trustworthy marketplace.</p>
+            <p>As a seller, you agree to:</p>
+            <ul>
+              <li>Only list items or accounts that you own and have the right to sell</li>
+              <li>Accurately describe everything in your listing — no misleading titles, descriptions, or images</li>
+              <li>Deliver the item or account as described within the agreed timeframe</li>
+              <li>Respond to buyer messages promptly and professionally</li>
+              <li>Not attempt to complete transactions outside of ZenLootX to avoid escrow</li>
+            </ul>
+            <div class="highlight-box">
+              <strong>Important:</strong> Sellers found to be engaging in fraud, misrepresentation, or scamming will be permanently banned from the Platform and may be reported to relevant authorities.
+            </div>
+            <p>ZenLootX reserves the right to place a hold on your earnings or suspend your account while investigating any dispute or complaint.</p>
+          </div>
+
+          <div class="doc-section" id="buyers">
+            <h2>5. Buyers</h2>
+            <p>As a buyer, you agree to:</p>
+            <ul>
+              <li>Review listings carefully before purchasing</li>
+              <li>Complete payment through ZenLootX's escrow system — never send payment directly to a seller outside the Platform</li>
+              <li>Confirm receipt of the item or account honestly — do not falsely claim non-delivery</li>
+              <li>Raise disputes through ZenLootX's official dispute process only</li>
+            </ul>
+            <p>Buyers who abuse the dispute system or make false claims may have their accounts suspended.</p>
+          </div>
+
+          <div class="doc-section" id="listings">
+            <h2>6. Listings</h2>
+            <p>All listings on ZenLootX must be honest, accurate, and comply with these Terms. You may not list:</p>
+            <ul>
+              <li>Accounts or items obtained through hacking, exploits, or unauthorized means</li>
+              <li>Stolen accounts or accounts belonging to another person without their consent</li>
+              <li>Items that are prohibited by the game developer's Terms of Service (note: it is your responsibility to understand these restrictions)</li>
+              <li>Any item or service that is illegal under Philippine law or international law</li>
+              <li>Misleading listings with fake screenshots, fabricated stats, or false descriptions</li>
+            </ul>
+            <p>ZenLootX reserves the right to remove any listing at its sole discretion without prior notice.</p>
+          </div>
+
+          <div class="doc-section" id="transactions">
+            <h2>7. Transactions & Escrow</h2>
+            <p>All transactions on ZenLootX are processed through our escrow system. Here is how it works:</p>
+            <ul>
+              <li><strong>Payment held:</strong> The buyer pays and the funds are securely held by ZenLootX</li>
+              <li><strong>Seller delivers:</strong> The seller transfers the account or item to the buyer</li>
+              <li><strong>Buyer confirms:</strong> The buyer confirms everything is as described</li>
+              <li><strong>Funds released:</strong> Payment is released to the seller</li>
+            </ul>
+            <p>If the buyer does not confirm or raise a dispute within the review window, the funds may be automatically released to the seller.</p>
+            <p>ZenLootX charges a platform fee on each completed transaction. The current fee rate is displayed at checkout.</p>
+          </div>
+
+          <div class="doc-section" id="prohibited">
+            <h2>8. Prohibited Activities</h2>
+            <p>The following are strictly prohibited on ZenLootX:</p>
+            <ul>
+              <li>Fraud, scamming, or intentional misrepresentation</li>
+              <li>Harassment, threats, or abusive behavior toward other users</li>
+              <li>Attempting to conduct transactions outside the Platform to bypass escrow</li>
+              <li>Creating fake accounts or impersonating another person</li>
+              <li>Posting spam, fake reviews, or misleading content</li>
+              <li>Any activity that disrupts or interferes with the Platform's operation</li>
+              <li>Using the Platform for money laundering or any illegal financial activity</li>
+            </ul>
+            <p>Violations may result in immediate account suspension, forfeiture of held funds, and referral to law enforcement where appropriate.</p>
+          </div>
+
+          <div class="doc-section" id="disputes">
+            <h2>9. Disputes</h2>
+            <p>If a transaction does not go as expected, buyers and sellers must use ZenLootX's official dispute resolution process. We will review evidence submitted by both parties and make a final decision on the release or refund of escrowed funds.</p>
+            <p>ZenLootX's decision on disputes is final. Both parties agree to accept this outcome as a condition of using the Platform.</p>
+            <p>ZenLootX is not liable for losses arising from transactions that took place outside of the Platform's escrow system.</p>
+          </div>
+
+          <div class="doc-section" id="liability">
+            <h2>10. Limitation of Liability</h2>
+            <p>ZenLootX provides the Platform on an "as is" and "as available" basis. We do not guarantee that the Platform will be error-free, uninterrupted, or free from security vulnerabilities.</p>
+            <p>To the fullest extent permitted by law, ZenLootX shall not be liable for:</p>
+            <ul>
+              <li>Any indirect, incidental, or consequential damages arising from use of the Platform</li>
+              <li>Loss of data, accounts, or in-game assets</li>
+              <li>Actions or misconduct of buyers or sellers on the Platform</li>
+              <li>Any transaction conducted outside of the Platform</li>
+            </ul>
+            <p>Our total liability to any user for any claim shall not exceed the amount of platform fees paid by that user in the three months preceding the claim.</p>
+          </div>
+
+          <div class="doc-section" id="termination">
+            <h2>11. Termination</h2>
+            <p>ZenLootX reserves the right to suspend or terminate any account at any time, with or without notice, for violations of these Terms or for any other reason at our sole discretion.</p>
+            <p>You may close your account at any time by contacting us. Pending transactions must be resolved before account closure.</p>
+          </div>
+
+          <div class="doc-section" id="changes">
+            <h2>12. Changes to These Terms</h2>
+            <p>We may update these Terms of Service from time to time. When we do, we will update the "Last updated" date at the top of this page. Continued use of the Platform after changes take effect constitutes your acceptance of the revised terms.</p>
+            <p>For significant changes, we will attempt to notify registered users via email.</p>
+          </div>
+
+          <div class="doc-section" id="contact">
+            <h2>13. Contact</h2>
+            <p>If you have questions about these Terms, please contact us at:</p>
+            <ul>
+              <li><strong>Email:</strong> <a href="mailto:support@zenlootexchange.com">support@zenlootexchange.com</a></li>
+              <li><strong>Website:</strong> <a href="https://zenlootexchange.com">zenlootexchange.com</a></li>
+            </ul>
+            <p>These Terms are governed by the laws of the Republic of the Philippines.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p>© 2026 ZenLootX</p>
+        <div style="display:flex;gap:20px;">
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
