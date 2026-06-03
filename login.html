@@ -420,6 +420,35 @@
           return;
         }
 
+        // Track session device info
+        const ua = navigator.userAgent;
+        let browser = 'Browser';
+        if (/Edg\//.test(ua))            browser = 'Edge';
+        else if (/OPR\/|Opera/.test(ua)) browser = 'Opera';
+        else if (/Chrome\//.test(ua))    browser = 'Chrome';
+        else if (/Firefox\//.test(ua))   browser = 'Firefox';
+        else if (/Safari\//.test(ua))    browser = 'Safari';
+
+        let device = 'Unknown device';
+        if (/iPhone/.test(ua))           device = 'iPhone';
+        else if (/iPad/.test(ua))        device = 'iPad';
+        else if (/Android/.test(ua)) {
+          const m = ua.match(/Android [\d.]+;\s*([^)]+?)(?:\s+Build\/|\s*\))/);
+          device = m ? m[1].trim() : 'Android device';
+        }
+        else if (/Macintosh/.test(ua))   device = 'Mac';
+        else if (/Windows NT/.test(ua))  device = 'Windows PC';
+        else if (/Linux/.test(ua))       device = 'Linux PC';
+
+        fetch('/api/track-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({ userAgent: ua, deviceName: device, browser }),
+        }).catch(() => {});
+
         // Success
         showSuccess('Signed in! Redirecting…');
         btn.textContent = 'Signed in!';

@@ -918,10 +918,12 @@
         body.innerHTML = '';
 
         sessions.forEach(s => {
-          const isCurrent = s.id === currentSessionId;
-          const { browser, os, type, device } = parseUA(s.user_agent || '');
+          const isCurrent = s.user_agent === navigator.userAgent;
+          const { type } = parseUA(s.user_agent || '');
+          const device   = s.device_name || 'Unknown device';
+          const browser  = s.browser || 'Browser';
           const icon     = deviceIcons[type] || deviceIcons.desktop;
-          const lastSeen = isCurrent ? 'Active now' : `Last active ${new Date(s.updated_at || s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+          const lastSeen = isCurrent ? 'Active now' : `Last active ${new Date(s.last_active || s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
           const card = document.createElement('div');
           card.style.cssText = `

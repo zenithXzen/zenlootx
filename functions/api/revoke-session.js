@@ -5,22 +5,15 @@ export async function onRequestPost(context) {
     const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
     if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const tokenUserId = payload.sub;
+
     const { sessionId, userId } = await request.json();
     if (!sessionId || !userId) return Response.json({ error: 'Missing fields' }, { status: 400 });
-
-    // Decode JWT to verify user owns this session
-    let tokenUserId;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      tokenUserId = payload.sub;
-    } catch {
-      return Response.json({ error: 'Invalid token' }, { status: 401 });
-    }
     if (tokenUserId !== userId) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    // Revoke the specific session
-    const res = await fetch(
-      `${env.SUPABASE_URL}/auth/v1/admin/users/${userId}/sessions/${sessionId}`,
+    await fetch(
+      `${env.SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionId}&user_id=eq.${userId}`,
       {
         method: 'DELETE',
         headers: {
@@ -30,10 +23,9 @@ export async function onRequestPost(context) {
       }
     );
 
-    if (!res.ok) return Response.json({ error: 'Failed to revoke session' }, { status: 500 });
     return Response.json({ success: true });
 
-  } catch {
-    return Response.json({ error: 'Server error' }, { status: 500 });
+  } catch (e) {
+    return Response.json({ error: e.message }, { status: 500 });
   }
 }
