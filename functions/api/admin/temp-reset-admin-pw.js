@@ -12,7 +12,7 @@ export async function onRequestGet({ request, env }) {
     const userId = '04b53ba1-4ffb-4307-8e58-ee3d0dc303bb';
 
     const res = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
         apikey: env.SUPABASE_SERVICE_KEY,
