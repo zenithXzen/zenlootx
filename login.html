@@ -254,7 +254,14 @@
     <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · © 2026 ZenLootX
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://msumlsqfergennhzxqon.supabase.co',
+      'sb_publishable_xNX8AtbiRiSO18hcKCzoZA_dohV9xzS'
+    );
+
     const MAX_ATTEMPTS = 6;
     let failedAttempts = 0;
     let locked = false;
@@ -264,7 +271,7 @@
     const iconShow = document.getElementById('iconShow');
     const iconHide = document.getElementById('iconHide');
     document.getElementById('togglePw').addEventListener('click', () => {
-      const vis  = pwInput.type === 'text';
+      const vis = pwInput.type === 'text';
       pwInput.type           = vis ? 'password' : 'text';
       iconShow.style.display = vis ? '' : 'none';
       iconHide.style.display = vis ? 'none' : '';
@@ -277,53 +284,26 @@
         el.className = el.className.replace(' visible', '');
       });
     }
-
-    function showError(msg) {
-      const el = document.getElementById('errorMsg');
-      el.textContent = msg;
-      el.classList.add('visible');
-    }
-
-    function showWarning(msg) {
-      const el = document.getElementById('warnMsg');
-      el.textContent = msg;
-      el.classList.add('visible');
-    }
-
-    function showSuccess(msg) {
-      const el = document.getElementById('successMsg');
-      el.textContent = msg;
-      el.classList.add('visible');
-    }
+    function showError(msg)   { const el = document.getElementById('errorMsg');   el.textContent = msg; el.classList.add('visible'); }
+    function showWarning(msg) { const el = document.getElementById('warnMsg');    el.textContent = msg; el.classList.add('visible'); }
+    function showSuccess(msg) { const el = document.getElementById('successMsg'); el.textContent = msg; el.classList.add('visible'); }
 
     function updateAttemptBadge() {
       const badge = document.getElementById('attemptBadge');
-      if (failedAttempts === 0) {
-        badge.className = 'attempt-badge';
-        return;
-      }
-      const remaining = MAX_ATTEMPTS - failedAttempts;
+      if (failedAttempts === 0) { badge.className = 'attempt-badge'; return; }
       badge.textContent = `${failedAttempts}/${MAX_ATTEMPTS} attempts`;
-      badge.className = failedAttempts >= 4
-        ? 'attempt-badge danger'
-        : 'attempt-badge warn';
+      badge.className   = failedAttempts >= 4 ? 'attempt-badge danger' : 'attempt-badge warn';
     }
 
     async function triggerReset(identifier) {
-      // Only send reset if identifier looks like an email
       const email = identifier.includes('@') ? identifier : null;
-
       locked = true;
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.textContent = 'Sending reset email…';
-
       clearAlerts();
-
       if (!email) {
-        showWarning(
-          'Too many failed attempts. Enter your email address above and click "Forgot password?" to reset your password.'
-        );
+        showWarning('Too many failed attempts. Enter your email and click "Forgot password?" to reset.');
         document.getElementById('identifier').value = '';
         document.getElementById('identifier').focus();
         btn.textContent = 'Sign in';
@@ -333,7 +313,6 @@
         updateAttemptBadge();
         return;
       }
-
       try {
         await fetch('/api/send-reset', {
           method: 'POST',
@@ -341,13 +320,18 @@
           body: JSON.stringify({ email }),
         });
       } catch {}
-
-      showSuccess(
-        `Too many failed attempts. A password reset link has been sent to ${email}. Check your inbox.`
-      );
+      showSuccess(`Too many failed attempts. A reset link has been sent to ${email}.`);
       btn.textContent = 'Reset email sent';
-      document.getElementById('identifier').classList.remove('error');
-      document.getElementById('password').classList.remove('error');
+    }
+
+    async function getEmailByUsername(username) {
+      const { data, error } = await sb
+        .from('profiles')
+        .select('email')
+        .eq('username', username)
+        .single();
+      if (error || !data) return null;
+      return data.email;
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -355,7 +339,6 @@
       if (locked) return;
 
       clearAlerts();
-
       const identifier = document.getElementById('identifier').value.trim();
       const password   = document.getElementById('password').value;
 
@@ -373,25 +356,58 @@
         return;
       }
 
-      // TODO: replace with real Supabase auth check
-      // Simulate a failed attempt for now
-      failedAttempts++;
-      updateAttemptBadge();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled    = true;
+      btn.textContent = 'Signing in…';
 
-      if (failedAttempts >= MAX_ATTEMPTS) {
-        await triggerReset(identifier);
-        return;
-      }
+      try {
+        // Resolve email from username if needed
+        let email = identifier;
+        if (!identifier.includes('@')) {
+          email = await getEmailByUsername(identifier);
+          if (!email) {
+            failedAttempts++;
+            updateAttemptBadge();
+            document.getElementById('identifier').classList.add('error');
+            showError('Username not found.');
+            btn.disabled    = false;
+            btn.textContent = 'Sign in';
+            return;
+          }
+        }
 
-      const remaining = MAX_ATTEMPTS - failedAttempts;
-      document.getElementById('password').classList.add('error');
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
-      if (failedAttempts >= 4) {
-        showError(
-          `Incorrect password. ${remaining} attempt${remaining === 1 ? '' : 's'} left before your account is locked and a reset email is sent.`
-        );
-      } else {
-        showError('Incorrect email/username or password. Please try again.');
+        if (error) {
+          failedAttempts++;
+          updateAttemptBadge();
+          btn.disabled    = false;
+          btn.textContent = 'Sign in';
+
+          if (failedAttempts >= MAX_ATTEMPTS) {
+            await triggerReset(identifier);
+            return;
+          }
+
+          document.getElementById('password').classList.add('error');
+          const remaining = MAX_ATTEMPTS - failedAttempts;
+          if (failedAttempts >= 4) {
+            showError(`Incorrect password. ${remaining} attempt${remaining === 1 ? '' : 's'} left before a reset email is sent.`);
+          } else {
+            showError('Incorrect email/username or password. Please try again.');
+          }
+          return;
+        }
+
+        // Success
+        showSuccess('Signed in! Redirecting…');
+        btn.textContent = 'Signed in!';
+        setTimeout(() => { window.location.href = '/'; }, 1000);
+
+      } catch {
+        showError('Network error. Check your connection and try again.');
+        btn.disabled    = false;
+        btn.textContent = 'Sign in';
       }
     });
   </script>

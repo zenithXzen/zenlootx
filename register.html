@@ -361,6 +361,14 @@
     <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · © 2026 ZenLootX
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://msumlsqfergennhzxqon.supabase.co',
+      'sb_publishable_xNX8AtbiRiSO18hcKCzoZA_dohV9xzS'
+    );
+  </script>
   <script>
     // ── Password toggle ──
     const pw1     = document.getElementById('password');
@@ -527,10 +535,29 @@
           return;
         }
 
-        // ✅ Verified — TODO: create account in Supabase here
+        // ✅ Verified — create account in Supabase
+        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value.trim();
+
+        btn.textContent = 'Creating account…';
+
+        const { data: signUpData, error: signUpError } = await sb.auth.signUp({
+          email,
+          password,
+          options: { data: { username } }
+        });
+
+        if (signUpError) {
+          errEl.textContent = signUpError.message || 'Failed to create account. Try again.';
+          errEl.classList.add('visible');
+          btn.disabled    = false;
+          btn.textContent = 'Verify & create account';
+          return;
+        }
+
         btn.textContent = 'Account created!';
         const s = document.getElementById('step2Success');
-        s.textContent = 'Email verified! Redirecting…';
+        s.textContent = 'Account created! Redirecting…';
         s.classList.add('visible');
         setTimeout(() => { window.location.href = '/'; }, 1500);
 
