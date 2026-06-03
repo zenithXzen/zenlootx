@@ -15,6 +15,9 @@ const ICON   = app.dataset.icon;
 
 let activeFilter = 'all';
 let activeSort   = 'newest';
+let minPrice     = '';
+let maxPrice     = '';
+let allListings  = null; // null = not fetched yet
 
 // ── Build page shell ──
 document.title = `${LABEL} Listings — ZenLootX`;
@@ -57,7 +60,14 @@ document.body.innerHTML = `
           <button class="filter-btn" data-filter="items">Items</button>
           <button class="filter-btn" data-filter="topup">Top-up</button>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">
+          <div class="price-range">
+            <span class="filter-label">Price:</span>
+            <input type="number" class="price-input" id="minPrice" placeholder="Min" min="0">
+            <span class="price-sep">—</span>
+            <input type="number" class="price-input" id="maxPrice" placeholder="Max" min="0">
+            <button class="clear-price" id="clearPrice" style="display:none;">✕</button>
+          </div>
           <span class="result-count" id="resultCount"></span>
           <select class="sort-select" id="sortSelect">
             <option value="newest">Newest</option>
@@ -185,21 +195,29 @@ async function initNav() {
 }
 
 // ── Fetch & render listings ──
-async function fetchListings() {
-  let query = sb
+async function fetchAllListings() {
+  const { data, error } = await sb
     .from('listings')
     .select('id, title, price, currency, type, images, created_at, seller_id')
     .eq('game', GAME)
-    .eq('status', 'active');
-
-  if (activeFilter !== 'all') query = query.eq('type', activeFilter);
-
-  if (activeSort === 'newest')     query = query.order('created_at', { ascending: false });
-  if (activeSort === 'price_asc')  query = query.order('price', { ascending: true });
-  if (activeSort === 'price_desc') query = query.order('price', { ascending: false });
-
-  const { data, error } = await query;
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
   return error ? [] : (data || []);
+}
+
+function applyFilters(listings) {
+  let result = [...listings];
+
+  if (activeFilter !== 'all') result = result.filter(l => l.type === activeFilter);
+
+  if (minPrice !== '') result = result.filter(l => Number(l.price) >= parseFloat(minPrice));
+  if (maxPrice !== '') result = result.filter(l => Number(l.price) <= parseFloat(maxPrice));
+
+  if (activeSort === 'price_asc')  result.sort((a, b) => a.price - b.price);
+  if (activeSort === 'price_desc') result.sort((a, b) => b.price - a.price);
+  // 'newest' is already default order from DB
+
+  return result;
 }
 
 function typeLabel(t) {
@@ -242,20 +260,31 @@ function renderCard(listing) {
 }
 
 async function render() {
-  const listings = await fetchListings();
-  const grid     = document.getElementById('listingsGrid');
-  const count    = document.getElementById('resultCount');
+  const grid  = document.getElementById('listingsGrid');
+  const count = document.getElementById('resultCount');
+
+  // Fetch once from DB, then filter client-side
+  if (allListings === null) {
+    allListings = await fetchAllListings();
+  }
+
+  const listings = applyFilters(allListings);
+
+  // Show/hide clear button
+  const clearBtn = document.getElementById('clearPrice');
+  if (clearBtn) clearBtn.style.display = (minPrice !== '' || maxPrice !== '') ? 'inline' : 'none';
 
   count.textContent = listings.length > 0 ? `${listings.length} listing${listings.length === 1 ? '' : 's'}` : '';
 
   if (listings.length === 0) {
+    const hasPriceFilter = minPrice !== '' || maxPrice !== '';
     grid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1;">
         <div class="empty-icon">${ICON}</div>
-        <h2>No listings yet</h2>
-        <p>Be the first to list a ${LABEL} account or item. Sellers get paid once the buyer confirms.</p>
+        <h2>${hasPriceFilter ? 'No listings in this price range' : 'No listings yet'}</h2>
+        <p>${hasPriceFilter ? 'Try adjusting or clearing the price filter.' : `Be the first to list a ${LABEL} account or item. Sellers get paid once the buyer confirms.`}</p>
         <div class="empty-actions">
-          <a href="/register" class="btn btn-primary">Start selling</a>
+          ${hasPriceFilter ? `<button class="btn btn-secondary" onclick="clearPriceFilter()">Clear price filter</button>` : `<a href="/register" class="btn btn-primary">Start selling</a>`}
           <a href="/" class="btn btn-secondary">Back to home</a>
         </div>
       </div>
@@ -266,7 +295,7 @@ async function render() {
   grid.innerHTML = listings.map(renderCard).join('');
 }
 
-// ── Filter + Sort events ──
+// ── Filter + Sort + Price events ──
 document.addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
@@ -277,11 +306,33 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('change', e => {
-  if (e.target.id === 'sortSelect') {
-    activeSort = e.target.value;
-    render();
+  if (e.target.id === 'sortSelect') { activeSort = e.target.value; render(); }
+});
+
+let priceTimer = null;
+document.addEventListener('input', e => {
+  if (e.target.id === 'minPrice' || e.target.id === 'maxPrice') {
+    clearTimeout(priceTimer);
+    priceTimer = setTimeout(() => {
+      minPrice = document.getElementById('minPrice').value;
+      maxPrice = document.getElementById('maxPrice').value;
+      render();
+    }, 400);
   }
 });
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'clearPrice') clearPriceFilter();
+});
+
+function clearPriceFilter() {
+  minPrice = ''; maxPrice = '';
+  const mn = document.getElementById('minPrice');
+  const mx = document.getElementById('maxPrice');
+  if (mn) mn.value = '';
+  if (mx) mx.value = '';
+  render();
+}
 
 // ── Init ──
 initNav();

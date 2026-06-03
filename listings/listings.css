@@ -40,6 +40,14 @@ nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);ba
 select.sort-select { background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-family:'Geist',sans-serif;font-size:13px;color:var(--text-dim);cursor:pointer;outline:none; }
 select.sort-select:focus { border-color:var(--accent); }
 
+.price-range { display:flex;align-items:center;gap:6px; }
+.price-input { background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Geist',sans-serif;font-size:13px;color:var(--text);outline:none;width:90px;transition:border-color 0.16s; }
+.price-input:focus { border-color:var(--accent); }
+.price-input::placeholder { color:var(--text-faint); }
+.price-sep { font-size:13px;color:var(--text-faint); }
+.clear-price { background:none;border:none;font-size:12px;color:var(--text-faint);cursor:pointer;font-family:'Geist',sans-serif;padding:4px 6px;border-radius:4px;transition:color 0.14s; }
+.clear-price:hover { color:var(--danger); }
+
 .result-count { font-size:13px;color:var(--text-faint); }
 
 /* LISTINGS GRID */
