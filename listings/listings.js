@@ -13,11 +13,13 @@ const BGPOS  = app.dataset.bgPos;
 const TAGCLS = app.dataset.tagClass;
 const ICON   = app.dataset.icon;
 
-let activeFilter = 'all';
-let activeSort   = 'newest';
-let minPrice     = '';
-let maxPrice     = '';
-let allListings  = null; // null = not fetched yet
+let activeFilter    = 'all';
+let activeSort      = 'newest';
+let minPrice        = '';
+let maxPrice        = '';
+let allListings     = null;
+let displayCurrency = 'PHP';
+let exchangeRates   = null; // keyed by currency code, base USD
 
 // ── Build page shell ──
 document.title = `${LABEL} Listings — ZenLootX`;
@@ -86,6 +88,18 @@ document.body.innerHTML = `
             <button class="clear-price" id="clearPrice" style="display:none;">✕</button>
           </div>
           <span class="result-count" id="resultCount"></span>
+          <select class="sort-select" id="currencySelect" title="Display currency">
+            <option value="PHP">₱ PHP</option>
+            <option value="USD">$ USD</option>
+            <option value="SGD">S$ SGD</option>
+            <option value="MYR">RM MYR</option>
+            <option value="IDR">Rp IDR</option>
+            <option value="THB">฿ THB</option>
+            <option value="JPY">¥ JPY</option>
+            <option value="KRW">₩ KRW</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
+          </select>
           <select class="sort-select" id="sortSelect">
             <option value="newest">Newest</option>
             <option value="price_asc">Price: Low to High</option>
@@ -211,6 +225,33 @@ async function initNav() {
   });
 }
 
+// ── Exchange rates ──
+async function fetchExchangeRates() {
+  try {
+    const res  = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    if (data.result === 'success') exchangeRates = data.rates;
+  } catch {}
+}
+
+function convertPrice(amount, fromCurrency) {
+  if (!exchangeRates) return { value: amount, currency: fromCurrency };
+  const rateFrom = exchangeRates[fromCurrency] || exchangeRates['USD'] || 1;
+  const rateTo   = exchangeRates[displayCurrency] || 1;
+  return { value: amount * (rateTo / rateFrom), currency: displayCurrency };
+}
+
+function formatPrice(amount, fromCurrency) {
+  const { value, currency } = convertPrice(amount, fromCurrency);
+  const formatted = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: currency === 'JPY' || currency === 'KRW' || currency === 'IDR' ? 0 : 2,
+  }).format(value);
+  return currency !== fromCurrency ? `≈ ${formatted}` : formatted;
+}
+
 // ── Fetch & render listings ──
 async function fetchAllListings() {
   const { data, error } = await sb
@@ -251,7 +292,7 @@ function renderCard(listing) {
     ? `<img src="${listing.images[0]}" alt="${listing.title}" loading="lazy">`
     : `<span class="fallback">${ICON}</span>`;
 
-  const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: listing.currency || 'USD', minimumFractionDigits: 0 }).format(listing.price);
+  const price = formatPrice(listing.price, listing.currency || 'USD');
 
   return `
     <div class="listing-card">
@@ -323,7 +364,11 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('change', e => {
-  if (e.target.id === 'sortSelect') { activeSort = e.target.value; render(); }
+  if (e.target.id === 'sortSelect')    { activeSort = e.target.value; render(); }
+  if (e.target.id === 'currencySelect') {
+    displayCurrency = e.target.value;
+    render();
+  }
 });
 
 let priceTimer = null;
@@ -353,4 +398,4 @@ function clearPriceFilter() {
 
 // ── Init ──
 initNav();
-render();
+fetchExchangeRates().then(() => render()); // fetch rates then render so prices convert immediately
