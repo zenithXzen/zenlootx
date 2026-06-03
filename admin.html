@@ -361,6 +361,9 @@
             Listings
             <span class="tab-count">${allListings.length}</span>
           </button>
+          <button class="section-tab ${activeSection === 'notifications' ? 'active' : ''}" data-section="notifications">
+            Send Notification
+          </button>
         </div>
         <div id="sectionContent"></div>`;
 
@@ -375,10 +378,11 @@
     }
 
     function renderActiveSection() {
-      if (activeSection === 'applications') renderApplications();
-      if (activeSection === 'reports')      renderReports();
-      if (activeSection === 'disputes')     renderDisputes();
-      if (activeSection === 'listings')     renderListings();
+      if (activeSection === 'applications')  renderApplications();
+      if (activeSection === 'reports')       renderReports();
+      if (activeSection === 'disputes')      renderDisputes();
+      if (activeSection === 'listings')      renderListings();
+      if (activeSection === 'notifications') renderNotificationSender();
     }
 
     // ════════════════════════════════════
@@ -792,6 +796,138 @@
       closeModal();
       await loadApplications();
       renderShell();
+    }
+
+    // ════════════════════════════════════
+    // SECTION 5 — SEND NOTIFICATION
+    // ════════════════════════════════════
+    function renderNotificationSender() {
+      document.getElementById('sectionContent').innerHTML = `
+        <div style="max-width:600px;">
+          <div class="stat-card" style="margin-bottom:24px;padding:16px 20px;">
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.6;">
+              Send a notification to all users (broadcast) or a specific user. It will appear in their
+              <strong style="color:var(--text);">Notifications</strong> page and as a
+              <strong style="color:var(--text);">device push notification</strong> if they enabled it.
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:18px;">
+
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px;">Title</label>
+              <input id="notifTitle" type="text" placeholder="e.g. Your application was approved"
+                style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.18s;"
+                onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px;">Message</label>
+              <textarea id="notifMessage" placeholder="Write your message here…"
+                style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:90px;transition:border-color 0.18s;"
+                onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px;">Type</label>
+                <select id="notifType"
+                  style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;cursor:pointer;">
+                  <option value="announcement">📢 Announcement</option>
+                  <option value="application">📋 Application Update</option>
+                  <option value="listing">🏷️ Listing Update</option>
+                  <option value="general">🔔 General</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px;">Link (optional)</label>
+                <input id="notifLink" type="text" placeholder="/notifications"
+                  style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.18s;"
+                  onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px;">Recipients</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:14px;flex:1;min-width:140px;">
+                  <input type="radio" name="notifTarget" value="all" checked style="accent-color:var(--accent);"> All users
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:14px;flex:1;min-width:140px;">
+                  <input type="radio" name="notifTarget" value="user" style="accent-color:var(--accent);"> Specific user
+                </label>
+              </div>
+            </div>
+
+            <div id="userIdWrap" style="display:none;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px;">User ID</label>
+              <input id="notifUserId" type="text" placeholder="Paste the user's UUID from Supabase"
+                style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.18s;"
+                onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+
+            <div id="notifError" style="font-size:13px;color:var(--danger);display:none;"></div>
+            <div id="notifSuccess" style="font-size:13px;color:var(--success);display:none;"></div>
+
+            <div>
+              <button class="btn btn-primary" id="sendNotifBtn" style="padding:11px 28px;font-size:14px;">
+                Send notification
+              </button>
+            </div>
+          </div>
+        </div>`;
+
+      document.querySelectorAll('input[name="notifTarget"]').forEach(r => {
+        r.addEventListener('change', () => {
+          document.getElementById('userIdWrap').style.display = r.value === 'user' ? '' : 'none';
+        });
+      });
+
+      document.getElementById('sendNotifBtn').addEventListener('click', submitNotification);
+    }
+
+    async function submitNotification() {
+      const btn     = document.getElementById('sendNotifBtn');
+      const errEl   = document.getElementById('notifError');
+      const succEl  = document.getElementById('notifSuccess');
+      const title   = document.getElementById('notifTitle').value.trim();
+      const message = document.getElementById('notifMessage').value.trim();
+      const type    = document.getElementById('notifType').value;
+      const link    = document.getElementById('notifLink').value.trim() || '/notifications';
+      const target  = document.querySelector('input[name="notifTarget"]:checked')?.value;
+      const userId  = target === 'user' ? document.getElementById('notifUserId').value.trim() : null;
+
+      errEl.style.display  = 'none';
+      succEl.style.display = 'none';
+
+      if (!title)   { errEl.textContent = 'Title is required.';   errEl.style.display = ''; return; }
+      if (!message) { errEl.textContent = 'Message is required.'; errEl.style.display = ''; return; }
+      if (target === 'user' && !userId) { errEl.textContent = 'Paste the user UUID.'; errEl.style.display = ''; return; }
+
+      btn.disabled    = true;
+      btn.textContent = 'Sending…';
+
+      const res  = await fetch('/api/admin/send-notification', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, message, type, link, userId }),
+      });
+      const data = await res.json();
+
+      btn.disabled    = false;
+      btn.textContent = 'Send notification';
+
+      if (!res.ok) {
+        errEl.textContent  = data.error || 'Failed to send. Try again.';
+        errEl.style.display = '';
+        return;
+      }
+
+      succEl.textContent  = `Sent! Saved to notifications DB. Push delivered to ${data.pushSent ?? 0} of ${data.totalSubs ?? 0} subscribed device(s).`;
+      succEl.style.display = '';
+      document.getElementById('notifTitle').value   = '';
+      document.getElementById('notifMessage').value = '';
+      document.getElementById('notifLink').value    = '';
     }
 
     // ════════════════════════════════════
