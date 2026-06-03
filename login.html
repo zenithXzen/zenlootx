@@ -21,6 +21,8 @@
       --text-dim:    #9BA8A0;
       --text-faint:  #6B776F;
       --danger:      #EF4444;
+      --warning:     #F5B947;
+      --success:     #22C55E;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,7 +42,6 @@
 
     a { text-decoration: none; color: inherit; }
 
-    /* NAV */
     nav {
       border-bottom: 1px solid var(--border);
       padding: 16px 24px;
@@ -48,23 +49,12 @@
       align-items: center;
       justify-content: space-between;
     }
-
-    .logo {
-      font-family: 'Geist', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
+    .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
     .logo .green { color: var(--accent); }
-
-    .nav-right {
-      font-size: 14px;
-      color: var(--text-dim);
-    }
+    .nav-right { font-size: 14px; color: var(--text-dim); }
     .nav-right a { color: var(--accent); font-weight: 500; }
     .nav-right a:hover { color: var(--accent-hover); }
 
-    /* MAIN */
     main {
       flex: 1;
       display: flex;
@@ -73,29 +63,12 @@
       padding: 48px 24px;
     }
 
-    .card {
-      width: 100%;
-      max-width: 420px;
-    }
+    .card { width: 100%; max-width: 420px; }
 
-    .card-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
+    .card-header { text-align: center; margin-bottom: 32px; }
+    .card-header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .card-header p  { font-size: 14px; color: var(--text-dim); }
 
-    .card-header h1 {
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-
-    .card-header p {
-      font-size: 14px;
-      color: var(--text-dim);
-    }
-
-    /* FORM */
     .form {
       background: var(--bg-surface);
       border: 1px solid var(--border);
@@ -106,23 +79,10 @@
       gap: 20px;
     }
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label  { font-size: 13px; font-weight: 500; color: var(--text-dim); }
 
-    label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-dim);
-    }
-
-    .input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+    .input-wrap { position: relative; display: flex; align-items: center; }
 
     input {
       background: var(--bg-elevated);
@@ -136,60 +96,52 @@
       transition: border-color 0.18s, box-shadow 0.18s;
       width: 100%;
     }
+    input::placeholder { color: var(--text-faint); }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input.error { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
 
     .toggle-pw {
-      position: absolute;
-      right: 12px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px;
-      color: var(--text-faint);
-      display: flex;
-      align-items: center;
-      transition: color 0.16s;
+      position: absolute; right: 12px;
+      background: none; border: none; cursor: pointer;
+      padding: 4px; color: var(--text-faint);
+      display: flex; align-items: center; transition: color 0.16s;
       flex-shrink: 0;
     }
     .toggle-pw:hover { color: var(--text-dim); }
     .toggle-pw svg { width: 18px; height: 18px; }
+    input[type="password"], input[type="text"].pw-field { padding-right: 42px; }
 
-    input[type="password"],
-    input[type="text"].pw-field {
-      padding-right: 42px;
-    }
-
-    input::placeholder { color: var(--text-faint); }
-
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    input.error {
-      border-color: var(--danger);
-      box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
-    }
-
-    .field-hint {
-      font-size: 12px;
-      color: var(--text-faint);
-    }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-    }
+    .divider { height: 1px; background: var(--border); }
 
     .forgot {
       display: flex;
       justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
     }
-    .forgot a {
-      font-size: 13px;
-      color: var(--text-faint);
-      transition: color 0.16s;
-    }
+    .forgot a { font-size: 13px; color: var(--text-faint); transition: color 0.16s; }
     .forgot a:hover { color: var(--text-dim); }
+
+    .attempt-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      display: none;
+    }
+    .attempt-badge.warn { display: inline-block; background: rgba(245,185,71,0.12); color: var(--warning); }
+    .attempt-badge.danger { display: inline-block; background: rgba(239,68,68,0.12); color: var(--danger); }
+
+    .alert {
+      display: none;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 13px;
+    }
+    .alert.visible { display: block; }
+    .alert-error   { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.2);  color: var(--danger); }
+    .alert-warning { background: rgba(245,185,71,0.08); border: 1px solid rgba(245,185,71,0.2); color: var(--warning); }
+    .alert-success { background: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.2);  color: var(--success); }
 
     .btn-submit {
       width: 100%;
@@ -202,33 +154,15 @@
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.18s;
+      transition: background 0.18s, opacity 0.18s;
     }
     .btn-submit:hover { background: var(--accent-hover); }
-    .btn-submit:active { transform: scale(0.99); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .form-footer {
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-faint);
-      margin-top: 4px;
-    }
+    .form-footer { text-align: center; font-size: 13px; color: var(--text-faint); margin-top: 4px; }
     .form-footer a { color: var(--accent); font-weight: 500; }
     .form-footer a:hover { color: var(--accent-hover); }
 
-    /* ERROR MESSAGE */
-    .error-msg {
-      display: none;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.2);
-      border-radius: 8px;
-      padding: 11px 14px;
-      font-size: 13px;
-      color: var(--danger);
-    }
-    .error-msg.visible { display: block; }
-
-    /* FOOTER */
     footer {
       border-top: 1px solid var(--border);
       padding: 20px 24px;
@@ -239,9 +173,7 @@
     footer a { color: var(--text-faint); transition: color 0.16s; }
     footer a:hover { color: var(--text-dim); }
 
-    @media (max-width: 480px) {
-      .form { padding: 24px 20px; }
-    }
+    @media (max-width: 480px) { .form { padding: 24px 20px; } }
   </style>
 </head>
 <body>
@@ -257,38 +189,25 @@
     <div class="card">
       <div class="card-header">
         <h1>Welcome back</h1>
-        <p>Sign in to your ZenLootX account.</p>
+        <p>Sign in with your email or username.</p>
       </div>
 
       <form class="form" id="loginForm" novalidate>
 
-        <div class="error-msg" id="errorMsg">
-          Incorrect credentials. Check your email, username, and password.
-        </div>
+        <div class="alert alert-error"   id="errorMsg"></div>
+        <div class="alert alert-warning" id="warnMsg"></div>
+        <div class="alert alert-success" id="successMsg"></div>
 
         <div class="field">
-          <label for="email">Email address</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="you@example.com"
-            autocomplete="email"
-            required
-          >
-        </div>
-
-        <div class="field">
-          <label for="username">Username</label>
+          <label for="identifier">Email or username</label>
           <input
             type="text"
-            id="username"
-            name="username"
-            placeholder="your_username"
+            id="identifier"
+            name="identifier"
+            placeholder=""
             autocomplete="username"
             required
           >
-          <span class="field-hint">Your unique ZenLootX username.</span>
         </div>
 
         <div class="divider"></div>
@@ -300,29 +219,28 @@
               type="password"
               id="password"
               name="password"
-              placeholder="••••••••"
+              placeholder=""
               autocomplete="current-password"
               class="pw-field"
               required
             >
             <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password visibility">
-              <!-- eye icon (shown when password is hidden) -->
               <svg id="iconShow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12C3.75 7.5 7.5 4.5 12 4.5s8.25 3 9.75 7.5c-1.5 4.5-5.25 7.5-9.75 7.5S3.75 16.5 2.25 12Z"/>
                 <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
               </svg>
-              <!-- eye-off icon (shown when password is visible) -->
               <svg id="iconHide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="display:none">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c1.5 4.5 5.25 7.5 9.75 7.5a10.43 10.43 0 0 0 4.134-.832M6.53 6.53A9.956 9.956 0 0 1 12 4.5c4.5 0 8.25 3 9.75 7.5a10.49 10.49 0 0 1-1.397 2.853M6.53 6.53 3 3m3.53 3.53 11.94 11.94M6.53 6.53A9.955 9.955 0 0 0 9.88 9.88M17.47 17.47A9.955 9.955 0 0 1 14.12 14.12m0 0A3 3 0 0 0 9.88 9.88m4.24 4.24L9.88 9.88"/>
               </svg>
             </button>
           </div>
           <div class="forgot">
-            <a href="/forgot-password">Forgot password?</a>
+            <span class="attempt-badge" id="attemptBadge"></span>
+            <a href="/forgot-password" id="forgotLink">Forgot password?</a>
           </div>
         </div>
 
-        <button type="submit" class="btn-submit">Sign in</button>
+        <button type="submit" class="btn-submit" id="submitBtn">Sign in</button>
 
         <div class="form-footer">
           Don't have an account? <a href="/register">Create one</a>
@@ -337,55 +255,144 @@
   </footer>
 
   <script>
-    const togglePw  = document.getElementById('togglePw');
-    const pwInput   = document.getElementById('password');
-    const iconShow  = document.getElementById('iconShow');
-    const iconHide  = document.getElementById('iconHide');
+    const MAX_ATTEMPTS = 6;
+    let failedAttempts = 0;
+    let locked = false;
 
-    togglePw.addEventListener('click', function () {
-      const visible = pwInput.type === 'text';
-      pwInput.type      = visible ? 'password' : 'text';
-      iconShow.style.display = visible ? '' : 'none';
-      iconHide.style.display = visible ? 'none' : '';
+    // Password toggle
+    const pwInput  = document.getElementById('password');
+    const iconShow = document.getElementById('iconShow');
+    const iconHide = document.getElementById('iconHide');
+    document.getElementById('togglePw').addEventListener('click', () => {
+      const vis  = pwInput.type === 'text';
+      pwInput.type           = vis ? 'password' : 'text';
+      iconShow.style.display = vis ? '' : 'none';
+      iconHide.style.display = vis ? 'none' : '';
     });
 
-    const form = document.getElementById('loginForm');
-    const errorMsg = document.getElementById('errorMsg');
+    function clearAlerts() {
+      ['errorMsg', 'warnMsg', 'successMsg'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = '';
+        el.className = el.className.replace(' visible', '');
+      });
+    }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
 
-      const email    = document.getElementById('email');
-      const username = document.getElementById('username');
-      const password = document.getElementById('password');
+    function showWarning(msg) {
+      const el = document.getElementById('warnMsg');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
 
-      let valid = true;
+    function showSuccess(msg) {
+      const el = document.getElementById('successMsg');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
 
-      [email, username, password].forEach(el => el.classList.remove('error'));
-      errorMsg.classList.remove('visible');
-
-      if (!email.value.trim() || !email.value.includes('@')) {
-        email.classList.add('error');
-        valid = false;
+    function updateAttemptBadge() {
+      const badge = document.getElementById('attemptBadge');
+      if (failedAttempts === 0) {
+        badge.className = 'attempt-badge';
+        return;
       }
-      if (!username.value.trim()) {
-        username.classList.add('error');
-        valid = false;
-      }
-      if (!password.value) {
-        password.classList.add('error');
-        valid = false;
-      }
+      const remaining = MAX_ATTEMPTS - failedAttempts;
+      badge.textContent = `${failedAttempts}/${MAX_ATTEMPTS} attempts`;
+      badge.className = failedAttempts >= 4
+        ? 'attempt-badge danger'
+        : 'attempt-badge warn';
+    }
 
-      if (!valid) {
-        errorMsg.textContent = 'Please fill in all fields correctly.';
-        errorMsg.classList.add('visible');
+    async function triggerReset(identifier) {
+      // Only send reset if identifier looks like an email
+      const email = identifier.includes('@') ? identifier : null;
+
+      locked = true;
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending reset email…';
+
+      clearAlerts();
+
+      if (!email) {
+        showWarning(
+          'Too many failed attempts. Enter your email address above and click "Forgot password?" to reset your password.'
+        );
+        document.getElementById('identifier').value = '';
+        document.getElementById('identifier').focus();
+        btn.textContent = 'Sign in';
+        btn.disabled = false;
+        locked = false;
+        failedAttempts = 0;
+        updateAttemptBadge();
         return;
       }
 
-      // TODO: wire up to your auth backend (Supabase)
-      errorMsg.textContent = 'Incorrect credentials. Check your email, username, and password.';
-      errorMsg.classList.add('visible');
+      try {
+        await fetch('/api/send-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+      } catch {}
+
+      showSuccess(
+        `Too many failed attempts. A password reset link has been sent to ${email}. Check your inbox.`
+      );
+      btn.textContent = 'Reset email sent';
+      document.getElementById('identifier').classList.remove('error');
+      document.getElementById('password').classList.remove('error');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (locked) return;
+
+      clearAlerts();
+
+      const identifier = document.getElementById('identifier').value.trim();
+      const password   = document.getElementById('password').value;
+
+      [document.getElementById('identifier'), document.getElementById('password')]
+        .forEach(el => el.classList.remove('error'));
+
+      if (!identifier) {
+        document.getElementById('identifier').classList.add('error');
+        showError('Enter your email or username.');
+        return;
+      }
+      if (!password) {
+        document.getElementById('password').classList.add('error');
+        showError('Enter your password.');
+        return;
+      }
+
+      // TODO: replace with real Supabase auth check
+      // Simulate a failed attempt for now
+      failedAttempts++;
+      updateAttemptBadge();
+
+      if (failedAttempts >= MAX_ATTEMPTS) {
+        await triggerReset(identifier);
+        return;
+      }
+
+      const remaining = MAX_ATTEMPTS - failedAttempts;
+      document.getElementById('password').classList.add('error');
+
+      if (failedAttempts >= 4) {
+        showError(
+          `Incorrect password. ${remaining} attempt${remaining === 1 ? '' : 's'} left before your account is locked and a reset email is sent.`
+        );
+      } else {
+        showError('Incorrect email/username or password. Please try again.');
+      }
     });
   </script>
 

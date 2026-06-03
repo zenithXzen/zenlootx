@@ -4,3 +4,9 @@ claude.md
 claude_temp.zip
 claude_extracted/
 zen_existing/
+
+# Secrets — never commit these
+.env
+.env.local
+.env.*.local
+.dev.vars

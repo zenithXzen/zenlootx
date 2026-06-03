@@ -1,0 +1,6 @@
+# Copy this file to .dev.vars and fill in your real values.
+# .dev.vars is gitignored — never commit it.
+# These same variables must also be set in Cloudflare Pages → Settings → Environment variables.
+
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
+HMAC_SECRET=your-random-secret-string-here

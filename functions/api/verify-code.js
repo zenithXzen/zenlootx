@@ -18,7 +18,7 @@ export async function onRequestPost(context) {
     );
 
     // Check current window and the previous one (10 min total grace period)
-    const now = Math.floor(Date.now() / 300000);
+    const now = Math.floor(Date.now() / 600000);
     for (const w of [now, now - 1]) {
       const message = `${email}:${code}:${w}`;
       const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));

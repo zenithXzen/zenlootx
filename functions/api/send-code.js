@@ -12,7 +12,7 @@ export async function onRequestPost(context) {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Sign: email + code + 5-min window (stateless, no DB needed)
-    const window = Math.floor(Date.now() / 300000);
+    const window = Math.floor(Date.now() / 600000);
     const message = `${email}:${code}:${window}`;
     const secret = env.HMAC_SECRET || 'zenlootx-default-secret';
     const key = await crypto.subtle.importKey(
@@ -43,7 +43,7 @@ export async function onRequestPost(context) {
             <div style="font-size:36px;font-weight:700;letter-spacing:10px;padding:28px;background:#121814;color:#19C37D;border-radius:8px;text-align:center;border:1px solid #232B26">
               ${code}
             </div>
-            <p style="color:#6B776F;font-size:13px;margin-top:20px">Expires in 5 minutes. If you didn't request this, ignore this email.</p>
+            <p style="color:#6B776F;font-size:13px;margin-top:20px">Expires in 10 minutes. If you didn't request this, ignore this email.</p>
           </div>
         `,
       }),
