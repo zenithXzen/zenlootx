@@ -12,14 +12,20 @@ export async function onRequestPost(context) {
     if (!sessionId || !userId) return Response.json({ error: 'Missing fields' }, { status: 400 });
     if (tokenUserId !== userId) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
+    // Mark as inactive instead of deleting — keeps history
     await fetch(
       `${env.SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionId}&user_id=eq.${userId}`,
       {
-        method: 'DELETE',
+        method: 'PATCH',
         headers: {
           Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
           apikey: env.SUPABASE_SERVICE_KEY,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          is_active:     false,
+          signed_out_at: new Date().toISOString(),
+        }),
       }
     );
 

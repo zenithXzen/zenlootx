@@ -5,44 +5,62 @@ export async function onRequestPost(context) {
     const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
     if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Decode JWT to get user ID
     const payload = JSON.parse(atob(token.split('.')[1]));
     const userId  = payload.sub;
     if (!userId) return Response.json({ error: 'Invalid token' }, { status: 401 });
 
     const { userAgent, deviceName, browser } = await request.json();
+    const now = new Date().toISOString();
 
-    // Upsert session — one row per user agent to avoid duplicates
-    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/user_sessions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-        apikey: env.SUPABASE_SERVICE_KEY,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=ignore-duplicates',
-      },
-      body: JSON.stringify({
-        user_id:     userId,
-        user_agent:  userAgent,
-        device_name: deviceName,
-        browser:     browser,
-        last_active: new Date().toISOString(),
-      }),
-    });
-
-    // Update last_active for existing session with same user_agent
-    await fetch(
-      `${env.SUPABASE_URL}/rest/v1/user_sessions?user_id=eq.${userId}&user_agent=eq.${encodeURIComponent(userAgent)}`,
+    // Check if session already exists for this user_agent
+    const checkRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/user_sessions?user_id=eq.${userId}&user_agent=eq.${encodeURIComponent(userAgent)}&select=id`,
       {
-        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          apikey: env.SUPABASE_SERVICE_KEY,
+        },
+      }
+    );
+    const existing = await checkRes.json();
+
+    if (Array.isArray(existing) && existing.length > 0) {
+      // Reactivate existing session
+      await fetch(
+        `${env.SUPABASE_URL}/rest/v1/user_sessions?user_id=eq.${userId}&user_agent=eq.${encodeURIComponent(userAgent)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            apikey: env.SUPABASE_SERVICE_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            is_active:     true,
+            signed_out_at: null,
+            last_active:   now,
+          }),
+        }
+      );
+    } else {
+      // Create new session record
+      await fetch(`${env.SUPABASE_URL}/rest/v1/user_sessions`, {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
           apikey: env.SUPABASE_SERVICE_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ last_active: new Date().toISOString() }),
-      }
-    );
+        body: JSON.stringify({
+          user_id:     userId,
+          user_agent:  userAgent,
+          device_name: deviceName,
+          browser:     browser,
+          last_active: now,
+          is_active:   true,
+        }),
+      });
+    }
 
     return Response.json({ success: true });
 
