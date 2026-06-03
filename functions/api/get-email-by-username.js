@@ -5,34 +5,21 @@ export async function onRequestPost(context) {
     const { username } = await request.json();
     if (!username) return Response.json({ email: null });
 
-    let page = 1;
-    while (true) {
-      const res = await fetch(
-        `${env.SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=1000`,
-        {
-          headers: {
-            Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-            apikey: env.SUPABASE_SERVICE_KEY,
-          },
-        }
-      );
-      const data = await res.json();
-      if (!data.users || data.users.length === 0) break;
+    // Call the Supabase SQL function directly
+    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/get_email_by_username`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        apikey: env.SUPABASE_SERVICE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ uname: username }),
+    });
 
-      for (const user of data.users) {
-        // Supabase admin API may use either field name
-        const meta = user.user_metadata || user.raw_user_meta_data || {};
-        const storedUsername = meta.username || '';
-        if (storedUsername.toLowerCase() === username.toLowerCase()) {
-          return Response.json({ email: user.email });
-        }
-      }
+    if (!res.ok) return Response.json({ email: null });
 
-      if (data.users.length < 1000) break;
-      page++;
-    }
-
-    return Response.json({ email: null });
+    const email = await res.json();
+    return Response.json({ email: email || null });
 
   } catch {
     return Response.json({ email: null });
