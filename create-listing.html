@@ -95,21 +95,24 @@
     .type-opt-sub   { font-size:11px;color:var(--text-faint);margin-top:2px; }
 
     /* IMAGE UPLOADS */
-    .image-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
-    .img-zone { aspect-ratio:4/3;border:2px dashed var(--border);border-radius:8px;cursor:pointer;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:var(--bg-elevated);transition:border-color 0.16s,background 0.16s; }
-    .img-zone:hover { border-color:var(--accent);background:var(--accent-glow); }
-    .img-zone.has-img { border-style:solid;border-color:var(--accent); }
-    .img-zone input[type="file"] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
-    .img-zone img { width:100%;height:100%;object-fit:cover;border-radius:6px; }
-    .img-zone-icon { font-size:20px;color:var(--text-faint); }
-    .img-zone-label { font-size:11px;color:var(--text-faint); }
-    .img-remove { position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(239,68,68,0.85);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:#fff;font-size:12px;z-index:2; }
-    .img-zone.has-img .img-remove { display:flex; }
-    .cover-badge { position:absolute;bottom:5px;left:5px;background:var(--accent);color:var(--bg-base);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:0.04em;z-index:2;pointer-events:none; }
-    .set-cover-btn { position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;display:none;font-family:'Geist',sans-serif;z-index:2;transition:background 0.16s; }
-    .set-cover-btn:hover { background:rgba(0,0,0,0.8); }
-    .img-zone.has-img .set-cover-btn { display:block; }
-    .img-zone.is-cover .set-cover-btn { display:none; }
+    .uploaded-list { display:flex;flex-direction:column;gap:10px; }
+    .uploaded-item { display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:10px;transition:border-color 0.16s; }
+    .uploaded-item.is-cover { border-color:var(--accent); }
+    .uploaded-thumb { width:72px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--bg-base); }
+    .uploaded-thumb img { width:100%;height:100%;object-fit:cover; }
+    .uploaded-meta { flex:1;min-width:0; }
+    .uploaded-name { font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block; }
+    .uploaded-size { font-size:11px;color:var(--text-faint); }
+    .uploaded-actions { display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap; }
+    .cover-badge { display:inline-flex;align-items:center;gap:4px;background:var(--accent);color:var(--bg-base);font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:0.04em; }
+    .set-cover-btn { background:none;border:1px solid var(--border-hi);color:var(--text-dim);font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;cursor:pointer;font-family:'Geist',sans-serif;transition:all 0.14s; }
+    .set-cover-btn:hover { border-color:var(--accent);color:var(--accent); }
+    .remove-img-btn { background:none;border:1px solid rgba(239,68,68,0.3);color:var(--danger);font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;cursor:pointer;font-family:'Geist',sans-serif;transition:all 0.14s;margin-left:auto;flex-shrink:0; }
+    .remove-img-btn:hover { background:rgba(239,68,68,0.08); }
+
+    .add-photo-zone { display:flex;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border-color 0.16s,background 0.16s;font-size:14px;font-weight:500;color:var(--text-dim);background:var(--bg-elevated);margin-top:4px; }
+    .add-photo-zone:hover { border-color:var(--accent);background:var(--accent-glow);color:var(--accent); }
+    .add-photo-zone input { display:none; }
 
     /* PREVIEW / SIDEBAR */
     .preview-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:88px; }
@@ -242,41 +245,13 @@
               <h2>Screenshots <span style="color:var(--danger)">*</span></h2>
             </div>
             <div class="form-section-body">
-              <div class="image-grid">
-                <div class="img-zone" id="imgZone0">
-                  <input type="file" id="imgInput0" accept="image/jpeg,image/png,image/webp">
-                  <div class="img-zone-icon">📷</div>
-                  <div class="img-zone-label">Photo 1</div>
-                  <button class="img-remove" id="imgRemove0" type="button">✕</button>
-                  <div class="cover-badge" id="coverBadge0" style="display:none;">✦ Cover</div>
-                  <button class="set-cover-btn" id="setCoverBtn0" type="button">Set as cover</button>
-                </div>
-                <div class="img-zone" id="imgZone1">
-                  <input type="file" id="imgInput1" accept="image/jpeg,image/png,image/webp">
-                  <div class="img-zone-icon">📷</div>
-                  <div class="img-zone-label">Photo 2</div>
-                  <button class="img-remove" id="imgRemove1" type="button">✕</button>
-                  <div class="cover-badge" id="coverBadge1" style="display:none;">✦ Cover</div>
-                  <button class="set-cover-btn" id="setCoverBtn1" type="button">Set as cover</button>
-                </div>
-                <div class="img-zone" id="imgZone2">
-                  <input type="file" id="imgInput2" accept="image/jpeg,image/png,image/webp">
-                  <div class="img-zone-icon">📷</div>
-                  <div class="img-zone-label">Photo 3</div>
-                  <button class="img-remove" id="imgRemove2" type="button">✕</button>
-                  <div class="cover-badge" id="coverBadge2" style="display:none;">✦ Cover</div>
-                  <button class="set-cover-btn" id="setCoverBtn2" type="button">Set as cover</button>
-                </div>
-                <div class="img-zone" id="imgZone3">
-                  <input type="file" id="imgInput3" accept="image/jpeg,image/png,image/webp">
-                  <div class="img-zone-icon">📷</div>
-                  <div class="img-zone-label">Photo 4</div>
-                  <button class="img-remove" id="imgRemove3" type="button">✕</button>
-                  <div class="cover-badge" id="coverBadge3" style="display:none;">✦ Cover</div>
-                  <button class="set-cover-btn" id="setCoverBtn3" type="button">Set as cover</button>
-                </div>
-              </div>
-              <span class="hint">JPG, PNG or WebP · Max 5MB each · Tap an uploaded photo to set it as the cover</span>
+              <div class="uploaded-list" id="uploadedList"></div>
+              <label class="add-photo-zone" id="addPhotoZone">
+                <input type="file" id="addPhotoInput" accept="image/jpeg,image/png,image/webp">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Add photo
+              </label>
+              <span class="hint">JPG, PNG or WebP · Max 5MB each · Tap "Set as cover" to choose the thumbnail</span>
             </div>
           </div>
 
@@ -328,7 +303,7 @@
     let currentUser = null;
     let selectedGame = null;
     let selectedType = null;
-    const imgFiles = [null, null, null, null];
+    const imgFiles = []; // { file, dataUrl, name, size }
     let featuredIndex = 0;
 
     const GAME_LABELS = { genshin:'Genshin Impact', mlbb:'Mobile Legends', valorant:'Valorant' };
@@ -390,100 +365,66 @@
         document.getElementById('descCount').textContent = `${descEl.value.length} / 1000`;
       });
 
-      // Image uploads
-      [0,1,2,3].forEach(i => {
-        document.getElementById(`imgInput${i}`).addEventListener('change', e => handleImageSelect(e, i));
-        document.getElementById(`imgRemove${i}`).addEventListener('click', e => { e.stopPropagation(); clearImage(i); });
-        document.getElementById(`setCoverBtn${i}`).addEventListener('click', e => { e.stopPropagation(); setCover(i); });
+      // Image upload via Add photo button
+      document.getElementById('addPhotoInput').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showError('Each image must be under 5MB.'); e.target.value = ''; return; }
+        clearError();
+        const reader = new FileReader();
+        reader.onload = ev => {
+          imgFiles.push({ file, dataUrl: ev.target.result, name: file.name, size: file.size });
+          if (imgFiles.length === 1) featuredIndex = 0;
+          renderUploadedList();
+          e.target.value = '';
+        };
+        reader.readAsDataURL(file);
       });
 
       // Submit
       document.getElementById('submitBtn').addEventListener('click', submitListing);
     }
 
-    function handleImageSelect(e, idx) {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (file.size > 5 * 1024 * 1024) { showError('Each image must be under 5MB.'); e.target.value = ''; return; }
-      clearError();
+    function renderUploadedList() {
+      const list = document.getElementById('uploadedList');
+      list.innerHTML = imgFiles.map((img, i) => `
+        <div class="uploaded-item ${i === featuredIndex ? 'is-cover' : ''}" data-idx="${i}">
+          <div class="uploaded-thumb"><img src="${img.dataUrl}" alt="${img.name}"></div>
+          <div class="uploaded-meta">
+            <span class="uploaded-name">${img.name}</span>
+            <span class="uploaded-size">${(img.size / 1024).toFixed(0)} KB</span>
+            <div class="uploaded-actions">
+              ${i === featuredIndex
+                ? `<span class="cover-badge">✦ Cover</span>`
+                : `<button class="set-cover-btn" data-idx="${i}">Set as cover</button>`}
+              <button class="remove-img-btn" data-idx="${i}">Remove</button>
+            </div>
+          </div>
+        </div>`).join('');
 
-      imgFiles[idx] = file;
-      const zone = document.getElementById(`imgZone${idx}`);
-      const reader = new FileReader();
-      reader.onload = ev => {
-        // Keep existing children structure, just add the image
-        zone.innerHTML = `
-          <img src="${ev.target.result}" alt="preview" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">
-          <button class="img-remove" id="imgRemove${idx}" type="button">✕</button>
-          <div class="cover-badge" id="coverBadge${idx}" style="display:none;">✦ Cover</div>
-          <button class="set-cover-btn" id="setCoverBtn${idx}" type="button">Set as cover</button>`;
-        zone.classList.add('has-img');
-
-        // Re-bind events
-        document.getElementById(`imgRemove${idx}`).addEventListener('click', ev2 => { ev2.stopPropagation(); clearImage(idx); });
-        document.getElementById(`setCoverBtn${idx}`).addEventListener('click', ev2 => { ev2.stopPropagation(); setCover(idx); });
-
-        // Auto-set as cover if it's the first image uploaded
-        if (!imgFiles.some((f, i) => f && i !== idx)) featuredIndex = idx;
-        updateZoneIndicators();
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function clearImage(idx) {
-      imgFiles[idx] = null;
-      const zone = document.getElementById(`imgZone${idx}`);
-      zone.classList.remove('has-img', 'is-cover');
-      zone.innerHTML = `
-        <input type="file" id="imgInput${idx}" accept="image/jpeg,image/png,image/webp">
-        <div class="img-zone-icon">📷</div>
-        <div class="img-zone-label">Photo ${idx + 1}</div>
-        <button class="img-remove" id="imgRemove${idx}" type="button">✕</button>
-        <div class="cover-badge" id="coverBadge${idx}" style="display:none;">✦ Cover</div>
-        <button class="set-cover-btn" id="setCoverBtn${idx}" type="button">Set as cover</button>`;
-      document.getElementById(`imgInput${idx}`).addEventListener('change', e => handleImageSelect(e, idx));
-      document.getElementById(`imgRemove${idx}`).addEventListener('click', e => { e.stopPropagation(); clearImage(idx); });
-      document.getElementById(`setCoverBtn${idx}`).addEventListener('click', e => { e.stopPropagation(); setCover(idx); });
-
-      // If the cover was cleared, pick the next available image
-      if (featuredIndex === idx) {
-        featuredIndex = imgFiles.findIndex(f => f);
-        if (featuredIndex === -1) featuredIndex = 0;
-      }
-      updateZoneIndicators();
-    }
-
-    function setCover(idx) {
-      if (!imgFiles[idx]) return;
-      featuredIndex = idx;
-      updateZoneIndicators();
-    }
-
-    function updateZoneIndicators() {
-      [0,1,2,3].forEach(i => {
-        const zone   = document.getElementById(`imgZone${i}`);
-        const badge  = document.getElementById(`coverBadge${i}`);
-        const setBtn = document.getElementById(`setCoverBtn${i}`);
-        if (!zone || !badge || !setBtn) return;
-
-        if (imgFiles[i] && i === featuredIndex) {
-          zone.classList.add('is-cover');
-          badge.style.display  = 'block';
-          setBtn.style.display = 'none';
-          // Update preview with cover image
-          const reader = new FileReader();
-          reader.onload = ev => { document.getElementById('prevImg').innerHTML = `<img src="${ev.target.result}">`; };
-          reader.readAsDataURL(imgFiles[i]);
-        } else {
-          zone.classList.remove('is-cover');
-          badge.style.display  = 'none';
-          setBtn.style.display = imgFiles[i] ? 'block' : 'none';
-        }
+      // Bind buttons
+      list.querySelectorAll('.set-cover-btn').forEach(btn => {
+        btn.addEventListener('click', () => { featuredIndex = +btn.dataset.idx; renderUploadedList(); updatePreview(); });
+      });
+      list.querySelectorAll('.remove-img-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = +btn.dataset.idx;
+          imgFiles.splice(idx, 1);
+          if (featuredIndex >= imgFiles.length) featuredIndex = Math.max(0, imgFiles.length - 1);
+          renderUploadedList();
+          updatePreview();
+        });
       });
 
-      // If no cover image, clear preview
-      if (!imgFiles[featuredIndex]) {
-        document.getElementById('prevImg').innerHTML = '<span>🎮</span>';
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const prev = document.getElementById('prevImg');
+      if (imgFiles.length && imgFiles[featuredIndex]) {
+        prev.innerHTML = `<img src="${imgFiles[featuredIndex].dataUrl}">`;
+      } else {
+        prev.innerHTML = '<span>🎮</span>';
       }
     }
 
@@ -529,25 +470,25 @@
       if (!selectedType)           { showError('Please select a listing type.'); return; }
       if (!title)                  { showError('Please enter a title.'); return; }
       if (!price || price <= 0)    { showError('Please enter a valid price.'); return; }
-      if (!imgFiles.some(f => f)) { showError('Please upload at least one screenshot.'); return; }
+      if (!imgFiles.length) { showError('Please upload at least one screenshot.'); return; }
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.textContent = 'Uploading images…';
 
-      // Upload images — featured image first
+      // Upload — featured image first, then the rest
+      const uploadOrder = [featuredIndex, ...imgFiles.map((_, i) => i).filter(i => i !== featuredIndex)];
       const imageUrls = [];
-      const uploadOrder = [featuredIndex, 0, 1, 2, 3].filter((v, i, a) => a.indexOf(v) === i);
       for (const i of uploadOrder) {
-        if (!imgFiles[i]) continue;
-        const ext  = imgFiles[i].name.split('.').pop();
+        const img  = imgFiles[i];
+        const ext  = img.name.split('.').pop();
         const path = `${currentUser.id}/${Date.now()}-${i}.${ext}`;
         const { error: upErr } = await sb.storage
           .from('listing-images')
-          .upload(path, imgFiles[i], { upsert: false, contentType: imgFiles[i].type });
+          .upload(path, img.file, { upsert: false, contentType: img.file.type });
 
         if (upErr) {
-          showError(`Failed to upload image ${i+1}. Check your storage bucket setup.`);
+          showError(`Failed to upload image. Check your storage bucket setup.`);
           btn.disabled = false; btn.textContent = 'Publish listing';
           return;
         }
