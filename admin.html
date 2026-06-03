@@ -274,11 +274,29 @@
     // ── Data loading ──
     async function loadApplications() {
       try {
-        const res  = await fetch('/api/admin/get-applications', { headers: { Authorization: `Bearer ${token}` } });
-        const data = await res.json();
-        if (!res.ok) { appError = data.error || `HTTP ${res.status}`; return; }
-        allApps  = data.applications || [];
+        // Query directly via Supabase client — admin RLS policy allows this
+        const { data, error } = await sb
+          .from('seller_applications')
+          .select('*')
+          .order('submitted_at', { ascending: false });
+
+        if (error) { appError = error.message; return; }
+
+        allApps  = (data || []).map(app => ({ ...app, _user: {} }));
         appError = null;
+
+        // Try to enrich with user info (email, username, avatar) via CF function
+        // Silently skipped if CF function is unavailable
+        try {
+          const res = await fetch('/api/admin/get-applications', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const enriched = await res.json();
+            if (enriched.applications?.length) allApps = enriched.applications;
+          }
+        } catch {}
+
       } catch (e) { appError = e.message; }
     }
 
