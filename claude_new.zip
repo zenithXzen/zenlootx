@@ -1,0 +1,54 @@
+# CLAUDE.md — Read This First, Every Session
+
+> Auto-loaded by the AI at the start of each session. After a `/clear`, this is how the AI re-learns the project.
+
+## 🔴 START-OF-SESSION INSTRUCTIONS (do this first)
+1. Read **`memory.md`** — current state + dated change log. What exists *right now*.
+2. Read **`decision.md`** — the important choices already made and *why*. **Do not reverse these without asking the owner.**
+3. Skim **`design-system.md`** and **`database-schema.md`** — the source of truth for styling and data. Match them exactly.
+4. Then proceed.
+
+## 🟢 AFTER MAKING CHANGES
+- Add a new dated entry to **`memory.md`** describing what changed.
+- Significant choice (new service, architecture, tradeoff)? Also record it in **`decision.md`**.
+
+---
+
+## Project Snapshot
+- **Name:** ZenLootX — escrow-based marketplace to buy/sell game accounts (Genshin, MLBB, Valorant).
+- **Owner:** new to coding, strong at marketing, based in the Philippines. Explain simply; confirm before big/irreversible steps.
+
+## Stack
+- **Frontend:** Static HTML/CSS/JS (Vite)
+- **Hosting:** Cloudflare Pages (repo `zenithXzen/zenlootx`)
+- **Domain:** zenlootexchange.com (Namecheap registrar → Cloudflare DNS)
+- **Auth + Database:** Supabase (PostgreSQL)
+- **Email:** Resend (custom 6-digit verification-code flow)
+- **Backend:** Cloudflare Pages Functions (`/functions/api/`)
+
+## Design — match `design-system.md` exactly
+- **Mood:** dark, premium, calm, minimal. Green accent on near-black. Green is a spice, not the main dish.
+- **Backgrounds:** bg-base `#0A0E0C` · bg-surface `#121814` · bg-elevated `#1A211C` · border `#232B26` · border-hi `#33403A`
+- **Accent:** `#19C37D` · hover `#2FD98F` · dim `#0E7A4E` · glow `rgba(25,195,125,0.15)`
+- **Text:** main `#E8EDE9` · dim `#9BA8A0` · faint `#6B776F` (never pure #fff or #000)
+- **Status:** success `#22C55E` · warning `#F5B947` · danger `#EF4444`
+- **Radius:** 12px cards · 8px buttons/inputs · 999px pills
+- **⚠️ FONT — UNRESOLVED:** design-system.md says Space Grotesk (headings) + Inter (body); PROJECT_LOG says Geist. **Confirm with owner before styling.** Use the owner's answer everywhere.
+
+## Data — match `database-schema.md` exactly
+- Core tables (planned): `profiles`, `listings`, `orders`, `payments`, `reviews`, `disputes`, `messages`. Currently only `user_sessions` is built.
+- `listings.attributes` and `listings.images` are `jsonb` (flexible per-game details).
+- Escrow flow lives in `orders`: payment `holding` → seller delivers → buyer confirms → `released`; if wrong → dispute → maybe `refunded`.
+- Build-later (don't build yet): `favorites`, `payouts`, `referrals` (₱50-per-referral program).
+
+## 🔒 Non-Negotiable Security Rules
+- **Never put secrets in code.** All secrets in Cloudflare env vars; `.env` stays in `.gitignore`.
+- **`SUPABASE_SERVICE_KEY` lives ONLY inside Functions — never sent to the browser.** (The anon key is public by design; RLS is what protects the data.)
+- **Enable RLS on EVERY table** — not optional on a money marketplace. Currently only on `user_sessions`; add it to every new table.
+- **Never let a buyer/seller change `escrow_status` directly** — only server/admin logic touches the money fields.
+- **Remove temp/debug endpoints (e.g. `debug-user.js`) before launch.**
+
+## Integrity Rules (owner's hard rules)
+- No fake listings, fake trust badges, fake testimonials, fake partner logos, or fake numbers.
+- If a feature (escrow/reviews) isn't built yet, don't display it.
+- Clean over crowded — when unsure, remove, don't add.

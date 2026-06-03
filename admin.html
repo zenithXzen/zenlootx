@@ -274,7 +274,7 @@
     // ── Init ──
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = '/admin-login'; return; }
+      if (!session) { window.location.href = '/login'; return; }
 
       if (!session.user.app_metadata?.is_admin) {
         document.getElementById('pageContent').innerHTML = `
@@ -288,7 +288,7 @@
 
       token = session.access_token;
       document.getElementById('adminName').textContent = session.user.user_metadata?.username || session.user.email;
-      document.getElementById('signOutBtn').addEventListener('click', async () => { await sb.auth.signOut(); window.location.href = '/admin-login'; });
+      document.getElementById('signOutBtn').addEventListener('click', async () => { await sb.auth.signOut(); window.location.href = '/login'; });
       document.getElementById('modalClose').addEventListener('click', closeModal);
       document.getElementById('reviewOverlay').addEventListener('click', e => { if (e.target === document.getElementById('reviewOverlay')) closeModal(); });
       document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
