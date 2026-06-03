@@ -304,8 +304,21 @@
       try {
         const res  = await fetch('/api/admin/get-reports', { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json();
-        if (!res.ok) { reportsError = data.error || `HTTP ${res.status}`; return; }
-        allReports   = data.reports || [];
+        if (res.ok) {
+          allReports   = data.reports || [];
+          reportsError = null;
+          return;
+        }
+      } catch {}
+
+      // Fallback: query reports table directly via Supabase (no user enrichment)
+      try {
+        const { data, error } = await sb
+          .from('reports')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) { reportsError = error.message; return; }
+        allReports   = (data || []).map(r => ({ ...r, _reporter: {}, _reported: {} }));
         reportsError = null;
       } catch (e) { reportsError = e.message; }
     }
@@ -465,6 +478,16 @@
     // SECTION 2 — USER REPORTS
     // ════════════════════════════════════
     function renderReports() {
+      if (reportsError) {
+        document.getElementById('sectionContent').innerHTML = `
+          <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:28px 24px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:12px;">⚠️</div>
+            <div style="font-size:14px;font-weight:600;color:var(--danger);margin-bottom:6px;">Could not load reports</div>
+            <div style="font-size:13px;color:var(--text-faint);margin-bottom:16px;">${reportsError}</div>
+            <button onclick="retryLoad()" class="btn btn-secondary btn-sm">Retry</button>
+          </div>`;
+        return;
+      }
       const pending  = allReports.filter(r => r.status === 'pending').length;
       const reviewed = allReports.filter(r => r.status === 'reviewed').length;
       const filtered = reportFilter === 'all' ? allReports : allReports.filter(r => r.status === reportFilter);
