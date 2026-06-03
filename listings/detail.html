@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listing — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --success:#22C55E;--warning:#F5B947;--danger:#EF4444;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:1200px;margin:0 auto;padding:0 24px; }
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:24px; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em; }
+    .logo .green { color:var(--accent); }
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s;text-decoration:none; }
+    .btn-primary { background:var(--accent);color:var(--bg-base); }
+    .btn-primary:hover { background:var(--accent-hover); }
+    .btn-secondary { background:transparent;color:var(--text);border-color:var(--border-hi); }
+    .btn-secondary:hover { background:var(--bg-elevated); }
+
+    main { flex:1;padding:40px 0; }
+
+    .back-link { display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-faint);margin-bottom:28px;transition:color 0.16s; }
+    .back-link:hover { color:var(--text-dim); }
+
+    .detail-grid { display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start; }
+
+    /* LEFT */
+    .detail-images { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;overflow:hidden; }
+    .main-img { height:400px;display:flex;align-items:center;justify-content:center;background:var(--bg-elevated);font-size:80px; }
+    .main-img img { width:100%;height:100%;object-fit:cover; }
+    .thumb-row { display:flex;gap:8px;padding:12px; }
+    .thumb { width:72px;height:56px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elevated);overflow:hidden;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;transition:border-color 0.16s; }
+    .thumb:hover, .thumb.active { border-color:var(--accent); }
+    .thumb img { width:100%;height:100%;object-fit:cover; }
+
+    .detail-info-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px; }
+    .detail-info-card h3 { font-size:14px;font-weight:600;margin-bottom:14px;color:var(--text-dim); }
+    .info-row { display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px; }
+    .info-row:last-child { border-bottom:none; }
+    .info-label { color:var(--text-faint); }
+    .info-value { font-weight:500; }
+
+    /* RIGHT (sticky buy panel) */
+    .buy-panel { position:sticky;top:80px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:16px; }
+
+    .panel-tags { display:flex;gap:6px;flex-wrap:wrap; }
+    .game-tag { display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em; }
+    .tag-genshin  { background:rgba(245,185,71,0.12);color:#F5B947; }
+    .tag-mlbb     { background:rgba(59,130,246,0.12);color:#60A5FA; }
+    .tag-valorant { background:rgba(239,68,68,0.12);color:#F87171; }
+    .pill { display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px; }
+    .pill-account { background:rgba(25,195,125,0.1);color:var(--accent); }
+    .pill-items   { background:rgba(168,85,247,0.1);color:#C084FC; }
+    .pill-topup   { background:rgba(245,185,71,0.08);color:#FBBF24; }
+
+    .panel-title { font-size:18px;font-weight:700;letter-spacing:-0.01em;line-height:1.3; }
+    .panel-price { font-size:32px;font-weight:700;letter-spacing:-0.02em; }
+    .panel-price span { font-size:16px;color:var(--text-faint);font-weight:400; }
+
+    .seller-box { display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:12px 14px; }
+    .seller-av-lg { width:40px;height:40px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden; }
+    .seller-av-lg img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+    .seller-info-name { font-size:14px;font-weight:600; }
+    .seller-info-sub  { font-size:12px;color:var(--text-faint); }
+
+    .escrow-note { background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text-dim);line-height:1.55; }
+    .escrow-note strong { color:var(--accent); }
+
+    .btn-buy { width:100%;padding:14px;font-size:16px; }
+
+    .description-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px; }
+    .description-card h3 { font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text-dim); }
+    .description-card p { font-size:14px;color:var(--text-dim);line-height:1.7;white-space:pre-wrap; }
+
+    /* SKELETON */
+    .skeleton { background:var(--bg-elevated);border-radius:6px;animation:shimmer 1.4s infinite; }
+    @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+    footer { border-top:1px solid var(--border);padding:24px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+    .footer-inner p { font-size:13px;color:var(--text-faint); }
+
+    @media (max-width:900px) { .detail-grid { grid-template-columns:1fr; } .buy-panel { position:static; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+        <div id="navActions">
+          <a href="/login" class="btn btn-secondary">Sign in</a>
+          <a href="/register" class="btn btn-primary">Get started</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container" id="mainContent">
+      <!-- Loading skeleton -->
+      <div class="skeleton" style="height:20px;width:120px;border-radius:6px;margin-bottom:28px;"></div>
+      <div class="detail-grid">
+        <div>
+          <div class="detail-images">
+            <div class="main-img skeleton"></div>
+          </div>
+        </div>
+        <div class="buy-panel">
+          <div class="skeleton" style="height:16px;width:80px;border-radius:999px;"></div>
+          <div class="skeleton" style="height:28px;width:100%;border-radius:6px;"></div>
+          <div class="skeleton" style="height:40px;width:60%;border-radius:6px;"></div>
+          <div class="skeleton" style="height:64px;width:100%;border-radius:10px;"></div>
+          <div class="skeleton" style="height:48px;width:100%;border-radius:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p>© 2026 ZenLootX</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://msumlsqfergennhzxqon.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q'
+    );
+
+    const GAME_CONFIG = {
+      genshin:  { label:'Genshin Impact',          tagClass:'tag-genshin',  icon:'✦' },
+      mlbb:     { label:'Mobile Legends: Bang Bang', tagClass:'tag-mlbb',    icon:'⚔' },
+      valorant: { label:'Valorant',                  tagClass:'tag-valorant', icon:'◈' },
+    };
+
+    const TYPE_LABELS = { account:'Account', items:'Items', topup:'Top-up' };
+    const TYPE_PILLS  = { account:'pill-account', items:'pill-items', topup:'pill-topup' };
+
+    const params = new URLSearchParams(window.location.search);
+    const listingId = params.get('id');
+
+    async function load() {
+      if (!listingId) { renderNotFound(); return; }
+
+      const { data: listing, error } = await sb
+        .from('listings')
+        .select('*')
+        .eq('id', listingId)
+        .eq('status', 'active')
+        .single();
+
+      if (error || !listing) { renderNotFound(); return; }
+
+      document.title = `${listing.title} — ZenLootX`;
+      renderListing(listing);
+    }
+
+    function renderNotFound() {
+      document.getElementById('mainContent').innerHTML = `
+        <div style="text-align:center;padding:80px 24px;">
+          <div style="font-size:48px;margin-bottom:20px;">🔍</div>
+          <h2 style="font-size:22px;font-weight:700;margin-bottom:10px;">Listing not found</h2>
+          <p style="color:var(--text-dim);margin-bottom:28px;">This listing may have been sold or removed.</p>
+          <a href="/" class="btn btn-primary">Back to home</a>
+        </div>
+      `;
+    }
+
+    function renderListing(l) {
+      const game   = GAME_CONFIG[l.game] || {};
+      const images = Array.isArray(l.images) ? l.images : [];
+      const price  = new Intl.NumberFormat('en-US', { style:'currency', currency: l.currency || 'USD', minimumFractionDigits:0 }).format(l.price);
+      const attrs  = l.attributes || {};
+      const backUrl = `/listings/${l.game}`;
+
+      // Images
+      const mainImg = images[0]
+        ? `<img src="${images[0]}" alt="${l.title}">`
+        : `<span style="font-size:80px;">${game.icon || '?'}</span>`;
+
+      const thumbs = images.length > 1
+        ? images.map((img, i) => `<div class="thumb${i===0?' active':''}" data-img="${img}"><img src="${img}" alt=""></div>`).join('')
+        : '';
+
+      // Attributes table
+      const attrRows = Object.entries(attrs).map(([k, v]) => `
+        <div class="info-row">
+          <span class="info-label">${k.replace(/_/g,' ')}</span>
+          <span class="info-value">${v}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('mainContent').innerHTML = `
+        <a href="${backUrl}" class="back-link">← Back to ${game.label || 'listings'}</a>
+        <div class="detail-grid">
+
+          <!-- LEFT -->
+          <div>
+            <div class="detail-images">
+              <div class="main-img" id="mainImg">${mainImg}</div>
+              ${thumbs ? `<div class="thumb-row" id="thumbRow">${thumbs}</div>` : ''}
+            </div>
+
+            ${l.description ? `
+              <div class="description-card">
+                <h3>Description</h3>
+                <p>${l.description}</p>
+              </div>
+            ` : ''}
+
+            ${attrRows ? `
+              <div class="detail-info-card">
+                <h3>Details</h3>
+                ${attrRows}
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- RIGHT -->
+          <div class="buy-panel">
+            <div class="panel-tags">
+              <span class="game-tag ${game.tagClass}">${game.label}</span>
+              <span class="pill ${TYPE_PILLS[l.type] || ''}">${TYPE_LABELS[l.type] || l.type}</span>
+            </div>
+
+            <div class="panel-title">${l.title}</div>
+
+            <div class="panel-price">${price} <span>${l.currency || 'USD'}</span></div>
+
+            <div class="seller-box" id="sellerBox">
+              <div class="seller-av-lg" id="sellerAv">?</div>
+              <div>
+                <div class="seller-info-name" id="sellerName">Loading…</div>
+                <div class="seller-info-sub">Seller</div>
+              </div>
+            </div>
+
+            <div class="escrow-note">
+              🔒 <strong>Escrow protected.</strong> Your payment is held safely until you confirm the account or items are as described.
+            </div>
+
+            <button class="btn btn-primary btn-buy" id="buyBtn">Buy now — ${price}</button>
+
+            <div style="text-align:center;font-size:12px;color:var(--text-faint);">
+              Listed ${new Date(l.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+            </div>
+          </div>
+
+        </div>
+      `;
+
+      loadSeller(l.seller_id);
+
+      // Thumbnail switching
+      document.querySelectorAll('.thumb').forEach(t => {
+        t.addEventListener('click', () => {
+          document.querySelectorAll('.thumb').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          document.getElementById('mainImg').innerHTML = `<img src="${t.dataset.img}" alt="">`;
+        });
+      });
+
+      // Buy button
+      document.getElementById('buyBtn').addEventListener('click', async () => {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+          window.location.href = `/login?redirect=/listings/detail?id=${listingId}`;
+          return;
+        }
+        // TODO: wire to orders/escrow flow
+        alert('Order flow coming soon!');
+      });
+    }
+
+    async function loadSeller(sellerId) {
+      const { data: { users } } = await sb.auth.admin?.listUsers?.() || { data: {} };
+      // Fetch seller username from user_sessions or profiles if available
+      // For now show a placeholder — will be replaced with profiles table
+      const av   = document.getElementById('sellerAv');
+      const name = document.getElementById('sellerName');
+      if (av && name) {
+        name.textContent = 'Verified Seller';
+        av.textContent   = '✓';
+      }
+    }
+
+    // Auth nav
+    async function initNav() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+      const user     = session.user;
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const initial  = username.charAt(0).toUpperCase();
+      document.getElementById('navActions').innerHTML = `
+        <a href="/account" class="btn btn-secondary">${initial} · ${username}</a>
+      `;
+    }
+
+    initNav();
+    load();
+  </script>
+
+</body>
+</html>
