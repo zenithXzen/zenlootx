@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:     #0A0E0C;
+      --bg-surface:  #121814;
+      --bg-elevated: #1A211C;
+      --border:      #232B26;
+      --border-hi:   #33403A;
+      --accent:      #19C37D;
+      --accent-hover:#2FD98F;
+      --accent-glow: rgba(25,195,125,0.15);
+      --text:        #E8EDE9;
+      --text-dim:    #9BA8A0;
+      --text-faint:  #6B776F;
+      --danger:      #EF4444;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-base);
+      color: var(--text);
+      font-family: 'Geist', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,14,12,0.88);
+      backdrop-filter: blur(14px);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; gap: 24px;
+    }
+    .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; flex-shrink: 0; }
+    .logo .green { color: var(--accent); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 8px;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: 1px solid transparent; transition: all 0.18s;
+    }
+    .btn-primary  { background: var(--accent); color: var(--bg-base); border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-secondary { background: transparent; color: var(--text); border-color: var(--border-hi); }
+    .btn-secondary:hover { background: var(--bg-elevated); }
+    .btn-danger { background: transparent; color: var(--danger); border-color: rgba(239,68,68,0.3); }
+    .btn-danger:hover { background: rgba(239,68,68,0.08); }
+
+    main { flex: 1; padding: 48px 0; }
+
+    .page-header { margin-bottom: 40px; }
+    .page-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .page-header p  { font-size: 14px; color: var(--text-dim); margin-top: 6px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* PROFILE CARD */
+    .profile-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 80px;
+      margin: 0 auto 16px;
+      cursor: pointer;
+    }
+
+    .avatar-large {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--accent-glow);
+      border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700;
+      color: var(--accent);
+      overflow: hidden;
+      transition: opacity 0.2s;
+    }
+
+    .avatar-large img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .avatar-wrap:hover .avatar-large { opacity: 0.75; }
+
+    .avatar-edit-btn {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg-surface);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .avatar-edit-btn:hover { background: var(--accent-hover); }
+    .avatar-edit-btn svg { width: 12px; height: 12px; color: var(--bg-base); }
+
+    /* USER DROPDOWN */
+    .user-menu { position: relative; }
+    .user-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-elevated); border: 1px solid var(--border-hi);
+      border-radius: 8px; padding: 8px 14px; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text); transition: border-color 0.18s;
+    }
+    .user-btn:hover { border-color: var(--accent); }
+    .user-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent-glow); border: 1.5px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .user-dropdown {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 10px; min-width: 180px; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 200;
+    }
+    .user-dropdown.open { display: block; }
+    .dropdown-email {
+      padding: 12px 16px; font-size: 12px; color: var(--text-faint);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 16px; font-size: 14px; color: var(--text-dim);
+      cursor: pointer; transition: background 0.16s, color 0.16s;
+      text-decoration: none; width: 100%; background: none;
+      border: none; font-family: 'Geist', sans-serif; text-align: left;
+    }
+    .dropdown-item:hover { background: var(--bg-elevated); color: var(--text); }
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+    .dropdown-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    .toggle-pw-btn {
+      position: absolute; right: 12px;
+      background: none; border: none; cursor: pointer;
+      padding: 4px; color: var(--text-faint);
+      display: flex; align-items: center; transition: color 0.16s;
+    }
+    .toggle-pw-btn:hover { color: var(--text-dim); }
+
+    .avatar-hint {
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-top: -8px;
+      margin-bottom: 16px;
+    }
+
+    .avatar-error {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 6px;
+      display: none;
+    }
+    .avatar-error.visible { display: block; }
+
+    .profile-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: var(--text-faint); margin-bottom: 20px; }
+
+    .profile-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: left;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    .meta-row { display: flex; justify-content: space-between; align-items: center; }
+    .meta-label { font-size: 12px; color: var(--text-faint); }
+    .meta-value { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+
+    /* SECTIONS */
+    .sections { display: flex; flex-direction: column; gap: 20px; }
+
+    .section-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-head h2 { font-size: 16px; font-weight: 600; }
+    .section-head p  { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+
+    .section-body { padding: 24px; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label  { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+
+    input {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'Geist', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      width: 100%;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .section-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* DANGER ZONE */
+    .danger-zone {
+      background: rgba(239,68,68,0.04);
+      border: 1px solid rgba(239,68,68,0.15);
+    }
+    .danger-zone .section-head h2 { color: var(--danger); }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-inner p { font-size: 13px; color: var(--text-faint); }
+    .footer-inner a { font-size: 13px; color: var(--text-faint); }
+    .footer-inner a:hover { color: var(--text-dim); }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+        <div id="navActions"></div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <h1>My account</h1>
+        <p>Manage your profile and account settings.</p>
+      </div>
+
+      <div class="grid">
+
+        <!-- PROFILE SIDEBAR -->
+        <div class="profile-card">
+          <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+          <div class="avatar-wrap" id="avatarWrap">
+            <div class="avatar-large" id="avatarLarge">?</div>
+            <div class="avatar-edit-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16H8v-2a2 2 0 01.586-1.414z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="avatar-hint">JPG, PNG or WebP · Max 2MB</div>
+          <div class="avatar-error" id="avatarError"></div>
+          <div class="profile-name"  id="profileName">—</div>
+          <div class="profile-email" id="profileEmail">—</div>
+          <div class="profile-meta">
+            <div class="meta-row">
+              <span class="meta-label">Member since</span>
+              <span class="meta-value" id="memberSince">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Role</span>
+              <span class="meta-value">Buyer</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTIONS -->
+        <div class="sections">
+
+          <!-- Profile info -->
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <h2>Profile information</h2>
+                <p>Your public details on ZenLootX.</p>
+              </div>
+            </div>
+            <div class="section-body" style="display:flex;flex-direction:column;gap:20px;">
+
+              <!-- Username -->
+              <div class="field">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <label style="margin:0;">Username</label>
+                  <button id="editUsernameBtn" class="btn btn-secondary" style="padding:5px 12px;font-size:12px;">Edit</button>
+                </div>
+                <input type="text" id="usernameField" disabled>
+                <div id="usernameEditRow" style="display:none;margin-top:10px;flex-direction:column;gap:8px;">
+                  <input type="text" id="usernameInput" placeholder="new_username">
+                  <div id="usernameHint" style="font-size:12px;color:var(--text-faint);">Only letters, numbers, and underscores. You can only change this once.</div>
+                  <div id="usernameAvailability" style="font-size:12px;display:none;"></div>
+                  <div id="usernameStatus" style="font-size:12px;display:none;"></div>
+                  <div style="display:flex;gap:8px;">
+                    <button id="saveUsernameBtn" class="btn btn-secondary" style="padding:8px 16px;font-size:13px;">Save username</button>
+                    <button id="cancelUsernameBtn" class="btn btn-secondary" style="padding:8px 16px;font-size:13px;color:var(--text-faint);">Cancel</button>
+                  </div>
+                </div>
+                <div id="usernameChangedNote" style="display:none;font-size:12px;color:var(--text-faint);margin-top:6px;">Username can only be changed once.</div>
+              </div>
+
+              <!-- Email -->
+              <div class="field">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <label style="margin:0;">Email address</label>
+                  <button id="editEmailBtn" class="btn btn-secondary" style="padding:5px 12px;font-size:12px;">Edit</button>
+                </div>
+                <input type="email" id="emailField" disabled>
+                <div id="emailEditRow" style="display:none;margin-top:10px;flex-direction:column;gap:8px;">
+                  <input type="email" id="emailInput" placeholder="new@example.com">
+                  <div style="font-size:12px;color:var(--text-faint);">A confirmation link will be sent to your new email address.</div>
+                  <div id="emailStatus" style="font-size:12px;display:none;"></div>
+                  <div style="display:flex;gap:8px;">
+                    <button id="saveEmailBtn" class="btn btn-secondary" style="padding:8px 16px;font-size:13px;">Save email</button>
+                    <button id="cancelEmailBtn" class="btn btn-secondary" style="padding:8px 16px;font-size:13px;color:var(--text-faint);">Cancel</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Security -->
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <h2>Security</h2>
+                <p>Change your password.</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="alert-pw" id="pwError" style="display:none;margin-bottom:16px;padding:10px 14px;border-radius:8px;font-size:13px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#EF4444;"></div>
+              <div id="pwSuccess" style="display:none;margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid rgba(34,197,94,0.2);">
+                <div style="padding:10px 14px;background:rgba(34,197,94,0.08);font-size:13px;color:#22C55E;">
+                  Password updated successfully.
+                </div>
+                <div style="padding:12px 14px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                  <p style="font-size:13px;color:var(--text-dim);">Want to sign out all other devices for security?</p>
+                  <button id="signOutOthersBtn" class="btn btn-danger" style="padding:7px 14px;font-size:13px;">Sign out other devices</button>
+                </div>
+              </div>
+              <div class="field" style="margin-bottom:16px;">
+                <label>Current password</label>
+                <div style="position:relative;display:flex;align-items:center;">
+                  <input type="password" id="oldPassword" autocomplete="current-password" style="padding-right:42px;">
+                  <button type="button" class="toggle-pw-btn" data-target="oldPassword" aria-label="Toggle">
+                    <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12C3.75 7.5 7.5 4.5 12 4.5s8.25 3 9.75 7.5c-1.5 4.5-5.25 7.5-9.75 7.5S3.75 16.5 2.25 12Z"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;display:none;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c1.5 4.5 5.25 7.5 9.75 7.5a10.43 10.43 0 0 0 4.134-.832M6.53 6.53A9.956 9.956 0 0 1 12 4.5c4.5 0 8.25 3 9.75 7.5a10.49 10.49 0 0 1-1.397 2.853M6.53 6.53 3 3m3.53 3.53 11.94 11.94"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>New password</label>
+                  <div style="position:relative;display:flex;align-items:center;">
+                    <input type="password" id="newPassword" autocomplete="new-password" style="padding-right:42px;">
+                    <button type="button" class="toggle-pw-btn" data-target="newPassword" aria-label="Toggle">
+                      <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12C3.75 7.5 7.5 4.5 12 4.5s8.25 3 9.75 7.5c-1.5 4.5-5.25 7.5-9.75 7.5S3.75 16.5 2.25 12Z"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;display:none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c1.5 4.5 5.25 7.5 9.75 7.5a10.43 10.43 0 0 0 4.134-.832M6.53 6.53A9.956 9.956 0 0 1 12 4.5c4.5 0 8.25 3 9.75 7.5a10.49 10.49 0 0 1-1.397 2.853M6.53 6.53 3 3m3.53 3.53 11.94 11.94"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Confirm new password</label>
+                  <div style="position:relative;display:flex;align-items:center;">
+                    <input type="password" id="confirmPassword" autocomplete="new-password" style="padding-right:42px;">
+                    <button type="button" class="toggle-pw-btn" data-target="confirmPassword" aria-label="Toggle">
+                      <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12C3.75 7.5 7.5 4.5 12 4.5s8.25 3 9.75 7.5c-1.5 4.5-5.25 7.5-9.75 7.5S3.75 16.5 2.25 12Z"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;display:none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c1.5 4.5 5.25 7.5 9.75 7.5a10.43 10.43 0 0 0 4.134-.832M6.53 6.53A9.956 9.956 0 0 1 12 4.5c4.5 0 8.25 3 9.75 7.5a10.49 10.49 0 0 1-1.397 2.853M6.53 6.53 3 3m3.53 3.53 11.94 11.94"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-secondary" id="changePasswordBtn">Update password</button>
+            </div>
+          </div>
+
+          <!-- Sessions / Sign out -->
+          <div class="section-card danger-zone">
+            <div class="section-head">
+              <div>
+                <h2>Active sessions</h2>
+                <p>Devices currently signed in to your account.</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div id="sessionCard" style="
+                display:flex;align-items:center;justify-content:space-between;gap:16px;
+                background:var(--bg-elevated);border:1px solid var(--border);
+                border-radius:10px;padding:16px 18px;flex-wrap:wrap;
+              ">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div id="deviceIcon" style="
+                    width:42px;height:42px;border-radius:10px;
+                    background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);
+                    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                  "></div>
+                  <div>
+                    <div id="deviceName" style="font-size:14px;font-weight:600;margin-bottom:2px;"></div>
+                    <div id="deviceMeta" style="font-size:12px;color:var(--text-faint);"></div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                  <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(34,197,94,0.1);color:#22C55E;">
+                    Current
+                  </span>
+                  <button class="btn btn-danger" id="logoutBtn2" style="padding:8px 14px;font-size:13px;">Sign out</button>
+                </div>
+              </div>
+            </div>
+            <div class="section-actions" style="justify-content:space-between;align-items:center;">
+              <p style="font-size:13px;color:var(--text-faint);">Signing out all devices will end every active session.</p>
+              <button class="btn btn-danger" id="logoutAllBtn">Sign out all devices</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p>© 2026 ZenLootX</p>
+        <div style="display:flex;gap:20px;">
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://msumlsqfergennhzxqon.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q'
+    );
+
+    async function logout() {
+      await sb.auth.signOut();
+      window.location.href = '/login';
+    }
+
+    document.getElementById('logoutBtn2').addEventListener('click', logout);
+
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+    const MAX_SIZE_MB   = 2;
+    const MAX_SIZE_B    = MAX_SIZE_MB * 1024 * 1024;
+
+    let currentUserId = null;
+
+    function showAvatarError(msg) {
+      const el = document.getElementById('avatarError');
+      el.textContent = msg;
+      el.classList.add('visible');
+      setTimeout(() => el.classList.remove('visible'), 4000);
+    }
+
+    function setAvatarImage(url) {
+      const el = document.getElementById('avatarLarge');
+      el.innerHTML = `<img src="${url}" alt="Avatar">`;
+    }
+
+    // Trigger file picker on avatar click
+    document.getElementById('avatarWrap').addEventListener('click', () => {
+      document.getElementById('avatarInput').click();
+    });
+
+    document.getElementById('avatarInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Validate type
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        showAvatarError('Only JPG, PNG, or WebP images are allowed.');
+        e.target.value = '';
+        return;
+      }
+
+      // Validate size
+      if (file.size > MAX_SIZE_B) {
+        showAvatarError(`Image must be under ${MAX_SIZE_MB}MB.`);
+        e.target.value = '';
+        return;
+      }
+
+      const avatarEl = document.getElementById('avatarLarge');
+      avatarEl.style.opacity = '0.5';
+
+      const ext      = file.name.split('.').pop();
+      const path     = `${currentUserId}/avatar.${ext}`;
+
+      const { error: uploadError } = await sb.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) {
+        showAvatarError('Upload failed. Please try again.');
+        avatarEl.style.opacity = '1';
+        e.target.value = '';
+        return;
+      }
+
+      const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(path);
+
+      // Save URL to user metadata
+      await sb.auth.updateUser({ data: { avatar_url: publicUrl } });
+
+      setAvatarImage(publicUrl + '?t=' + Date.now());
+      avatarEl.style.opacity = '1';
+      e.target.value = '';
+    });
+
+    // ── Username editing ──
+    function initUsernameEdit(user) {
+      const alreadyChanged = user.user_metadata?.username_changed;
+      const editBtn   = document.getElementById('editUsernameBtn');
+      const editRow   = document.getElementById('usernameEditRow');
+      const changedNote = document.getElementById('usernameChangedNote');
+
+      if (alreadyChanged) {
+        editBtn.style.display = 'none';
+        changedNote.style.display = 'block';
+        return;
+      }
+
+      editBtn.addEventListener('click', () => {
+        editRow.style.display = 'flex';
+        editBtn.style.display = 'none';
+        document.getElementById('usernameInput').value = '';
+        document.getElementById('usernameInput').focus();
+      });
+
+      document.getElementById('cancelUsernameBtn').addEventListener('click', () => {
+        editRow.style.display = 'none';
+        editBtn.style.display = '';
+        document.getElementById('usernameStatus').style.display      = 'none';
+        document.getElementById('usernameAvailability').style.display = 'none';
+      });
+
+      // Real-time availability check as user types
+      let checkTimer = null;
+      document.getElementById('usernameInput').addEventListener('input', () => {
+        const val     = document.getElementById('usernameInput').value.trim();
+        const avail   = document.getElementById('usernameAvailability');
+        clearTimeout(checkTimer);
+        avail.style.display = 'none';
+
+        if (!val || val.length < 3) return;
+        if (!/^[a-zA-Z0-9_]+$/.test(val)) {
+          avail.textContent  = '✕ Only letters, numbers, and underscores.';
+          avail.style.color  = 'var(--danger)';
+          avail.style.display = 'block';
+          return;
+        }
+        if (val === user.user_metadata?.username) {
+          avail.textContent  = '✕ That is already your username.';
+          avail.style.color  = 'var(--danger)';
+          avail.style.display = 'block';
+          return;
+        }
+
+        avail.textContent  = 'Checking…';
+        avail.style.color  = 'var(--text-faint)';
+        avail.style.display = 'block';
+
+        checkTimer = setTimeout(async () => {
+          try {
+            const res  = await fetch('/api/check-username', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: val, userId: user.id }),
+            });
+            const { available, error: err } = await res.json();
+            if (err) {
+              avail.textContent  = `✕ ${err}`;
+              avail.style.color  = 'var(--danger)';
+            } else if (available) {
+              avail.textContent  = '✓ Username is available';
+              avail.style.color  = '#22C55E';
+            } else {
+              avail.textContent  = '✕ Username is already taken';
+              avail.style.color  = 'var(--danger)';
+            }
+          } catch {
+            avail.textContent  = '';
+            avail.style.display = 'none';
+          }
+        }, 500);
+      });
+
+      document.getElementById('saveUsernameBtn').addEventListener('click', async () => {
+        const newUsername = document.getElementById('usernameInput').value.trim();
+        const statusEl   = document.getElementById('usernameStatus');
+        const saveBtn    = document.getElementById('saveUsernameBtn');
+
+        statusEl.style.display = 'none';
+
+        if (!newUsername) {
+          statusEl.textContent  = 'Enter a username.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          return;
+        }
+        if (newUsername === user.user_metadata?.username) {
+          statusEl.textContent  = 'That is already your username.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          return;
+        }
+
+        saveBtn.disabled    = true;
+        saveBtn.textContent = 'Checking…';
+
+        const res  = await fetch('/api/check-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: newUsername, userId: user.id }),
+        });
+        const { available, error: checkErr } = await res.json();
+
+        if (checkErr) {
+          statusEl.textContent  = checkErr;
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          saveBtn.disabled    = false;
+          saveBtn.textContent = 'Save username';
+          return;
+        }
+        if (!available) {
+          statusEl.textContent  = 'That username is already taken.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          saveBtn.disabled    = false;
+          saveBtn.textContent = 'Save username';
+          return;
+        }
+
+        saveBtn.textContent = 'Saving…';
+        const { error: updateErr } = await sb.auth.updateUser({
+          data: { username: newUsername, username_changed: true }
+        });
+
+        if (updateErr) {
+          statusEl.textContent  = 'Failed to save. Try again.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          saveBtn.disabled    = false;
+          saveBtn.textContent = 'Save username';
+          return;
+        }
+
+        document.getElementById('usernameField').value = newUsername;
+        document.getElementById('profileName').textContent = newUsername;
+        editRow.style.display = 'none';
+        editBtn.style.display = 'none';
+        changedNote.style.display = 'block';
+        statusEl.style.display = 'none';
+      });
+    }
+
+    // ── Email editing ──
+    function initEmailEdit() {
+      const editBtn  = document.getElementById('editEmailBtn');
+      const editRow  = document.getElementById('emailEditRow');
+
+      editBtn.addEventListener('click', () => {
+        editRow.style.display = 'flex';
+        editBtn.style.display = 'none';
+        document.getElementById('emailInput').value = '';
+        document.getElementById('emailInput').focus();
+      });
+
+      document.getElementById('cancelEmailBtn').addEventListener('click', () => {
+        editRow.style.display = 'none';
+        editBtn.style.display = '';
+        document.getElementById('emailStatus').style.display = 'none';
+      });
+
+      document.getElementById('saveEmailBtn').addEventListener('click', async () => {
+        const newEmail  = document.getElementById('emailInput').value.trim();
+        const statusEl  = document.getElementById('emailStatus');
+        const saveBtn   = document.getElementById('saveEmailBtn');
+
+        statusEl.style.display = 'none';
+
+        if (!newEmail || !newEmail.includes('@')) {
+          statusEl.textContent  = 'Enter a valid email address.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          return;
+        }
+        if (newEmail === document.getElementById('emailField').value) {
+          statusEl.textContent  = 'That is already your email.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          return;
+        }
+
+        saveBtn.disabled    = true;
+        saveBtn.textContent = 'Sending…';
+
+        const { error } = await sb.auth.updateUser({ email: newEmail });
+
+        if (error) {
+          statusEl.textContent  = error.message || 'Failed to update email.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          saveBtn.disabled    = false;
+          saveBtn.textContent = 'Save email';
+          return;
+        }
+
+        statusEl.textContent  = `Confirmation link sent to ${newEmail}. Click it to confirm your new email.`;
+        statusEl.style.color  = '#22C55E';
+        statusEl.style.display = 'block';
+        saveBtn.disabled    = false;
+        saveBtn.textContent = 'Save email';
+        document.getElementById('cancelEmailBtn').textContent = 'Close';
+      });
+    }
+
+    // Device detection
+    function getDeviceInfo() {
+      const ua = navigator.userAgent;
+
+      // Browser
+      let browser = 'Unknown browser';
+      if (/Edg\//.test(ua))            browser = 'Microsoft Edge';
+      else if (/OPR\/|Opera/.test(ua)) browser = 'Opera';
+      else if (/Chrome\//.test(ua))    browser = 'Chrome';
+      else if (/Firefox\//.test(ua))   browser = 'Firefox';
+      else if (/Safari\//.test(ua))    browser = 'Safari';
+
+      // OS
+      let os = 'Unknown OS';
+      if (/Windows NT/.test(ua))       os = 'Windows';
+      else if (/Mac OS X/.test(ua))    os = 'macOS';
+      else if (/Android/.test(ua))     os = 'Android';
+      else if (/iPhone|iPad/.test(ua)) os = 'iOS';
+      else if (/Linux/.test(ua))       os = 'Linux';
+
+      // Device type
+      let type = 'desktop';
+      if (/Mobi|Android/.test(ua))     type = 'mobile';
+      else if (/Tablet|iPad/.test(ua)) type = 'tablet';
+
+      // Icon SVG
+      const icons = {
+        desktop: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="var(--accent)" stroke-width="1.6" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z"/></svg>`,
+        mobile:  `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="var(--accent)" stroke-width="1.6" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>`,
+        tablet:  `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="var(--accent)" stroke-width="1.6" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5h3m-6.75 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-15a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 4.5v15a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`,
+      };
+
+      return { browser, os, type, icon: icons[type] };
+    }
+
+    function renderDeviceInfo() {
+      const { browser, os, type, icon } = getDeviceInfo();
+      document.getElementById('deviceIcon').innerHTML = icon;
+      document.getElementById('deviceName').textContent = `${browser} on ${os}`;
+      document.getElementById('deviceMeta').textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} · Active now`;
+    }
+
+    renderDeviceInfo();
+
+    document.getElementById('logoutAllBtn').addEventListener('click', async () => {
+      await sb.auth.signOut({ scope: 'global' });
+      window.location.href = '/login';
+    });
+
+    // Password visibility toggles
+    document.querySelectorAll('.toggle-pw-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input   = document.getElementById(btn.dataset.target);
+        const isText  = input.type === 'text';
+        input.type    = isText ? 'password' : 'text';
+        btn.querySelector('.eye-show').style.display = isText ? '' : 'none';
+        btn.querySelector('.eye-hide').style.display = isText ? 'none' : '';
+      });
+    });
+
+    // Change password
+    document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+      const errEl  = document.getElementById('pwError');
+      const sucEl  = document.getElementById('pwSuccess');
+      const oldPw  = document.getElementById('oldPassword').value;
+      const newPw  = document.getElementById('newPassword').value;
+      const confPw = document.getElementById('confirmPassword').value;
+      const btn    = document.getElementById('changePasswordBtn');
+
+      errEl.style.display = 'none';
+      sucEl.style.display = 'none';
+
+      if (!oldPw || !newPw || !confPw) {
+        errEl.textContent   = 'Please fill in all password fields.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (newPw.length < 8) {
+        errEl.textContent   = 'New password must be at least 8 characters.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (newPw !== confPw) {
+        errEl.textContent   = 'New passwords do not match.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (oldPw === newPw) {
+        errEl.textContent   = 'New password must be different from your current password.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled    = true;
+      btn.textContent = 'Updating…';
+
+      // Re-authenticate with old password to verify it
+      const { data: { session } } = await sb.auth.getSession();
+      const email = session.user.email;
+
+      const { error: signInError } = await sb.auth.signInWithPassword({ email, password: oldPw });
+
+      if (signInError) {
+        errEl.textContent   = 'Current password is incorrect.';
+        errEl.style.display = 'block';
+        btn.disabled        = false;
+        btn.textContent     = 'Update password';
+        return;
+      }
+
+      // Update to new password
+      const { error: updateError } = await sb.auth.updateUser({ password: newPw });
+
+
+      if (updateError) {
+        errEl.textContent   = updateError.message || 'Failed to update password. Try again.';
+        errEl.style.display = 'block';
+        btn.disabled        = false;
+        btn.textContent     = 'Update password';
+        return;
+      }
+
+      sucEl.style.display = 'block';
+      btn.textContent     = 'Update password';
+      btn.disabled        = false;
+      document.getElementById('oldPassword').value     = '';
+      document.getElementById('newPassword').value     = '';
+      document.getElementById('confirmPassword').value = '';
+
+      document.getElementById('signOutOthersBtn').onclick = async () => {
+        const ob = document.getElementById('signOutOthersBtn');
+        ob.disabled    = true;
+        ob.textContent = 'Signing out…';
+        await sb.auth.signOut({ scope: 'others' });
+        ob.textContent = 'Done — other devices signed out';
+      };
+    });
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+
+      if (!session) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const user     = session.user;
+      currentUserId  = user.id;
+      const email    = user.email;
+      const username = user.user_metadata?.username || email.split('@')[0];
+      const initial  = username.charAt(0).toUpperCase();
+      const joined   = new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const avatarUrl = user.user_metadata?.avatar_url;
+
+      if (avatarUrl) {
+        setAvatarImage(avatarUrl);
+      } else {
+        document.getElementById('avatarLarge').textContent = initial;
+      }
+
+      document.getElementById('profileName').textContent  = username;
+      document.getElementById('profileEmail').textContent = email;
+      document.getElementById('memberSince').textContent  = joined;
+      document.getElementById('usernameField').value      = username;
+      document.getElementById('emailField').value         = email;
+
+      initUsernameEdit(user);
+      initEmailEdit();
+
+      // Build nav dropdown
+      const avatarHtml = avatarUrl
+        ? `<img src="${avatarUrl}" alt="avatar">`
+        : initial;
+
+      document.getElementById('navActions').innerHTML = `
+        <div class="user-menu" id="userMenu">
+          <button class="user-btn" id="userBtn">
+            <div class="user-avatar">${avatarHtml}</div>
+            ${username}
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <div class="dropdown-email">${email}</div>
+            <a href="/profile" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+              View Profile
+            </a>
+            <a href="/account" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+              My account
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/orders" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>
+              Orders
+            </a>
+            <a href="/messages" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"/></svg>
+              Messages
+            </a>
+            <a href="/notifications" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+              Notifications
+            </a>
+            <a href="/wallet" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/></svg>
+              Wallet
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/sell" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"/></svg>
+              Become a seller
+            </a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger" id="dropdownLogout">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"/></svg>
+              Sign out
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('userBtn').addEventListener('click', () => {
+        document.getElementById('userDropdown').classList.toggle('open');
+      });
+      document.addEventListener('click', (e) => {
+        const menu = document.getElementById('userMenu');
+        if (menu && !menu.contains(e.target)) {
+          document.getElementById('userDropdown').classList.remove('open');
+        }
+      });
+      document.getElementById('dropdownLogout').addEventListener('click', logout);
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
