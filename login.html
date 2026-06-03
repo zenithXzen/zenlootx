@@ -325,10 +325,11 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username }),
         });
+        if (!res.ok) return { email: null, serviceError: true };
         const { email } = await res.json();
-        return email || null;
+        return { email: email || null, serviceError: false };
       } catch {
-        return null;
+        return { email: null, serviceError: true };
       }
     }
 
@@ -362,16 +363,23 @@
         // Resolve email from username if needed
         let email = identifier;
         if (!identifier.includes('@')) {
-          email = await getEmailByUsername(identifier);
-          if (!email) {
-            failedAttempts++;
-            updateAttemptBadge();
-            document.getElementById('identifier').classList.add('error');
-            showError('Username not found.');
+          const result = await getEmailByUsername(identifier);
+          if (result.serviceError) {
+            showError('Unable to reach the server. Please try again or use your email to sign in.');
             btn.disabled    = false;
             btn.textContent = 'Sign in';
             return;
           }
+          if (!result.email) {
+            failedAttempts++;
+            updateAttemptBadge();
+            document.getElementById('identifier').classList.add('error');
+            showError('Username not found. Check your username or sign in with your email.');
+            btn.disabled    = false;
+            btn.textContent = 'Sign in';
+            return;
+          }
+          email = result.email;
         }
 
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
