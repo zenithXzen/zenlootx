@@ -650,21 +650,22 @@
     }
 
     async function dismissReport(reportId, btn) {
-      btn.disabled = true;
+      btn.disabled    = true;
       btn.textContent = 'Saving…';
 
-      const res  = await fetch('/api/admin/dismiss-report', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportId }),
-      });
+      const { error } = await sb
+        .from('reports')
+        .update({ status: 'reviewed' })
+        .eq('id', reportId);
 
-      if (res.ok) {
-        await loadReports();
+      if (!error) {
+        // Update in-memory so we don't need a full reload
+        allReports = allReports.map(r => r.id === reportId ? { ...r, status: 'reviewed' } : r);
         renderShell();
       } else {
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = 'Mark reviewed';
+        alert('Failed: ' + error.message);
       }
     }
 
