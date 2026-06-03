@@ -1046,31 +1046,25 @@
       if (event === 'SIGNED_OUT') window.location.href = '/login';
     });
 
-    // Realtime session monitor — instant sign-out when revoked
-    async function startSessionMonitor() {
+    // Poll every 5 seconds — if this session is revoked, redirect to login immediately
+    async function watchSession() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) return;
+      if (!session) { window.location.href = '/login'; return; }
 
-      const sessionRowId = localStorage.getItem('zlx_session_row');
-      if (!sessionRowId) return;
-
-      sb.channel('session-monitor')
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'user_sessions',
-          filter: `id=eq.${sessionRowId}`,
-        }, async (payload) => {
-          if (payload.new.is_active === false) {
-            localStorage.removeItem('zlx_session_row');
-            await sb.auth.signOut();
-            window.location.href = '/login';
-          }
-        })
-        .subscribe();
+      try {
+        const res = await fetch('/api/check-session', {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        const { active } = await res.json();
+        if (!active) {
+          localStorage.removeItem('zlx_session_row');
+          await sb.auth.signOut({ scope: 'local' });
+          window.location.href = '/login';
+        }
+      } catch {}
     }
 
-    startSessionMonitor();
+    setInterval(watchSession, 5000);
     }
 
     document.getElementById('logoutAllBtn').addEventListener('click', async () => {
