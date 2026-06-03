@@ -302,23 +302,38 @@
 
     async function loadReports() {
       try {
+        // Try CF function first (enriches with email from auth.users)
         const res  = await fetch('/api/admin/get-reports', { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json();
-        if (res.ok) {
-          allReports   = data.reports || [];
+        if (res.ok && data.reports) {
+          allReports   = data.reports;
           reportsError = null;
           return;
         }
       } catch {}
 
-      // Fallback: query reports table directly via Supabase (no user enrichment)
+      // Fallback: query directly + enrich from profiles table
       try {
-        const { data, error } = await sb
+        const { data: reports, error } = await sb
           .from('reports')
           .select('*')
           .order('created_at', { ascending: false });
         if (error) { reportsError = error.message; return; }
-        allReports   = (data || []).map(r => ({ ...r, _reporter: {}, _reported: {} }));
+
+        const raw = reports || [];
+        const ids = [...new Set(raw.flatMap(r => [r.reporter_id, r.reported_user_id].filter(Boolean)))];
+
+        let profileMap = {};
+        if (ids.length) {
+          const { data: profs } = await sb.from('profiles').select('id,username').in('id', ids);
+          (profs || []).forEach(p => { profileMap[p.id] = p; });
+        }
+
+        allReports = raw.map(r => ({
+          ...r,
+          _reporter: profileMap[r.reporter_id]  || {},
+          _reported: profileMap[r.reported_user_id] || {},
+        }));
         reportsError = null;
       } catch (e) { reportsError = e.message; }
     }
@@ -553,8 +568,8 @@
       const icons   = { fraud:'🚨', wrong_listing:'⚠️', communication:'💬', harassment:'🚫', other:'🏳️' };
       const isPending = r.status !== 'reviewed';
 
-      const reporterName  = r._reporter?.username  || r._reporter?.email?.split('@')[0]  || 'Unknown';
-      const reportedName  = r._reported?.username  || r._reported?.email?.split('@')[0]  || 'Unknown user';
+      const reporterName  = r._reporter?.username || r._reporter?.email?.split('@')[0] || r.reporter_id?.slice(0,8)  || 'Unknown';
+      const reportedName  = r._reported?.username || r._reported?.email?.split('@')[0] || r.reported_user_id?.slice(0,8) || 'Unknown';
 
       return `
         <div class="report-card ${!isPending ? 'reviewed' : ''}">

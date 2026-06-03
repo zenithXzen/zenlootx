@@ -26,7 +26,7 @@ export async function onRequestPost({ request, env }) {
         'Content-Type': 'application/json',
         Prefer: 'return=minimal',
       },
-      body: JSON.stringify({ status: 'reviewed', reviewed_at: new Date().toISOString() }),
+      body: JSON.stringify({ status: 'reviewed' }),
     });
 
     if (!res.ok) return Response.json({ error: await res.text() }, { status: res.status });
