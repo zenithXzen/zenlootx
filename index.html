@@ -904,7 +904,7 @@
     // Poll every 5 seconds — check if this session was remotely revoked
     async function watchSession() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = '/login'; return; }
+      if (!session) return;
 
       try {
         const sessionRowId = localStorage.getItem('zlx_session_row');
