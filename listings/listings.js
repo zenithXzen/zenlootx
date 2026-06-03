@@ -89,16 +89,16 @@ document.body.innerHTML = `
           </div>
           <span class="result-count" id="resultCount"></span>
           <select class="sort-select" id="currencySelect" title="Display currency">
-            <option value="PHP">₱ PHP</option>
-            <option value="USD">$ USD</option>
-            <option value="SGD">S$ SGD</option>
-            <option value="MYR">RM MYR</option>
-            <option value="IDR">Rp IDR</option>
-            <option value="THB">฿ THB</option>
-            <option value="JPY">¥ JPY</option>
-            <option value="KRW">₩ KRW</option>
-            <option value="EUR">€ EUR</option>
-            <option value="GBP">£ GBP</option>
+            <option value="PHP">PHP</option>
+            <option value="USD">USD</option>
+            <option value="SGD">SGD</option>
+            <option value="MYR">MYR</option>
+            <option value="IDR">IDR</option>
+            <option value="THB">THB</option>
+            <option value="JPY">JPY</option>
+            <option value="KRW">KRW</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
           </select>
           <select class="sort-select" id="sortSelect">
             <option value="newest">Newest</option>
