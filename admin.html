@@ -267,7 +267,7 @@
     let token = '';
     let activeSection = 'applications';
     let allApps = [], allReports = [], allDisputes = [], allListings = [];
-    let appFilter = 'all', reportFilter = 'all';
+    let appFilter = 'pending', reportFilter = 'pending';
     let rejectOpen = false;
     let appError = null, reportsError = null, disputesError = null, listingsError = null;
 
@@ -467,7 +467,7 @@
         </div>
         <div class="filter-row">
           <div class="filter-tabs">
-            ${['all','pending','approved','rejected'].map(f => `
+            ${['pending','approved','rejected'].map(f => `
               <button class="filter-tab ${appFilter === f ? 'active' : ''}" data-appfilter="${f}">
                 ${f.charAt(0).toUpperCase() + f.slice(1)}
               </button>`).join('')}
@@ -541,7 +541,7 @@
         </div>
         <div class="filter-row">
           <div class="filter-tabs">
-            ${['all','pending','reviewed'].map(f => `
+            ${['pending','reviewed'].map(f => `
               <button class="filter-tab ${reportFilter === f ? 'active' : ''}" data-reportfilter="${f}">
                 ${f.charAt(0).toUpperCase() + f.slice(1)}
               </button>`).join('')}
