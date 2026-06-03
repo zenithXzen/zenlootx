@@ -259,7 +259,7 @@
     const { createClient } = supabase;
     const sb = createClient(
       'https://msumlsqfergennhzxqon.supabase.co',
-      'sb_publishable_xNX8AtbiRiSO18hcKCzoZA_dohV9xzS'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q'
     );
 
     const MAX_ATTEMPTS = 6;
@@ -389,12 +389,27 @@
             return;
           }
 
+          // Check if email is registered to show the right error
+          try {
+            const checkRes = await fetch('/api/check-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email }),
+            });
+            const { exists } = await checkRes.json();
+            if (!exists) {
+              document.getElementById('identifier').classList.add('error');
+              showError('This email is not registered. Create an account first.');
+              return;
+            }
+          } catch {}
+
           document.getElementById('password').classList.add('error');
           const remaining = MAX_ATTEMPTS - failedAttempts;
           if (failedAttempts >= 4) {
             showError(`Incorrect password. ${remaining} attempt${remaining === 1 ? '' : 's'} left before a reset email is sent.`);
           } else {
-            showError('Incorrect email/username or password. Please try again.');
+            showError('Incorrect password. Please try again.');
           }
           return;
         }
