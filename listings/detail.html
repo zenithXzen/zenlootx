@@ -341,15 +341,31 @@
     }
 
     async function loadSeller(sellerId) {
-      const { data: { users } } = await sb.auth.admin?.listUsers?.() || { data: {} };
-      // Fetch seller username from user_sessions or profiles if available
-      // For now show a placeholder — will be replaced with profiles table
-      const av   = document.getElementById('sellerAv');
-      const name = document.getElementById('sellerName');
-      if (av && name) {
-        name.textContent = 'Verified Seller';
-        av.textContent   = '✓';
-      }
+      try {
+        const res = await fetch(`/api/public/profile?id=${sellerId}`);
+        if (!res.ok) return;
+        const seller = await res.json();
+
+        const av   = document.getElementById('sellerAv');
+        const name = document.getElementById('sellerName');
+        const box  = document.getElementById('sellerBox');
+
+        if (av) {
+          av.innerHTML = seller.avatar_url
+            ? `<img src="${seller.avatar_url}" alt="${seller.username}">`
+            : seller.username.charAt(0).toUpperCase();
+        }
+        if (name) name.textContent = seller.username;
+
+        // Make the seller box clickable — opens public profile
+        if (box) {
+          box.style.cursor = 'pointer';
+          box.title = `View ${seller.username}'s profile`;
+          box.addEventListener('click', () => {
+            window.location.href = `/public-profile?id=${sellerId}`;
+          });
+        }
+      } catch {}
     }
 
     // Auth nav

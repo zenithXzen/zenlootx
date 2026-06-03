@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Profile — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --danger:#EF4444;--warning:#F5B947;--success:#22C55E;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:1200px;margin:0 auto;padding:0 20px; }
+
+    /* NAV */
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.9);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:16px; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em; }
+    .logo .green { color:var(--accent); }
+    .back-btn { display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--text-faint);background:none;border:none;cursor:pointer;padding:6px 0;transition:color 0.16s; }
+    .back-btn:hover { color:var(--text); }
+
+    /* BUTTONS */
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s;text-decoration:none;white-space:nowrap; }
+    .btn-primary  { background:var(--accent);color:var(--bg-base);border-color:var(--accent); }
+    .btn-primary:hover  { background:var(--accent-hover); }
+    .btn-secondary { background:transparent;color:var(--text);border-color:var(--border-hi); }
+    .btn-secondary:hover { background:var(--bg-elevated); }
+
+    main { flex:1;padding:32px 0 64px; }
+
+    /* PROFILE HEADER */
+    .profile-header {
+      background:var(--bg-surface);border:1px solid var(--border);
+      border-radius:16px;padding:28px 24px;
+      display:flex;gap:24px;align-items:flex-start;
+      margin-bottom:28px;
+    }
+    .profile-avatar {
+      width:88px;height:88px;flex-shrink:0;border-radius:50%;
+      background:var(--accent-glow);border:2px solid var(--accent);
+      display:flex;align-items:center;justify-content:center;
+      font-size:32px;font-weight:700;color:var(--accent);overflow:hidden;
+    }
+    .profile-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+    .profile-body { flex:1;min-width:0; }
+
+    .username-row { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:2px; }
+    .username-wrap { display:flex;align-items:center;gap:10px;flex-wrap:wrap; }
+    .profile-username { font-size:24px;font-weight:700;letter-spacing:-0.02em; }
+    .verified-badge {
+      display:inline-flex;align-items:center;gap:5px;
+      background:rgba(25,195,125,0.1);border:1px solid rgba(25,195,125,0.25);
+      border-radius:999px;padding:3px 10px;
+      font-size:11px;font-weight:600;color:var(--accent);
+    }
+    .profile-since { font-size:13px;color:var(--text-faint);margin-bottom:16px; }
+
+    .profile-stats { display:flex;gap:28px;margin-bottom:16px; }
+    .stat-num   { font-size:22px;font-weight:700;line-height:1; }
+    .stat-label { font-size:12px;color:var(--text-faint);margin-top:3px; }
+
+    .bio-text { font-size:14px;color:var(--text-dim);line-height:1.65; }
+
+    .report-btn {
+      display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
+      background:none;border:1px solid var(--border);border-radius:8px;
+      padding:6px 12px;font-family:'Geist',sans-serif;font-size:12px;
+      font-weight:500;color:var(--text-faint);cursor:pointer;
+      transition:all 0.16s;
+    }
+    .report-btn:hover { color:var(--danger);border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.06); }
+
+    /* TABS */
+    .tabs { display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px; }
+    .tab { background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:11px 20px;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text-dim);cursor:pointer;transition:color 0.16s,border-color 0.16s; }
+    .tab:hover { color:var(--text); }
+    .tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+
+    /* LISTING CARDS */
+    .listings-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:14px; }
+    .listing-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 0.18s,background 0.18s,box-shadow 0.18s,transform 0.18s;display:flex;flex-direction:column; }
+    .listing-card:hover { border-color:var(--border-hi);background:var(--bg-elevated);box-shadow:0 0 28px var(--accent-glow);transform:translateY(-2px); }
+    .listing-card a { display:flex;flex-direction:column;flex:1;text-decoration:none;color:inherit; }
+    .card-img { height:150px;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden; }
+    .card-img img { width:100%;height:100%;object-fit:cover; }
+    .card-body { padding:12px 14px;flex:1;display:flex;flex-direction:column; }
+    .card-tags { display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap; }
+    .pill { display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px; }
+    .pill-account { background:rgba(25,195,125,0.1);color:var(--accent); }
+    .pill-items   { background:rgba(168,85,247,0.1);color:#C084FC; }
+    .pill-topup   { background:rgba(245,185,71,0.08);color:#FBBF24; }
+    .game-tag { display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em; }
+    .tag-genshin  { background:rgba(245,185,71,0.12);color:#F5B947; }
+    .tag-mlbb     { background:rgba(59,130,246,0.12);color:#60A5FA; }
+    .tag-valorant { background:rgba(239,68,68,0.12);color:#F87171; }
+    .card-title { font-size:13px;font-weight:600;line-height:1.4;margin-bottom:auto;padding-bottom:12px; }
+    .card-footer { display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);margin-top:auto; }
+    .card-price { font-size:18px;font-weight:700; }
+
+    /* EMPTY / SKELETON */
+    .empty-state { display:flex;flex-direction:column;align-items:center;text-align:center;padding:56px 24px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px; }
+    .empty-icon { width:52px;height:52px;border-radius:12px;background:var(--bg-elevated);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px; }
+    .empty-state h3 { font-size:17px;font-weight:600;margin-bottom:6px; }
+    .empty-state p  { font-size:13px;color:var(--text-dim);max-width:320px;line-height:1.65; }
+    .skeleton { background:var(--bg-elevated);border-radius:6px;animation:shimmer 1.4s infinite; }
+    @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+    /* NAV DROPDOWN (shared) */
+    .user-menu { position:relative; }
+    .user-btn { display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;padding:8px 14px;cursor:pointer;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text);transition:border-color 0.18s; }
+    .user-btn:hover { border-color:var(--accent); }
+    .user-avatar { width:26px;height:26px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden; }
+    .user-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+    .user-dropdown { display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:200px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200; }
+    .user-dropdown.open { display:block; }
+    .dropdown-email { padding:12px 16px;font-size:12px;color:var(--text-faint);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .dropdown-item { display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;width:100%;background:none;border:none;font-family:'Geist',sans-serif;text-align:left; }
+    .dropdown-item:hover { background:var(--bg-elevated);color:var(--text); }
+    .dropdown-item.danger { color:var(--danger); }
+    .dropdown-item.danger:hover { background:rgba(239,68,68,0.08); }
+    .dropdown-divider { height:1px;background:var(--border);margin:4px 0; }
+    .dropdown-item svg { width:15px;height:15px;flex-shrink:0; }
+
+    footer { border-top:1px solid var(--border);padding:20px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+    .footer-inner p, .footer-inner a { font-size:13px;color:var(--text-faint); }
+    .footer-inner a:hover { color:var(--text-dim); }
+
+    /* RESPONSIVE */
+    @media (max-width:768px) {
+      .profile-header { flex-direction:column;align-items:center;text-align:center; }
+      .username-row { justify-content:center; }
+      .profile-stats { justify-content:center; }
+      .listings-grid { grid-template-columns:repeat(2,1fr); }
+      .report-btn { display:none; } /* hidden on mobile to avoid clutter — accessible via other means */
+    }
+    @media (max-width:480px) {
+      .listings-grid { grid-template-columns:1fr; }
+      .profile-avatar { width:72px;height:72px;font-size:26px; }
+      .profile-username { font-size:20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+        <div id="navActions">
+          <button class="back-btn" onclick="history.back()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+            Back
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <!-- Profile header skeleton -->
+      <div id="profileWrap">
+        <div class="profile-header">
+          <div class="skeleton" style="width:88px;height:88px;border-radius:50%;flex-shrink:0;"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+            <div class="skeleton" style="height:24px;width:160px;"></div>
+            <div class="skeleton" style="height:13px;width:120px;"></div>
+            <div class="skeleton" style="height:14px;width:80%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" id="tabs" style="display:none;">
+        <button class="tab active" data-tab="listings">Listings</button>
+        <button class="tab"        data-tab="reviews">Reviews</button>
+      </div>
+
+      <div id="panelListings"></div>
+      <div id="panelReviews" hidden>
+        <div class="empty-state">
+          <div class="empty-icon">★</div>
+          <h3>No reviews yet</h3>
+          <p>Reviews from completed trades will appear here once that feature is live.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <p>© 2026 ZenLootX</p>
+        <div style="display:flex;gap:20px;">
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://msumlsqfergennhzxqon.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const GAME_META = { genshin:{cls:'tag-genshin',label:'Genshin'}, mlbb:{cls:'tag-mlbb',label:'MLBB'}, valorant:{cls:'tag-valorant',label:'Valorant'} };
+    const TYPE_META = { account:['pill-account','Account'], items:['pill-items','Items'], topup:['pill-topup','Top-up'] };
+
+    function listingCard(l) {
+      const img = Array.isArray(l.images) && l.images[0]
+        ? `<img src="${l.images[0]}" alt="${l.title}" loading="lazy">`
+        : `<span>🎮</span>`;
+      const price = new Intl.NumberFormat('en-US',{style:'currency',currency:l.currency||'USD',minimumFractionDigits:0}).format(l.price);
+      const gt = GAME_META[l.game] || {cls:'',label:l.game};
+      const [pc,pl] = TYPE_META[l.type] || ['',l.type];
+      return `
+        <div class="listing-card">
+          <a href="/listings/detail?id=${l.id}">
+            <div class="card-img">${img}</div>
+            <div class="card-body">
+              <div class="card-tags">
+                <span class="game-tag ${gt.cls}">${gt.label}</span>
+                <span class="pill ${pc}">${pl}</span>
+              </div>
+              <div class="card-title">${l.title}</div>
+              <div class="card-footer">
+                <div class="card-price">${price}</div>
+              </div>
+            </div>
+          </a>
+        </div>`;
+    }
+
+    async function init() {
+      const sellerId = new URLSearchParams(location.search).get('id');
+      if (!sellerId) { document.getElementById('profileWrap').innerHTML = `<div style="text-align:center;padding:80px 0;color:var(--text-faint);">No seller ID provided.</div>`; return; }
+
+      // Fetch profile + listings + verified seller status in parallel
+      const [profileRes, listingsRes, sellerAppRes] = await Promise.all([
+        fetch(`/api/public/profile?id=${sellerId}`),
+        sb.from('listings').select('id,title,price,currency,type,images,game,created_at').eq('seller_id', sellerId).eq('status','active').order('created_at',{ascending:false}),
+        sb.from('seller_applications').select('status').eq('user_id', sellerId).eq('status','approved').maybeSingle(),
+      ]);
+
+      if (!profileRes.ok) {
+        document.getElementById('profileWrap').innerHTML = `<div style="text-align:center;padding:80px 0;color:var(--text-faint);">Seller not found.</div>`;
+        return;
+      }
+
+      const profile    = await profileRes.json();
+      const listings   = listingsRes.data || [];
+      const isVerified = !!sellerAppRes.data;
+      const joined     = new Date(profile.created_at).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+
+      // Check if the viewer is logged in (for the report button)
+      const { data: { session } } = await sb.auth.getSession();
+      const viewerIsOwner = session?.user?.id === sellerId;
+      const showReport = session && !viewerIsOwner;
+
+      document.getElementById('profileWrap').innerHTML = `
+        <div class="profile-header">
+          <div class="profile-avatar">
+            ${profile.avatar_url ? `<img src="${profile.avatar_url}" alt="${profile.username}">` : profile.username.charAt(0).toUpperCase()}
+          </div>
+          <div class="profile-body">
+            <div class="username-row">
+              <div class="username-wrap">
+                <div class="profile-username">${profile.username}</div>
+                ${isVerified ? `<span class="verified-badge"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg> Verified seller</span>` : ''}
+              </div>
+              ${showReport ? `
+                <button class="report-btn" id="reportBtnEl">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18m0-13.5 4-2.25L11 7.5l4-2.25 4 2.25V17.25l-4-2.25-4 2.25-4-2.25"/></svg>
+                  Report
+                </button>` : ''}
+            </div>
+            <div class="profile-since">Member since ${joined}</div>
+            <div class="profile-stats">
+              <div><div class="stat-num">${listings.length}</div><div class="stat-label">Listings</div></div>
+              <div><div class="stat-num">0</div><div class="stat-label">Reviews</div></div>
+            </div>
+            ${profile.bio ? `<div class="bio-text">${profile.bio}</div>` : ''}
+          </div>
+        </div>`;
+
+      // Wire report button
+      document.getElementById('reportBtnEl')?.addEventListener('click', () => submitReport(sellerId, session.user.id));
+
+      // Show tabs + listings
+      document.getElementById('tabs').style.display = '';
+      document.querySelectorAll('.tab').forEach(t => {
+        t.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          document.getElementById('panelListings').hidden = t.dataset.tab !== 'listings';
+          document.getElementById('panelReviews').hidden  = t.dataset.tab !== 'reviews';
+        });
+      });
+
+      if (!listings.length) {
+        document.getElementById('panelListings').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🏷️</div>
+            <h3>No active listings</h3>
+            <p>This seller doesn't have any active listings right now.</p>
+          </div>`;
+      } else {
+        document.getElementById('panelListings').innerHTML = `<div class="listings-grid">${listings.map(listingCard).join('')}</div>`;
+      }
+
+      // Update page title
+      document.title = `${profile.username} — ZenLootX`;
+
+      // Load nav
+      if (session) initNav(session.user);
+    }
+
+    async function submitReport(reportedId, reporterId) {
+      const reason = prompt('Reason for report (fraud, harassment, wrong listing, other):');
+      if (!reason) return;
+      await sb.from('reports').insert({ reporter_id: reporterId, reported_user_id: reportedId, reason, status: 'pending' });
+      alert('Report submitted. Thank you for helping keep ZenLootX safe.');
+    }
+
+    async function initNav(user) {
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const initial  = username.charAt(0).toUpperCase();
+      const avatar   = user.user_metadata?.avatar_url;
+
+      document.getElementById('navActions').innerHTML = `
+        <div class="user-menu" id="userMenu">
+          <button class="user-btn" id="userBtn">
+            <div class="user-avatar">${avatar ? `<img src="${avatar}">` : initial}</div>
+            ${username}
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <div class="dropdown-email">${user.email}</div>
+            <a href="/profile" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+              My Profile
+            </a>
+            <a href="/account" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+              My account
+            </a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger" id="logoutBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"/></svg>
+              Sign out
+            </button>
+          </div>
+        </div>`;
+
+      document.getElementById('userBtn').addEventListener('click', () => document.getElementById('userDropdown').classList.toggle('open'));
+      document.addEventListener('click', e => { const m = document.getElementById('userMenu'); if (m && !m.contains(e.target)) document.getElementById('userDropdown')?.classList.remove('open'); });
+      document.getElementById('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); window.location.href = '/login'; });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
