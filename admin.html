@@ -702,23 +702,35 @@
     async function loadSignedPhoto(key, path) {
       const box = document.getElementById(`photoBox_${key}`);
       if (!box) return;
-      const res  = await fetch('/api/admin/get-signed-url', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path }),
-      });
-      const data = await res.json();
       box.classList.remove('loading');
-      if (data.url) {
-        box.innerHTML = `<img src="${data.url}" alt="${key}" loading="lazy">`;
+
+      function showPhoto(url) {
+        box.innerHTML = `<img src="${url}" alt="${key}" loading="lazy">`;
         box.addEventListener('click', () => {
-          document.getElementById('lightboxImg').src = data.url;
+          document.getElementById('lightboxImg').src = url;
           document.getElementById('lightbox').classList.add('open');
         });
-      } else {
-        box.innerHTML = `<span class="id-photo-none" style="font-size:11px;">Failed to load</span>`;
-        box.style.cursor = 'default';
       }
+
+      // Try Supabase client directly (requires admin storage RLS policy)
+      try {
+        const { data } = await sb.storage.from('id_documents').createSignedUrl(path, 3600);
+        if (data?.signedUrl) { showPhoto(data.signedUrl); return; }
+      } catch {}
+
+      // Fall back to CF function
+      try {
+        const res  = await fetch('/api/admin/get-signed-url', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path }),
+        });
+        const cfData = await res.json();
+        if (cfData.url) { showPhoto(cfData.url); return; }
+      } catch {}
+
+      box.innerHTML = `<span class="id-photo-none" style="font-size:11px;">Failed to load</span>`;
+      box.style.cursor = 'default';
     }
 
     async function submitAppReview(app, action) {

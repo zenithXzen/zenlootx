@@ -34,7 +34,7 @@ export async function onRequestPost({ request, env }) {
     if (!res.ok) return Response.json({ error: data }, { status: res.status });
 
     const signedUrl = data.signedURL || data.signedUrl || '';
-    return Response.json({ url: `${env.SUPABASE_URL}/storage/v1${signedUrl}` });
+    return Response.json({ url: `${env.SUPABASE_URL}${signedUrl}` });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
