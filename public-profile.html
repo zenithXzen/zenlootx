@@ -251,20 +251,20 @@
 
       // Fetch profile + listings + verified seller status in parallel
       const [profileRes, listingsRes, sellerAppRes] = await Promise.all([
-        fetch(`/api/public/profile?id=${sellerId}`),
+        sb.from('profiles').select('id,username,avatar_url,bio').eq('id', sellerId).single(),
         sb.from('listings').select('id,title,price,currency,type,images,game,created_at').eq('seller_id', sellerId).eq('status','active').order('created_at',{ascending:false}),
         sb.from('seller_applications').select('status').eq('user_id', sellerId).eq('status','approved').maybeSingle(),
       ]);
 
-      if (!profileRes.ok) {
+      if (profileRes.error || !profileRes.data) {
         document.getElementById('profileWrap').innerHTML = `<div style="text-align:center;padding:80px 0;color:var(--text-faint);">Seller not found.</div>`;
         return;
       }
 
-      const profile    = await profileRes.json();
+      const profile    = profileRes.data;
       const listings   = listingsRes.data || [];
       const isVerified = !!sellerAppRes.data;
-      const joined     = new Date(profile.created_at).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      const joined     = '—';
 
       // Check if the viewer is logged in (for the report button)
       const { data: { session } } = await sb.auth.getSession();
