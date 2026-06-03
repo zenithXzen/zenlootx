@@ -390,18 +390,39 @@
     await initNav(session.user);
 
     // Fetch purchases (as buyer)
-    const { data: purchases } = await sb
-      .from('orders')
-      .select('*, listings(title, game), seller_profile:profiles!seller_id(username, avatar_url)')
-      .eq('buyer_id', userId)
-      .order('created_at', { ascending: false });
+    const { data: rawPurchases } = await sb
+      .from('orders').select('*').eq('buyer_id', userId).order('created_at', { ascending: false });
 
     // Fetch sales (as seller)
-    const { data: sales } = await sb
-      .from('orders')
-      .select('*, listings(title, game), buyer_profile:profiles!buyer_id(username, avatar_url)')
-      .eq('seller_id', userId)
-      .order('created_at', { ascending: false });
+    const { data: rawSales } = await sb
+      .from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false });
+
+    // Enrich with listing + profile data
+    async function enrich(orders, role) {
+      if (!orders?.length) return orders || [];
+      const listingIds = [...new Set(orders.map(o => o.listing_id).filter(Boolean))];
+      const userIds    = [...new Set(orders.map(o => role === 'buyer' ? o.seller_id : o.buyer_id).filter(Boolean))];
+
+      const [{ data: listings }, { data: profiles }] = await Promise.all([
+        listingIds.length ? sb.from('listings').select('id,title,game').in('id', listingIds) : { data: [] },
+        userIds.length    ? sb.from('profiles').select('id,username,avatar_url').in('id', userIds) : { data: [] },
+      ]);
+
+      const listingMap = Object.fromEntries((listings || []).map(l => [l.id, l]));
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+
+      return orders.map(o => ({
+        ...o,
+        listings: listingMap[o.listing_id] || null,
+        seller_profile: role === 'buyer' ? (profileMap[o.seller_id] || null) : null,
+        buyer_profile:  role === 'seller' ? (profileMap[o.buyer_id]  || null) : null,
+      }));
+    }
+
+    const [purchases, sales] = await Promise.all([
+      enrich(rawPurchases, 'buyer'),
+      enrich(rawSales,     'seller'),
+    ]);
 
     const buyCount  = purchases?.length || 0;
     const sellCount = sales?.length || 0;
