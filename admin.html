@@ -517,6 +517,27 @@
       document.querySelectorAll('.dismiss-report-btn').forEach(btn => {
         btn.addEventListener('click', () => dismissReport(btn.dataset.id, btn));
       });
+      document.querySelectorAll('.ban-user-btn').forEach(btn => {
+        btn.addEventListener('click', () => adminBanUser(btn.dataset.uid, btn.dataset.name, btn));
+      });
+    }
+
+    async function adminBanUser(userId, username, btn) {
+      const reason = prompt(`Ban reason for ${username} (optional):`);
+      if (reason === null) return;
+      btn.disabled = true; btn.textContent = 'Banning…';
+      const res = await fetch('/api/admin/ban-user', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action: 'ban', reason: reason || null }),
+      });
+      if (res.ok) {
+        btn.textContent = '✓ Banned';
+        btn.style.color = 'var(--success)';
+      } else {
+        btn.disabled = false; btn.textContent = 'Ban user';
+        alert('Failed to ban. Try again.');
+      }
     }
 
     function reportCard(r) {
@@ -551,6 +572,8 @@
           </div>
           <div class="report-right">
             ${isPending ? `<button class="btn btn-secondary btn-sm dismiss-report-btn" data-id="${r.id}">Mark reviewed</button>` : `<span style="font-size:12px;color:var(--text-faint);">Reviewed</span>`}
+            <a href="/public-profile?id=${r.reported_user_id}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:11px;">View profile</a>
+            <button class="btn btn-danger btn-sm ban-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" style="font-size:11px;">Ban user</button>
           </div>
         </div>`;
     }

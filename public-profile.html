@@ -280,7 +280,7 @@
 
       // Fetch profile + listings + verified seller status in parallel
       const [profileRes, listingsRes, sellerAppRes] = await Promise.all([
-        sb.from('profiles').select('id,username,avatar_url,bio,created_at').eq('id', sellerId).single(),
+        sb.from('profiles').select('id,username,avatar_url,bio,created_at,is_banned,ban_reason').eq('id', sellerId).single(),
         sb.from('listings').select('id,title,price,currency,type,images,game,created_at').eq('seller_id', sellerId).eq('status','active').order('created_at',{ascending:false}),
         sb.from('seller_applications').select('status').eq('user_id', sellerId).eq('status','approved').maybeSingle(),
       ]);
@@ -293,33 +293,46 @@
       const profile    = profileRes.data;
       const listings   = listingsRes.data || [];
       const isVerified = !!sellerAppRes.data;
+      const isBanned   = !!profile.is_banned;
       const joined = profile.created_at
         ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
         : '—';
 
-      // Check if the viewer is logged in (for the report button)
+      // Check viewer session
       const { data: { session } } = await sb.auth.getSession();
       const viewerIsOwner = session?.user?.id === sellerId;
-      const showReport = session && !viewerIsOwner;
+      const isAdmin       = session?.user?.app_metadata?.is_admin === true;
+      const showReport    = session && !viewerIsOwner && !isAdmin;
 
       document.getElementById('profileWrap').innerHTML = `
         <div class="profile-header">
-          <div class="profile-avatar">
+          <div class="profile-avatar" style="${isBanned ? 'opacity:0.5;' : ''}">
             ${profile.avatar_url ? `<img src="${profile.avatar_url}" alt="${profile.username}">` : profile.username.charAt(0).toUpperCase()}
           </div>
           <div class="profile-body">
             <div class="username-row">
               <div class="username-wrap">
-                <div class="profile-username">${profile.username}</div>
-                ${isVerified ? `<span class="verified-badge"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg> Verified seller</span>` : ''}
+                <div class="profile-username" style="${isBanned ? 'color:var(--text-faint);' : ''}">${profile.username}</div>
+                ${isVerified && !isBanned ? `<span class="verified-badge"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg> Verified seller</span>` : ''}
+                ${isBanned ? `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;color:#F87171;">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                  Banned
+                </span>` : ''}
               </div>
-              ${showReport ? `
-                <button class="report-btn" id="reportBtnEl">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18m0-13.5 4-2.25L11 7.5l4-2.25 4 2.25V17.25l-4-2.25-4 2.25-4-2.25"/></svg>
-                  Report
-                </button>` : ''}
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${isAdmin && !viewerIsOwner ? `
+                  <button id="banBtn" style="display:inline-flex;align-items:center;gap:5px;flex-shrink:0;background:none;border:1px solid ${isBanned ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'};border-radius:8px;padding:6px 12px;font-family:'Geist',sans-serif;font-size:12px;font-weight:600;color:${isBanned ? 'var(--success)' : '#F87171'};cursor:pointer;transition:all 0.16s;">
+                    ${isBanned ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg> Unban user` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg> Ban user`}
+                  </button>` : ''}
+                ${showReport ? `
+                  <button class="report-btn" id="reportBtnEl">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18m0-13.5 4-2.25L11 7.5l4-2.25 4 2.25V17.25l-4-2.25-4 2.25-4-2.25"/></svg>
+                    Report
+                  </button>` : ''}
+              </div>
             </div>
             <div class="profile-since">Member since ${joined}</div>
+            ${isBanned && profile.ban_reason ? `<div style="font-size:12px;color:#F87171;margin-bottom:8px;">Ban reason: ${profile.ban_reason}</div>` : ''}
             <div class="profile-stats">
               <div><div class="stat-num">${listings.length}</div><div class="stat-label">Listings</div></div>
               <div><div class="stat-num">0</div><div class="stat-label">Reviews</div></div>
@@ -327,6 +340,9 @@
             ${profile.bio ? `<div class="bio-text">${profile.bio}</div>` : ''}
           </div>
         </div>`;
+
+      // Wire ban button
+      document.getElementById('banBtn')?.addEventListener('click', () => handleBan(sellerId, isBanned, session.access_token));
 
       // Wire report button
       document.getElementById('reportBtnEl')?.addEventListener('click', () => openReportModal(sellerId, session.user.id));
@@ -358,6 +374,35 @@
 
       // Load nav
       if (session) initNav(session.user);
+    }
+
+    async function handleBan(userId, currentlyBanned, accessToken) {
+      const action = currentlyBanned ? 'unban' : 'ban';
+      let reason = null;
+
+      if (!currentlyBanned) {
+        reason = window.prompt('Ban reason (optional — visible to you in admin):');
+        if (reason === null) return; // cancelled
+      } else {
+        if (!window.confirm('Unban this user? Their listings will be restored.')) return;
+      }
+
+      const btn = document.getElementById('banBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Processing…'; }
+
+      const res = await fetch('/api/admin/ban-user', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action, reason: reason || null }),
+      });
+
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = currentlyBanned ? 'Unban user' : 'Ban user'; }
+      }
     }
 
     function openReportModal(reportedId, reporterId) {

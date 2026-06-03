@@ -329,6 +329,10 @@
 
       if (!isSeller) { window.location.href = '/sell'; return; }
 
+      // Banned users cannot list
+      const { data: _prof } = await sb.from('profiles').select('is_banned').eq('id', currentUser.id).single();
+      if (_prof?.is_banned) { window.location.href = '/?banned=1'; return; }
+
       await initNav(currentUser, isSeller);
       bindEvents();
     }
