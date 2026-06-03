@@ -430,15 +430,15 @@
     }
 
     function updatePreview() {
+      // Image
       const prev = document.getElementById('prevImg');
       if (imgFiles.length && imgFiles[featuredIndex]) {
         prev.innerHTML = `<img src="${imgFiles[featuredIndex].dataUrl}">`;
       } else {
         prev.innerHTML = '<span>🎮</span>';
       }
-    }
 
-    function updatePreview() {
+      // Title / price / game tag
       const title    = document.getElementById('f_title').value.trim();
       const price    = document.getElementById('f_price').value;
       const currency = document.getElementById('f_currency').value;
@@ -452,7 +452,7 @@
 
       const prevGame = document.getElementById('prevGame');
       if (selectedGame) {
-        prevGame.textContent  = GAME_LABELS[selectedGame];
+        prevGame.textContent   = GAME_LABELS[selectedGame];
         prevGame.style.cssText = GAME_TAG_STYLE[selectedGame];
         prevGame.style.display = 'inline-flex';
       } else {
