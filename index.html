@@ -559,28 +559,145 @@
       .cta-banner { padding: 40px 24px; }
       .cta-banner h2 { font-size: 24px; }
     }
+
+    /* HAMBURGER */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 40px; height: 40px;
+      background: none; border: none;
+      cursor: pointer; padding: 8px;
+      border-radius: 8px;
+      transition: background 0.16s;
+      flex-shrink: 0;
+    }
+    .hamburger:hover { background: var(--bg-elevated); }
+    .hamburger span {
+      display: block; width: 20px; height: 2px;
+      background: var(--text); border-radius: 2px;
+      transition: transform 0.25s, opacity 0.25s, width 0.25s;
+      transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 57px; left: 0; right: 0; bottom: 0;
+      background: var(--bg-base);
+      z-index: 99;
+      overflow-y: auto;
+      padding: 8px 0 32px;
+      border-top: 1px solid var(--border);
+      animation: menuIn 0.2s ease;
+    }
+    @keyframes menuIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    .mobile-menu.open { display: block; }
+
+    .mobile-menu-section {
+      padding: 8px 20px 4px;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-faint);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .mobile-menu-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px;
+      font-size: 15px; font-weight: 500;
+      color: var(--text-dim);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mobile-menu-item:active { background: var(--bg-elevated); }
+    .mobile-menu-item .mi-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .mobile-menu-item .mi-text { display: flex; flex-direction: column; }
+    .mobile-menu-item .mi-label { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .mobile-menu-item .mi-sub   { font-size: 12px; color: var(--text-faint); margin-top: 1px; }
+    .mobile-menu-divider { height: 1px; background: var(--border); margin: 8px 20px; }
+
+    .mobile-menu-cta {
+      padding: 16px 20px 0;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .mobile-menu-cta .btn { justify-content: center; padding: 13px 20px; font-size: 15px; }
+
+    @media (max-width: 640px) {
+      .hamburger { display: flex; }
+      .nav-actions .btn { display: none; }
+    }
   </style>
 </head>
 <body>
 
   <!-- NAV -->
-  <nav>
+  <nav id="mainNav">
     <div class="container">
       <div class="nav-inner">
         <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
-        <ul class="nav-links">
-          <li><a href="#games">Browse</a></li>
-          <li><a href="#games">Games</a></li>
-          <li><a href="#how">How it works</a></li>
-          <li><a href="#sell">Sell</a></li>
-        </ul>
         <div class="nav-actions" id="navActions">
           <a href="/login"    class="btn btn-secondary">Sign in</a>
           <a href="/register" class="btn btn-primary">Get started</a>
         </div>
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-section">Browse</div>
+    <a href="/listings/genshin" class="mobile-menu-item">
+      <div class="mi-icon">🌸</div>
+      <div class="mi-text">
+        <span class="mi-label">Genshin Impact</span>
+        <span class="mi-sub">Accounts, items & top-ups</span>
+      </div>
+    </a>
+    <a href="/listings/mlbb" class="mobile-menu-item">
+      <div class="mi-icon">⚔️</div>
+      <div class="mi-text">
+        <span class="mi-label">Mobile Legends</span>
+        <span class="mi-sub">Accounts, skins & top-ups</span>
+      </div>
+    </a>
+    <a href="/listings/valorant" class="mobile-menu-item">
+      <div class="mi-icon">🎯</div>
+      <div class="mi-text">
+        <span class="mi-label">Valorant</span>
+        <span class="mi-sub">Accounts, skins & agents</span>
+      </div>
+    </a>
+
+    <div class="mobile-menu-divider"></div>
+    <div class="mobile-menu-section">Sellers</div>
+    <a href="/sell" class="mobile-menu-item">
+      <div class="mi-icon">🏪</div>
+      <div class="mi-text">
+        <span class="mi-label">Become a seller</span>
+        <span class="mi-sub">Apply to list your accounts</span>
+      </div>
+    </a>
+
+    <div class="mobile-menu-divider"></div>
+    <div id="mobileMenuAuth">
+      <div class="mobile-menu-cta">
+        <a href="/register" class="btn btn-primary">Get started</a>
+        <a href="/login"    class="btn btn-secondary">Sign in</a>
+      </div>
+    </div>
+  </div>
 
   <!-- HERO -->
   <section class="hero">
@@ -959,6 +1076,63 @@
       const s = (b64 + p).replace(/-/g, '+').replace(/_/g, '/');
       return Uint8Array.from(atob(s), c => c.charCodeAt(0));
     }
+
+    // ── Hamburger ──
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileMenu   = document.getElementById('mobileMenu');
+
+    hamburgerBtn.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburgerBtn.classList.toggle('open', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    // Close on link tap
+    mobileMenu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburgerBtn.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+
+    // Update mobile menu auth section when logged in
+    async function updateMobileMenuAuth() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+      const username = session.user.user_metadata?.username || session.user.email.split('@')[0];
+      const avatar   = session.user.user_metadata?.avatar_url;
+      const initial  = username.charAt(0).toUpperCase();
+      document.getElementById('mobileMenuAuth').innerHTML = `
+        <div class="mobile-menu-divider"></div>
+        <div class="mobile-menu-section">Account</div>
+        <a href="/profile" class="mobile-menu-item">
+          <div class="mi-icon" style="background:var(--accent-glow);border-color:rgba(25,195,125,0.3);overflow:hidden;">
+            ${avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">` : `<span style="font-size:16px;font-weight:700;color:var(--accent);">${initial}</span>`}
+          </div>
+          <div class="mi-text">
+            <span class="mi-label">${username}</span>
+            <span class="mi-sub">View your profile</span>
+          </div>
+        </a>
+        <a href="/notifications" class="mobile-menu-item">
+          <div class="mi-icon">🔔</div>
+          <div class="mi-text"><span class="mi-label">Notifications</span></div>
+        </a>
+        <a href="/account" class="mobile-menu-item">
+          <div class="mi-icon">⚙️</div>
+          <div class="mi-text"><span class="mi-label">Settings</span></div>
+        </a>
+        <div class="mobile-menu-cta">
+          <button class="btn btn-secondary" id="mobileLogoutBtn">Sign out</button>
+        </div>`;
+      document.getElementById('mobileLogoutBtn')?.addEventListener('click', async () => {
+        localStorage.removeItem('zlx_session_row');
+        await sb.auth.signOut();
+        window.location.href = '/login';
+      });
+    }
+    updateMobileMenuAuth();
 
     // Auto sign-out if session revoked remotely
     sb.auth.onAuthStateChange((event) => {
