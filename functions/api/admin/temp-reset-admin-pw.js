@@ -1,7 +1,9 @@
 // TEMPORARY — delete this file after use
-export async function onRequestPost({ request, env }) {
+export async function onRequestGet({ request, env }) {
   try {
-    const { secret, newPassword } = await request.json();
+    const url = new URL(request.url);
+    const secret = url.searchParams.get('secret');
+    const newPassword = url.searchParams.get('pw');
 
     if (secret !== 'zenloot-reset-2026') {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
