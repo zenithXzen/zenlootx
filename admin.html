@@ -240,10 +240,10 @@
 
     let token = '';
     let activeSection = 'applications';
-    let allApps = [], allReports = [], allDisputes = [];
+    let allApps = [], allReports = [], allDisputes = [], allListings = [];
     let appFilter = 'all', reportFilter = 'all';
     let rejectOpen = false;
-    let appError = null, reportsError = null, disputesError = null;
+    let appError = null, reportsError = null, disputesError = null, listingsError = null;
 
     // ── Init ──
     async function init() {
@@ -267,7 +267,7 @@
       document.getElementById('reviewOverlay').addEventListener('click', e => { if (e.target === document.getElementById('reviewOverlay')) closeModal(); });
       document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
 
-      await Promise.all([loadApplications(), loadReports(), loadDisputes()]);
+      await Promise.all([loadApplications(), loadReports(), loadDisputes(), loadListings()]);
       renderShell();
     }
 
@@ -320,8 +320,20 @@
       } catch (e) { disputesError = e.message; }
     }
 
+    async function loadListings() {
+      try {
+        const { data, error } = await sb
+          .from('listings')
+          .select('id, title, price, currency, game, type, status, created_at, seller_id')
+          .order('created_at', { ascending: false });
+        if (error) { listingsError = error.message; return; }
+        allListings   = data || [];
+        listingsError = null;
+      } catch (e) { listingsError = e.message; }
+    }
+
     async function retryLoad() {
-      await Promise.all([loadApplications(), loadReports(), loadDisputes()]);
+      await Promise.all([loadApplications(), loadReports(), loadDisputes(), loadListings()]);
       renderShell();
     }
 
@@ -345,6 +357,10 @@
             Disputes
             <span class="tab-count ${openDisputes > 0 ? 'has-items' : ''}">${openDisputes}</span>
           </button>
+          <button class="section-tab ${activeSection === 'listings' ? 'active' : ''}" data-section="listings">
+            Listings
+            <span class="tab-count">${allListings.length}</span>
+          </button>
         </div>
         <div id="sectionContent"></div>`;
 
@@ -362,6 +378,7 @@
       if (activeSection === 'applications') renderApplications();
       if (activeSection === 'reports')      renderReports();
       if (activeSection === 'disputes')     renderDisputes();
+      if (activeSection === 'listings')     renderListings();
     }
 
     // ════════════════════════════════════
@@ -775,6 +792,71 @@
       closeModal();
       await loadApplications();
       renderShell();
+    }
+
+    // ════════════════════════════════════
+    // SECTION 4 — LISTINGS
+    // ════════════════════════════════════
+    function renderListings() {
+      const GAME_LABEL = { genshin:'Genshin', mlbb:'MLBB', valorant:'Valorant' };
+      const TYPE_LABEL = { account:'Account', items:'Items', topup:'Top-up' };
+
+      document.getElementById('sectionContent').innerHTML = `
+        <div class="stats-row stats-row-3">
+          <div class="stat-card"><div class="stat-card-num">${allListings.filter(l=>l.status==='active').length}</div><div class="stat-card-label">Active</div></div>
+          <div class="stat-card"><div class="stat-card-num">${allListings.filter(l=>l.status!=='active').length}</div><div class="stat-card-label">Inactive / other</div></div>
+          <div class="stat-card"><div class="stat-card-num">${allListings.length}</div><div class="stat-card-label">Total listings</div></div>
+        </div>
+        ${listingsError ? `<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:20px 24px;font-size:14px;color:var(--danger);">${listingsError}</div>` : ''}
+        <div class="card-list">
+          ${allListings.length ? allListings.map(l => {
+            const price = new Intl.NumberFormat('en-US',{style:'currency',currency:l.currency||'USD',minimumFractionDigits:0}).format(l.price);
+            const date  = new Date(l.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+            const badgeCls = l.status === 'active' ? 'badge-approved' : 'badge-reviewed';
+            return `
+              <div class="app-card" id="listingRow_${l.id}">
+                <div class="app-info">
+                  <div class="app-name">${l.title}</div>
+                  <div class="app-meta">
+                    <div class="app-meta-item"><span>Game:</span> ${GAME_LABEL[l.game]||l.game}</div>
+                    <div class="app-meta-item"><span>Type:</span> ${TYPE_LABEL[l.type]||l.type}</div>
+                    <div class="app-meta-item"><span>Price:</span> ${price}</div>
+                    <div class="app-meta-item"><span>Created:</span> ${date}</div>
+                  </div>
+                </div>
+                <div class="app-right">
+                  <span class="status-badge ${badgeCls}">${l.status}</span>
+                  <button class="btn btn-danger btn-sm delete-listing-btn" data-id="${l.id}">Delete</button>
+                </div>
+              </div>`;
+          }).join('') : `<div class="empty-state"><div class="empty-icon">🏷️</div><h3>No listings</h3><p>No listings in the database.</p></div>`}
+        </div>`;
+
+      document.querySelectorAll('.delete-listing-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteListing(btn.dataset.id, btn));
+      });
+    }
+
+    async function deleteListing(id, btn) {
+      if (!confirm('Delete this listing? This cannot be undone.')) return;
+      btn.disabled    = true;
+      btn.textContent = 'Deleting…';
+
+      const res = await fetch('/api/admin/delete-listing', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: id }),
+      });
+
+      if (res.ok) {
+        allListings = allListings.filter(l => l.id !== id);
+        renderShell();
+      } else {
+        btn.disabled    = false;
+        btn.textContent = 'Delete';
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed to delete. Try again.');
+      }
     }
 
     function closeModal() {
