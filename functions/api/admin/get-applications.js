@@ -25,10 +25,17 @@ export async function onRequestGet({ request, env }) {
       headers: {
         Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
         apikey: env.SUPABASE_SERVICE_KEY,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      return Response.json({ error: `DB error ${res.status}: ${errText}` }, { status: res.status });
+    }
+
     const data = await res.json();
-    if (!res.ok) return Response.json({ error: data }, { status: res.status });
 
     const usersRes  = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users?per_page=1000`, {
       headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
