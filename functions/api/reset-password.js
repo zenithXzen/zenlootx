@@ -37,9 +37,37 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Reset link is invalid or has expired.' }, { status: 400 });
     }
 
-    // TODO: update password in Supabase
-    // const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY)
-    // await supabase.auth.admin.updateUserByEmail(email, { password })
+    // Look up user by email to get their ID
+    const lookupRes = await fetch(
+      `${env.SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          apikey: env.SUPABASE_SERVICE_KEY,
+        },
+      }
+    );
+    const lookupData = await lookupRes.json();
+    const userId = lookupData?.users?.[0]?.id;
+    if (!userId) {
+      return Response.json({ error: 'Account not found.' }, { status: 404 });
+    }
+
+    // Update password via Supabase admin API
+    const updateRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        apikey: env.SUPABASE_SERVICE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }),
+    });
+
+    if (!updateRes.ok) {
+      const err = await updateRes.json();
+      return Response.json({ error: err?.msg || 'Failed to update password.' }, { status: 500 });
+    }
 
     return Response.json({ success: true });
 
