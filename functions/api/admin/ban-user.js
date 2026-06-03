@@ -26,28 +26,48 @@ export async function onRequestPost({ request, env }) {
       Prefer: 'return=minimal',
     };
 
-    // Update profile ban status
-    await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
-      method: 'PATCH', headers,
-      body: JSON.stringify({
-        is_banned:  isBanning,
-        ban_reason: isBanning ? (reason || null) : null,
+    await Promise.all([
+      // 1. Update profile ban status
+      fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+        method: 'PATCH', headers,
+        body: JSON.stringify({
+          is_banned:  isBanning,
+          ban_reason: isBanning ? (reason || null) : null,
+        }),
       }),
-    });
 
-    if (isBanning) {
-      // Hide all active listings by marking them 'banned'
-      await fetch(`${env.SUPABASE_URL}/rest/v1/listings?seller_id=eq.${userId}&status=eq.active`, {
-        method: 'PATCH', headers,
-        body: JSON.stringify({ status: 'banned' }),
-      });
-    } else {
-      // Restore listings when unbanning
-      await fetch(`${env.SUPABASE_URL}/rest/v1/listings?seller_id=eq.${userId}&status=eq.banned`, {
-        method: 'PATCH', headers,
-        body: JSON.stringify({ status: 'active' }),
-      });
-    }
+      // 2. Stamp app_metadata so the JWT carries the ban on next refresh
+      fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          apikey: env.SUPABASE_SERVICE_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ app_metadata: { is_banned: isBanning } }),
+      }),
+
+      // 3. Delete all active sessions → kicks them out immediately
+      fetch(`${env.SUPABASE_URL}/rest/v1/user_sessions?user_id=eq.${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          apikey: env.SUPABASE_SERVICE_KEY,
+          Prefer: 'return=minimal',
+        },
+      }),
+
+      // 4. Hide/restore listings
+      isBanning
+        ? fetch(`${env.SUPABASE_URL}/rest/v1/listings?seller_id=eq.${userId}&status=eq.active`, {
+            method: 'PATCH', headers,
+            body: JSON.stringify({ status: 'banned' }),
+          })
+        : fetch(`${env.SUPABASE_URL}/rest/v1/listings?seller_id=eq.${userId}&status=eq.banned`, {
+            method: 'PATCH', headers,
+            body: JSON.stringify({ status: 'active' }),
+          }),
+    ]);
 
     return Response.json({ success: true, action });
   } catch (e) {

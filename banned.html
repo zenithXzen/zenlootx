@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Banned — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg-base:#0A0E0C;--accent:#19C37D;--text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;--danger:#EF4444;--border:#232B26;--bg-surface:#121814; }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center; }
+    .logo { font-size:22px;font-weight:700;letter-spacing:-0.02em;margin-bottom:48px; }
+    .logo .green { color:var(--accent); }
+    .icon { width:72px;height:72px;border-radius:50%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 24px; }
+    h1 { font-size:26px;font-weight:700;letter-spacing:-0.02em;margin-bottom:12px; }
+    p  { font-size:15px;color:var(--text-dim);max-width:420px;line-height:1.7;margin:0 auto 8px; }
+    .reason-box { background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin:20px auto;max-width:400px;font-size:13px;color:var(--text-faint); }
+    .reason-box strong { color:var(--text-dim);display:block;margin-bottom:4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em; }
+    a { color:var(--accent);font-size:14px; }
+  </style>
+</head>
+<body>
+  <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+  <div class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#EF4444" stroke-width="2" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+  </div>
+  <h1>Your account has been banned</h1>
+  <p>Your account has been suspended from ZenLootX due to a violation of our terms of service.</p>
+  <div class="reason-box" id="reasonBox" style="display:none;">
+    <strong>Reason</strong>
+    <span id="reasonText"></span>
+  </div>
+  <p style="margin-top:16px;">If you believe this is a mistake, contact us at <a href="mailto:support@zenlootexchange.com">support@zenlootexchange.com</a></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const sb = supabase.createClient(
+      'https://msumlsqfergennhzxqon.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q'
+    );
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        const { data: profile } = await sb.from('profiles').select('ban_reason').eq('id', session.user.id).single();
+        if (profile?.ban_reason) {
+          document.getElementById('reasonText').textContent = profile.ban_reason;
+          document.getElementById('reasonBox').style.display = '';
+        }
+        await sb.auth.signOut();
+      }
+    })();
+  </script>
+</body>
+</html>

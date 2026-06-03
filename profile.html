@@ -503,6 +503,7 @@
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = '/login'; return; }
+      if (await isBanned(session.user.id)) return;
 
       const user      = session.user;
       const username  = user.user_metadata?.username || user.email.split('@')[0];
@@ -873,6 +874,12 @@
         await sb.auth.signOut();
         window.location.href = '/login';
       });
+    }
+
+    async function isBanned(userId) {
+      const { data } = await sb.from('profiles').select('is_banned').eq('id', userId).single();
+      if (data?.is_banned) { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
+      return false;
     }
 
     init().then(() => initPush());

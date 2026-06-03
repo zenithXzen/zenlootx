@@ -1166,6 +1166,12 @@
       };
     });
 
+    async function isBanned(userId) {
+      const { data } = await sb.from('profiles').select('is_banned').eq('id', userId).single();
+      if (data?.is_banned) { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
+      return false;
+    }
+
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
 
@@ -1173,6 +1179,7 @@
         window.location.href = '/login';
         return;
       }
+      if (await isBanned(session.user.id)) return;
 
       const user     = session.user;
       currentUserId  = user.id;
