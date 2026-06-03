@@ -243,6 +243,7 @@
     let allApps = [], allReports = [], allDisputes = [];
     let appFilter = 'all', reportFilter = 'all';
     let rejectOpen = false;
+    let appError = null, reportsError = null, disputesError = null;
 
     // ── Init ──
     async function init() {
@@ -272,21 +273,38 @@
 
     // ── Data loading ──
     async function loadApplications() {
-      const res  = await fetch('/api/admin/get-applications', { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      allApps = data.applications || [];
+      try {
+        const res  = await fetch('/api/admin/get-applications', { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) { appError = data.error || `HTTP ${res.status}`; return; }
+        allApps  = data.applications || [];
+        appError = null;
+      } catch (e) { appError = e.message; }
     }
 
     async function loadReports() {
-      const res  = await fetch('/api/admin/get-reports', { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      allReports = data.reports || [];
+      try {
+        const res  = await fetch('/api/admin/get-reports', { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) { reportsError = data.error || `HTTP ${res.status}`; return; }
+        allReports   = data.reports || [];
+        reportsError = null;
+      } catch (e) { reportsError = e.message; }
     }
 
     async function loadDisputes() {
-      const res  = await fetch('/api/admin/get-disputes', { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      allDisputes = data.disputes || [];
+      try {
+        const res  = await fetch('/api/admin/get-disputes', { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) { disputesError = data.error || `HTTP ${res.status}`; return; }
+        allDisputes   = data.disputes || [];
+        disputesError = null;
+      } catch (e) { disputesError = e.message; }
+    }
+
+    async function retryLoad() {
+      await Promise.all([loadApplications(), loadReports(), loadDisputes()]);
+      renderShell();
     }
 
     // ── Shell with section tabs ──
@@ -332,6 +350,16 @@
     // SECTION 1 — SELLER APPLICATIONS
     // ════════════════════════════════════
     function renderApplications() {
+      if (appError) {
+        document.getElementById('sectionContent').innerHTML = `
+          <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:28px 24px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:12px;">⚠️</div>
+            <div style="font-size:14px;font-weight:600;color:var(--danger);margin-bottom:6px;">Could not load applications</div>
+            <div style="font-size:13px;color:var(--text-faint);margin-bottom:16px;">${appError}</div>
+            <button onclick="retryLoad()" class="btn btn-secondary btn-sm">Retry</button>
+          </div>`;
+        return;
+      }
       const pending  = allApps.filter(a => a.status === 'pending').length;
       const approved = allApps.filter(a => a.status === 'approved').length;
       const rejected = allApps.filter(a => a.status === 'rejected').length;
