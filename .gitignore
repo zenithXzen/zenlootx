@@ -1,2 +1,6 @@
 node_modules
 dist
+claude.md
+claude_temp.zip
+claude_extracted/
+zen_existing/
