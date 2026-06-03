@@ -395,27 +395,12 @@
             return;
           }
 
-          // Check if email is registered to show the right error
-          try {
-            const checkRes = await fetch('/api/check-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email }),
-            });
-            const { exists } = await checkRes.json();
-            if (!exists) {
-              document.getElementById('identifier').classList.add('error');
-              showError('This email is not registered. Create an account first.');
-              return;
-            }
-          } catch {}
-
           document.getElementById('password').classList.add('error');
           const remaining = MAX_ATTEMPTS - failedAttempts;
           if (failedAttempts >= 4) {
-            showError(`Incorrect password. ${remaining} attempt${remaining === 1 ? '' : 's'} left before a reset email is sent.`);
+            showError(`Incorrect email or password. ${remaining} attempt${remaining === 1 ? '' : 's'} left before a reset email is sent.`);
           } else {
-            showError('Incorrect password. Please try again.');
+            showError('Incorrect email or password. Please try again.');
           }
           return;
         }
