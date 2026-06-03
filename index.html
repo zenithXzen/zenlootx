@@ -397,9 +397,10 @@
       background-size: cover;
       background-position: center;
       opacity: 0;
+      pointer-events: none;
       transition: opacity 0.8s ease;
     }
-    .slide.active { opacity: 1; }
+    .slide.active { opacity: 1; pointer-events: auto; }
 
     .slide-overlay {
       position: absolute;
@@ -546,7 +547,7 @@
             <span class="game-tag tag-genshin">Genshin Impact</span>
             <div class="slide-title">Genshin Impact</div>
             <div class="slide-desc">High adventure rank accounts, limited characters and weapons, unrolled and reroll account and welkin passes.</div>
-            <a href="/listings?game=genshin" class="btn btn-primary">Browse listings</a>
+            <a href="/listings/genshin" class="btn btn-primary">Browse listings</a>
           </div>
         </div>
 
@@ -556,7 +557,7 @@
             <span class="game-tag tag-mlbb">MLBB</span>
             <div class="slide-title">Mobile Legends: Bang Bang</div>
             <div class="slide-desc">Collector skins, collab skins, epic recall, emotes, max emblem and high rank accounts.</div>
-            <a href="/listings?game=mlbb" class="btn btn-primary">Browse listings</a>
+            <a href="/listings/mlbb" class="btn btn-primary">Browse listings</a>
           </div>
         </div>
 
@@ -566,7 +567,7 @@
             <span class="game-tag tag-valorant">Valorant</span>
             <div class="slide-title">Valorant</div>
             <div class="slide-desc">Premium skins, battlepass and bundle.</div>
-            <a href="/listings?game=valorant" class="btn btn-primary">Browse listings</a>
+            <a href="/listings/valorant" class="btn btn-primary">Browse listings</a>
           </div>
         </div>
 

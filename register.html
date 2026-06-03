@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create account — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:     #0A0E0C;
+      --bg-surface:  #121814;
+      --bg-elevated: #1A211C;
+      --border:      #232B26;
+      --border-hi:   #33403A;
+      --accent:      #19C37D;
+      --accent-hover:#2FD98F;
+      --accent-glow: rgba(25,195,125,0.15);
+      --text:        #E8EDE9;
+      --text-dim:    #9BA8A0;
+      --text-faint:  #6B776F;
+      --danger:      #EF4444;
+      --success:     #22C55E;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      background: var(--bg-base);
+      color: var(--text);
+      font-family: 'Geist', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .logo .green { color: var(--accent); }
+    .nav-right { font-size: 14px; color: var(--text-dim); }
+    .nav-right a { color: var(--accent); font-weight: 500; }
+    .nav-right a:hover { color: var(--accent-hover); }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .card { width: 100%; max-width: 440px; }
+
+    .card-header { text-align: center; margin-bottom: 32px; }
+    .card-header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .card-header p { font-size: 14px; color: var(--text-dim); }
+
+    /* STEP INDICATOR */
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 32px;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .step-circle {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-hi);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-faint);
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .step-item.active .step-circle {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+    .step-item.done .step-circle {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--bg-base);
+    }
+    .step-label { font-size: 12px; color: var(--text-faint); }
+    .step-item.active .step-label { color: var(--text-dim); }
+    .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; }
+
+    .form {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+
+    .input-wrap { position: relative; display: flex; align-items: center; }
+
+    input {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-family: 'Geist', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      width: 100%;
+    }
+    input::placeholder { color: var(--text-faint); }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input.error { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
+
+    .toggle-pw {
+      position: absolute; right: 12px;
+      background: none; border: none; cursor: pointer;
+      padding: 4px; color: var(--text-faint);
+      display: flex; align-items: center; transition: color 0.16s;
+    }
+    .toggle-pw:hover { color: var(--text-dim); }
+    .toggle-pw svg { width: 18px; height: 18px; }
+    input[type="password"], input[type="text"].pw-field { padding-right: 42px; }
+
+    .field-hint { font-size: 12px; color: var(--text-faint); }
+
+    .divider { height: 1px; background: var(--border); }
+
+    .alert {
+      display: none;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 13px;
+    }
+    .alert.visible { display: block; }
+    .alert-error {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: var(--danger);
+    }
+    .alert-success {
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      color: var(--success);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg-base);
+      font-family: 'Geist', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, opacity 0.18s;
+    }
+    .btn-submit:hover { background: var(--accent-hover); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* CODE INPUT */
+    .code-inputs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .code-digit {
+      width: 52px; height: 60px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Geist', sans-serif;
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      padding: 0;
+    }
+    .code-digit:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .code-digit.filled { border-color: var(--border-hi); }
+
+    .resend-row {
+      display: flex;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--text-faint);
+      gap: 4px;
+    }
+    .resend-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 13px;
+      color: var(--accent); font-weight: 500;
+      padding: 0; transition: color 0.16s;
+    }
+    .resend-btn:hover { color: var(--accent-hover); }
+    .resend-btn:disabled { color: var(--text-faint); cursor: not-allowed; }
+
+    .form-footer {
+      text-align: center; font-size: 13px; color: var(--text-faint);
+    }
+    .form-footer a { color: var(--accent); font-weight: 500; }
+    .form-footer a:hover { color: var(--accent-hover); }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+    footer a { color: var(--text-faint); transition: color 0.16s; }
+    footer a:hover { color: var(--text-dim); }
+
+    @media (max-width: 480px) {
+      .form { padding: 24px 20px; }
+      .code-digit { width: 44px; height: 54px; font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
+    <div class="nav-right">
+      Already have an account? <a href="/login">Sign in</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="card">
+
+      <div class="card-header">
+        <h1 id="stepTitle">Create your account</h1>
+        <p id="stepSub">Fill in your details to get started.</p>
+      </div>
+
+      <!-- STEP INDICATOR -->
+      <div class="steps">
+        <div class="step-item active" id="si1">
+          <div class="step-circle">1</div>
+          <span class="step-label">Your details</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" id="si2">
+          <div class="step-circle">2</div>
+          <span class="step-label">Verify email</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: Details -->
+      <form class="form" id="step1Form" novalidate>
+
+        <div class="alert alert-error" id="step1Error"></div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="your_username" autocomplete="username" required>
+          <span class="field-hint">Unique. Visible to other users.</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <input type="password" id="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" class="pw-field" required>
+            <button type="button" class="toggle-pw" id="togglePw1" aria-label="Toggle password visibility">
+              <svg id="eye1Show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12C3.75 7.5 7.5 4.5 12 4.5s8.25 3 9.75 7.5c-1.5 4.5-5.25 7.5-9.75 7.5S3.75 16.5 2.25 12Z"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <svg id="eye1Hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="display:none">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c1.5 4.5 5.25 7.5 9.75 7.5a10.43 10.43 0 0 0 4.134-.832M6.53 6.53A9.956 9.956 0 0 1 12 4.5c4.5 0 8.25 3 9.75 7.5a10.49 10.49 0 0 1-1.397 2.853M6.53 6.53 3 3m3.53 3.53 11.94 11.94M6.53 6.53A9.955 9.955 0 0 0 9.88 9.88M17.47 17.47A9.955 9.955 0 0 1 14.12 14.12m0 0A3 3 0 0 0 9.88 9.88m4.24 4.24L9.88 9.88"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="sendCodeBtn">Send verification code</button>
+
+        <div class="form-footer">
+          Already have an account? <a href="/login">Sign in</a>
+        </div>
+
+      </form>
+
+      <!-- STEP 2: Verify Code -->
+      <form class="form" id="step2Form" novalidate style="display:none;">
+
+        <div class="alert alert-success" id="step2Success"></div>
+        <div class="alert alert-error"   id="step2Error"></div>
+
+        <div style="text-align:center;">
+          <p style="font-size:14px;color:var(--text-dim);">We sent a 6-digit code to</p>
+          <p style="font-size:14px;font-weight:600;color:var(--text);margin-top:4px;" id="emailDisplay"></p>
+        </div>
+
+        <div class="field">
+          <label style="text-align:center;display:block;">Verification code</label>
+          <div class="code-inputs" id="codeInputs">
+            <input class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="verifyBtn">Verify &amp; create account</button>
+
+        <div class="resend-row">
+          Didn't get it?
+          <button type="button" class="resend-btn" id="resendBtn">Resend code</button>
+          <span id="resendTimer" style="display:none;color:var(--text-faint);"></span>
+        </div>
+
+        <div class="form-footer">
+          <a href="#" id="backToStep1">← Change email or details</a>
+        </div>
+
+      </form>
+
+    </div>
+  </main>
+
+  <footer>
+    <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · © 2026 ZenLootX
+  </footer>
+
+  <script>
+    // ── Password toggle ──
+    const pw1     = document.getElementById('password');
+    const eye1Show = document.getElementById('eye1Show');
+    const eye1Hide = document.getElementById('eye1Hide');
+    document.getElementById('togglePw1').addEventListener('click', () => {
+      const vis = pw1.type === 'text';
+      pw1.type = vis ? 'password' : 'text';
+      eye1Show.style.display = vis ? '' : 'none';
+      eye1Hide.style.display = vis ? 'none' : '';
+    });
+
+    // ── State ──
+    let verifyToken = null;
+    let resendCooldown = null;
+
+    // ── Step 1 submit ──
+    document.getElementById('step1Form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('step1Error');
+      err.className = 'alert alert-error';
+
+      const email    = document.getElementById('email').value.trim();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      // Validate
+      let invalid = false;
+      [document.getElementById('email'), document.getElementById('username'), document.getElementById('password')]
+        .forEach(el => el.classList.remove('error'));
+
+      if (!email || !email.includes('@')) {
+        document.getElementById('email').classList.add('error'); invalid = true;
+      }
+      if (!username) {
+        document.getElementById('username').classList.add('error'); invalid = true;
+      }
+      if (!password || password.length < 8) {
+        document.getElementById('password').classList.add('error'); invalid = true;
+      }
+      if (invalid) {
+        err.textContent = 'Please fill in all fields. Password must be at least 8 characters.';
+        err.classList.add('visible');
+        return;
+      }
+
+      const btn = document.getElementById('sendCodeBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      try {
+        const res = await fetch('/api/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          err.textContent = data.error || 'Failed to send code. Try again.';
+          err.classList.add('visible');
+          btn.disabled = false;
+          btn.textContent = 'Send verification code';
+          return;
+        }
+
+        verifyToken = data.token;
+        goToStep2(email);
+
+      } catch {
+        err.textContent = 'Network error. Check your connection and try again.';
+        err.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Send verification code';
+      }
+    });
+
+    function goToStep2(email) {
+      document.getElementById('step1Form').style.display = 'none';
+      document.getElementById('step2Form').style.display = 'flex';
+      document.getElementById('stepTitle').textContent   = 'Check your email';
+      document.getElementById('stepSub').textContent     = 'Enter the 6-digit code we sent you.';
+      document.getElementById('emailDisplay').textContent = email;
+
+      // Steps indicator
+      document.getElementById('si1').classList.remove('active');
+      document.getElementById('si1').classList.add('done');
+      document.getElementById('si1').querySelector('.step-circle').textContent = '✓';
+      document.getElementById('si2').classList.add('active');
+
+      // Show success banner
+      const s = document.getElementById('step2Success');
+      s.textContent = `Code sent to ${email}.`;
+      s.classList.add('visible');
+      setTimeout(() => s.classList.remove('visible'), 4000);
+
+      // Focus first digit
+      document.querySelector('.code-digit').focus();
+
+      startResendTimer(60);
+    }
+
+    // ── Code digit inputs ──
+    const digits = Array.from(document.querySelectorAll('.code-digit'));
+    digits.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/g, '').slice(-1);
+        if (inp.value) {
+          inp.classList.add('filled');
+          if (i < digits.length - 1) digits[i + 1].focus();
+        }
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) {
+          digits[i - 1].value = '';
+          digits[i - 1].classList.remove('filled');
+          digits[i - 1].focus();
+        }
+      });
+      inp.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+        pasted.split('').forEach((ch, j) => {
+          if (digits[j]) { digits[j].value = ch; digits[j].classList.add('filled'); }
+        });
+        const next = digits[Math.min(pasted.length, 5)];
+        if (next) next.focus();
+      });
+    });
+
+    // ── Step 2 submit ──
+    document.getElementById('step2Form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('step2Error');
+      errEl.className = 'alert alert-error';
+
+      const code = digits.map(d => d.value).join('');
+      if (code.length < 6) {
+        errEl.textContent = 'Enter all 6 digits.';
+        errEl.classList.add('visible');
+        return;
+      }
+
+      const email = document.getElementById('emailDisplay').textContent;
+      const btn   = document.getElementById('verifyBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying…';
+
+      try {
+        const res = await fetch('/api/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code, token: verifyToken }),
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.valid) {
+          errEl.textContent = data.error || 'Incorrect code. Try again.';
+          errEl.classList.add('visible');
+          btn.disabled = false;
+          btn.textContent = 'Verify & create account';
+          digits.forEach(d => { d.value = ''; d.classList.remove('filled'); });
+          digits[0].focus();
+          return;
+        }
+
+        // ✅ Verified — TODO: create account in Supabase here
+        btn.textContent = 'Account created!';
+        const s = document.getElementById('step2Success');
+        s.textContent = 'Email verified! Redirecting…';
+        s.classList.add('visible');
+        setTimeout(() => { window.location.href = '/'; }, 1500);
+
+      } catch {
+        errEl.textContent = 'Network error. Try again.';
+        errEl.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Verify & create account';
+      }
+    });
+
+    // ── Resend ──
+    function startResendTimer(seconds) {
+      const btn   = document.getElementById('resendBtn');
+      const timer = document.getElementById('resendTimer');
+      btn.style.display   = 'none';
+      timer.style.display = '';
+      let s = seconds;
+      resendCooldown = setInterval(() => {
+        timer.textContent = `Resend in ${s}s`;
+        s--;
+        if (s < 0) {
+          clearInterval(resendCooldown);
+          timer.style.display = 'none';
+          btn.style.display   = '';
+          btn.disabled = false;
+        }
+      }, 1000);
+    }
+
+    document.getElementById('resendBtn').addEventListener('click', async () => {
+      const email = document.getElementById('emailDisplay').textContent;
+      document.getElementById('resendBtn').disabled = true;
+      try {
+        const res  = await fetch('/api/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          verifyToken = data.token;
+          const s = document.getElementById('step2Success');
+          s.textContent = 'New code sent.';
+          s.classList.add('visible');
+          setTimeout(() => s.classList.remove('visible'), 3000);
+          digits.forEach(d => { d.value = ''; d.classList.remove('filled'); });
+          digits[0].focus();
+          startResendTimer(60);
+        }
+      } catch {}
+    });
+
+    document.getElementById('backToStep1').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('step2Form').style.display = 'none';
+      document.getElementById('step1Form').style.display = 'flex';
+      document.getElementById('stepTitle').textContent   = 'Create your account';
+      document.getElementById('stepSub').textContent     = 'Fill in your details to get started.';
+      document.getElementById('si1').classList.add('active');
+      document.getElementById('si1').classList.remove('done');
+      document.getElementById('si1').querySelector('.step-circle').textContent = '1';
+      document.getElementById('si2').classList.remove('active');
+      document.getElementById('sendCodeBtn').disabled = false;
+      document.getElementById('sendCodeBtn').textContent = 'Send verification code';
+      if (resendCooldown) clearInterval(resendCooldown);
+    });
+  </script>
+
+</body>
+</html>
