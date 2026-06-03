@@ -118,6 +118,12 @@
       color: var(--text-dim);
     }
 
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
     input {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
@@ -129,6 +135,27 @@
       outline: none;
       transition: border-color 0.18s, box-shadow 0.18s;
       width: 100%;
+    }
+
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      transition: color 0.16s;
+      flex-shrink: 0;
+    }
+    .toggle-pw:hover { color: var(--text-dim); }
+    .toggle-pw svg { width: 18px; height: 18px; }
+
+    input[type="password"],
+    input[type="text"].pw-field {
+      padding-right: 42px;
     }
 
     input::placeholder { color: var(--text-faint); }
@@ -268,14 +295,28 @@
 
         <div class="field">
           <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="••••••••"
-            autocomplete="current-password"
-            required
-          >
+          <div class="input-wrap">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              class="pw-field"
+              required
+            >
+            <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password visibility">
+              <!-- eye icon (shown when password is hidden) -->
+              <svg id="iconShow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12C3.75 7.5 7.5 4.5 12 4.5s8.25 3 9.75 7.5c-1.5 4.5-5.25 7.5-9.75 7.5S3.75 16.5 2.25 12Z"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <!-- eye-off icon (shown when password is visible) -->
+              <svg id="iconHide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="display:none">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c1.5 4.5 5.25 7.5 9.75 7.5a10.43 10.43 0 0 0 4.134-.832M6.53 6.53A9.956 9.956 0 0 1 12 4.5c4.5 0 8.25 3 9.75 7.5a10.49 10.49 0 0 1-1.397 2.853M6.53 6.53 3 3m3.53 3.53 11.94 11.94M6.53 6.53A9.955 9.955 0 0 0 9.88 9.88M17.47 17.47A9.955 9.955 0 0 1 14.12 14.12m0 0A3 3 0 0 0 9.88 9.88m4.24 4.24L9.88 9.88"/>
+              </svg>
+            </button>
+          </div>
           <div class="forgot">
             <a href="/forgot-password">Forgot password?</a>
           </div>
@@ -296,6 +337,18 @@
   </footer>
 
   <script>
+    const togglePw  = document.getElementById('togglePw');
+    const pwInput   = document.getElementById('password');
+    const iconShow  = document.getElementById('iconShow');
+    const iconHide  = document.getElementById('iconHide');
+
+    togglePw.addEventListener('click', function () {
+      const visible = pwInput.type === 'text';
+      pwInput.type      = visible ? 'password' : 'text';
+      iconShow.style.display = visible ? '' : 'none';
+      iconHide.style.display = visible ? 'none' : '';
+    });
+
     const form = document.getElementById('loginForm');
     const errorMsg = document.getElementById('errorMsg');
 
