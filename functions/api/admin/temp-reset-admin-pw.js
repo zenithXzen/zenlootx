@@ -13,7 +13,7 @@ export async function onRequestGet({ request, env }) {
     const keyPayload = JSON.parse(atob(env.SUPABASE_SERVICE_KEY.split('.')[1]));
     const keyRole = keyPayload.role;
 
-    const userId = '04b53ba1-4ffb-4307-8e58-ee3d0dc303bb';
+    const userId = '509bef50-b596-4f26-aca2-35a8a9836db1';
 
     const res = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
       method: 'PUT',
