@@ -251,7 +251,7 @@
 
       // Fetch profile + listings + verified seller status in parallel
       const [profileRes, listingsRes, sellerAppRes] = await Promise.all([
-        sb.from('profiles').select('id,username,avatar_url,bio').eq('id', sellerId).single(),
+        sb.from('profiles').select('id,username,avatar_url,bio,created_at').eq('id', sellerId).single(),
         sb.from('listings').select('id,title,price,currency,type,images,game,created_at').eq('seller_id', sellerId).eq('status','active').order('created_at',{ascending:false}),
         sb.from('seller_applications').select('status').eq('user_id', sellerId).eq('status','approved').maybeSingle(),
       ]);
@@ -264,7 +264,9 @@
       const profile    = profileRes.data;
       const listings   = listingsRes.data || [];
       const isVerified = !!sellerAppRes.data;
-      const joined     = '—';
+      const joined = profile.created_at
+        ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        : '—';
 
       // Check if the viewer is logged in (for the report button)
       const { data: { session } } = await sb.auth.getSession();
