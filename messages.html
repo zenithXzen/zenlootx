@@ -380,9 +380,25 @@
     const av      = other.avatar_url ? `<img src="${other.avatar_url}" alt="${name}">` : initial;
     const isBuyer = conv?.buyer_id === currentUser.id;
 
-    const orderData    = conv?.order || null;
-    const orderId      = conv?.order_id || orderData?.id || null;
-    const escrowStatus = orderData?.escrow_status || null;
+    let orderData    = conv?.order || null;
+    let orderId      = conv?.order_id || orderData?.id || null;
+    let escrowStatus = orderData?.escrow_status || null;
+
+    // Fallback for both buyer AND seller if order data missing
+    if (!orderData) {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const r = await fetch('/api/my-orders', { headers: { Authorization: `Bearer ${session.access_token}` } });
+        if (r.ok) {
+          const d      = await r.json();
+          const allOrd = [...(d.purchases || []), ...(d.sales || [])];
+          const match  = conv?.listing_id
+            ? allOrd.find(o => o.listing_id === conv.listing_id)
+            : allOrd.find(o => o.seller_id === conv.seller_id || o.buyer_id === conv.buyer_id);
+          if (match) { orderData = match; orderId = match.id; escrowStatus = match.escrow_status; }
+        }
+      } catch {}
+    }
 
     const releaseBtn = ''; // moved into purchase summary card
 
