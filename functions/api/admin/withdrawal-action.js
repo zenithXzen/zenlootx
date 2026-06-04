@@ -94,8 +94,7 @@ export async function onRequestPost({ request, env }) {
     });
     if (!patchRes.ok) return Response.json({ error: await patchRes.text() }, { status: patchRes.status });
 
-    // Update the transaction row logged when the request was submitted.
-    // Falls back to inserting a new row if the pending row doesn't exist (older requests).
+    // Update / create transaction records
     {
       let method = null;
       try {
@@ -106,33 +105,44 @@ export async function onRequestPost({ request, env }) {
         method = wReqData[0]?.method;
       } catch {}
       const METHOD_LABEL = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer', wise:'Wise', binance:'Binance' };
-      const methodLabel   = METHOD_LABEL[method] || method || 'payout';
-      const txStatus      = action === 'approve' ? 'completed' : 'rejected';
-      const txDescription = action === 'approve'
-        ? `Withdrawal via ${methodLabel} — approved`
-        : `Withdrawal via ${methodLabel} — rejected`;
+      const methodLabel  = METHOD_LABEL[method] || method || 'payout';
 
-      // Try to update existing transaction row first
-      const txCheckRes  = await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, { method: 'GET', headers: { Prefer: '' } });
-      const txCheckData = await txCheckRes.json();
+      if (action === 'approve') {
+        // Update or insert the withdrawal debit as completed
+        const txCheckRes  = await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, { method: 'GET', headers: { Prefer: '' } });
+        const txCheckData = await txCheckRes.json();
+        if (Array.isArray(txCheckData) && txCheckData.length > 0) {
+          await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'completed', description: `Withdrawal via ${methodLabel} — approved` }),
+          });
+        } else {
+          await sb(env, 'transactions', {
+            method: 'POST',
+            body: JSON.stringify({ user_id: userId, type: 'debit', amount: Number(amount), description: `Withdrawal via ${methodLabel} — approved`, reference: id, status: 'completed' }),
+          });
+        }
 
-      if (Array.isArray(txCheckData) && txCheckData.length > 0) {
-        await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ status: txStatus, description: txDescription }),
-        });
       } else {
-        // No existing row — insert one (covers older withdrawal requests)
+        // Rejection: mark the original withdrawal as rejected
+        const txCheckRes  = await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, { method: 'GET', headers: { Prefer: '' } });
+        const txCheckData = await txCheckRes.json();
+        if (Array.isArray(txCheckData) && txCheckData.length > 0) {
+          await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'rejected', description: `Withdrawal via ${methodLabel} — rejected` }),
+          });
+        } else {
+          await sb(env, 'transactions', {
+            method: 'POST',
+            body: JSON.stringify({ user_id: userId, type: 'debit', amount: Number(amount), description: `Withdrawal via ${methodLabel} — rejected`, reference: id, status: 'rejected' }),
+          });
+        }
+
+        // Always insert a separate refund credit so the user sees their money returned
         await sb(env, 'transactions', {
           method: 'POST',
-          body: JSON.stringify({
-            user_id:     userId,
-            type:        'debit',
-            amount:      Number(amount),
-            description: txDescription,
-            reference:   id,
-            status:      txStatus,
-          }),
+          body: JSON.stringify({ user_id: userId, type: 'refund', amount: Number(amount), description: `Refunded — withdrawal rejected`, reference: id, status: 'completed' }),
         });
       }
     }
