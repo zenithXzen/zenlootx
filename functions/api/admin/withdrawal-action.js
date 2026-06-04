@@ -70,12 +70,17 @@ export async function onRequestPost({ request, env }) {
     // On reject: refund the frozen amount back to the user.
     if (action === 'reject') {
       const walletRes  = await sb(env, `wallets?user_id=eq.${userId}&select=balance`, { method: 'GET', headers: { Prefer: '' } });
+      if (!walletRes.ok) return Response.json({ error: 'Failed to read wallet. Please try again.' }, { status: 500 });
       const walletData = await walletRes.json();
-      const balance    = Number(walletData?.[0]?.balance || 0);
-      await sb(env, `wallets?user_id=eq.${userId}`, {
+      if (!Array.isArray(walletData) || !walletData[0]) {
+        return Response.json({ error: 'Wallet not found for this user.' }, { status: 404 });
+      }
+      const balance   = Number(walletData[0].balance || 0);
+      const refundRes = await sb(env, `wallets?user_id=eq.${userId}`, {
         method: 'PATCH',
         body: JSON.stringify({ balance: balance + Number(amount) }),
       });
+      if (!refundRes.ok) return Response.json({ error: 'Failed to refund balance. Please try again.' }, { status: 500 });
     }
 
     // Mark the request
@@ -85,7 +90,8 @@ export async function onRequestPost({ request, env }) {
     });
     if (!patchRes.ok) return Response.json({ error: await patchRes.text() }, { status: patchRes.status });
 
-    // Update the pending transaction that was logged when the request was submitted
+    // Update the transaction row logged when the request was submitted.
+    // Falls back to inserting a new row if the pending row doesn't exist (older requests).
     {
       let method = null;
       try {
@@ -96,16 +102,35 @@ export async function onRequestPost({ request, env }) {
         method = wReqData[0]?.method;
       } catch {}
       const METHOD_LABEL = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer', wise:'Wise', binance:'Binance' };
-      const methodLabel  = METHOD_LABEL[method] || method || 'payout';
-      await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}&status=eq.pending`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          status:      action === 'approve' ? 'completed' : 'rejected',
-          description: action === 'approve'
-            ? `Withdrawal via ${methodLabel} — approved`
-            : `Withdrawal via ${methodLabel} — rejected`,
-        }),
-      });
+      const methodLabel   = METHOD_LABEL[method] || method || 'payout';
+      const txStatus      = action === 'approve' ? 'completed' : 'rejected';
+      const txDescription = action === 'approve'
+        ? `Withdrawal via ${methodLabel} — approved`
+        : `Withdrawal via ${methodLabel} — rejected`;
+
+      // Try to update existing transaction row first
+      const txCheckRes  = await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, { method: 'GET', headers: { Prefer: '' } });
+      const txCheckData = await txCheckRes.json();
+
+      if (Array.isArray(txCheckData) && txCheckData.length > 0) {
+        await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: txStatus, description: txDescription }),
+        });
+      } else {
+        // No existing row — insert one (covers older withdrawal requests)
+        await sb(env, 'transactions', {
+          method: 'POST',
+          body: JSON.stringify({
+            user_id:     userId,
+            type:        'debit',
+            amount:      Number(amount),
+            description: txDescription,
+            reference:   id,
+            status:      txStatus,
+          }),
+        });
+      }
     }
 
     const fmt = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
