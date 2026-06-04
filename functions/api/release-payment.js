@@ -32,7 +32,7 @@ export async function onRequestPost({ request, env }) {
     const amount = Number(order.amount);
 
     // Credit seller wallet
-    const wRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}&select=balance,total_earned`, { headers: hdr });
+    const wRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}&select=balance,total_earned,escrow`, { headers: hdr });
     const wData = await wRes.json();
     const wallet = wData[0];
 
@@ -42,6 +42,7 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({
           balance:      Number(wallet.balance) + amount,
           total_earned: Number(wallet.total_earned) + amount,
+          escrow:       Math.max(0, Number(wallet.escrow || 0) - amount),
         }),
       });
     } else {
@@ -81,6 +82,12 @@ export async function onRequestPost({ request, env }) {
         method: 'PATCH',
         headers: { ...hdr, Prefer: 'return=minimal' },
         body: JSON.stringify({ status: 'completed', description: `Purchase completed: ${title}` }),
+      });
+      // Update seller's escrow transaction to completed (funds moved to balance)
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions?reference=eq.${orderId}&user_id=eq.${order.seller_id}&type=eq.escrow`, {
+        method: 'PATCH',
+        headers: { ...hdr, Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: 'completed', description: `Sale completed: ${title}` }),
       });
     } catch {}
 

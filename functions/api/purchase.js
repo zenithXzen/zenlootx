@@ -84,6 +84,36 @@ export async function onRequestPost({ request, env }) {
       body: JSON.stringify({ status: 'sold' }),
     });
 
+    // Add to seller's escrow balance so they can see funds pending
+    try {
+      const swRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${listing.seller_id}&select=escrow`, { headers: hdr });
+      const swData = await swRes.json();
+      if (swData[0]) {
+        await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${listing.seller_id}`, {
+          method: 'PATCH', headers: { ...hdr, Prefer: 'return=minimal' },
+          body: JSON.stringify({ escrow: Number(swData[0].escrow || 0) + price }),
+        });
+      } else {
+        await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
+          method: 'POST', headers: { ...hdr, Prefer: 'return=minimal' },
+          body: JSON.stringify({ user_id: listing.seller_id, balance: 0, escrow: price, total_earned: 0 }),
+        });
+      }
+      // Log escrow transaction for seller
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: { ...hdr, Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          user_id:     listing.seller_id,
+          type:        'escrow',
+          amount:      price,
+          description: `Sale in escrow: ${listing.title}`,
+          reference:   order?.id || null,
+          status:      'pending',
+        }),
+      });
+    } catch {}
+
     // Log escrow transaction for buyer
     try {
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
