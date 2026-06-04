@@ -1046,9 +1046,9 @@
         const wrap  = document.getElementById('tierStatWrap');
         const label = document.getElementById('tierStatLabel');
         if (!wrap || !label) return;
-        const iconColor = t.color.startsWith('url') ? '#a78bfa' : t.color;
-        const iconSvg = getTierIcon(t.tier, t.color).replace('<svg ', '<svg width="18" height="18" ');
-        label.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;">${iconSvg}<span style="color:${iconColor};font-weight:700;">${t.name}</span></span>`;
+        const iconSvg = getTierIcon(t.tier, t.color).replace('<svg ', '<svg width="20" height="20" ');
+        label.innerHTML = `<span class="tt-${t.tier}" style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:6px;font-size:12px;white-space:nowrap;">${iconSvg}<span style="font-weight:800;letter-spacing:0.04em;">TIER ${t.tier}</span><span style="font-weight:500;opacity:0.75;">${t.name}</span></span>`;
+        document.querySelector('#tierStatWrap .stat-label').style.display = 'none';
         wrap.style.display = '';
 
         sb.channel(`own-tier-${userId}`)
