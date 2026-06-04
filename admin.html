@@ -48,6 +48,20 @@
     .section-tab { background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 20px;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text-faint);cursor:pointer;transition:color 0.16s,border-color 0.16s;display:flex;align-items:center;gap:8px; }
     .section-tab:hover { color:var(--text); }
     .section-tab.active { color:var(--text);border-bottom-color:var(--accent); }
+
+    /* ANALYTICS */
+    .analytics-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px; }
+    .stat-box { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px; }
+    .stat-box-num { font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px; }
+    .stat-box-label { font-size:12px;color:var(--text-faint);font-weight:500;text-transform:uppercase;letter-spacing:0.05em; }
+    .chart-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px; }
+    .chart-title { font-size:14px;font-weight:600;margin-bottom:20px;color:var(--text-dim); }
+    .chart-bars { display:flex;align-items:flex-end;gap:8px;height:120px; }
+    .chart-bar-wrap { flex:1;display:flex;flex-direction:column;align-items:center;gap:6px; }
+    .chart-bar { width:100%;border-radius:4px 4px 0 0;background:var(--accent);opacity:0.7;min-height:4px;transition:opacity 0.16s; }
+    .chart-bar:hover { opacity:1; }
+    .chart-label { font-size:10px;color:var(--text-faint);text-align:center; }
+    .chart-val { font-size:11px;font-weight:600;color:var(--text-dim); }
     .tab-count { font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--bg-elevated); }
     .tab-count.has-items { background:rgba(245,185,71,0.15);color:var(--warning); }
 
@@ -266,13 +280,14 @@
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let token = '';
-    let activeSection = 'applications';
+    let activeSection = 'analytics';
     let allApps = [], allReports = [], allDisputes = [], allListings = [];
     let allTopups = [], allWithdrawals = [];
     let topupFilter = 'pending', withdrawalFilter = 'pending';
     let appFilter = 'pending', reportFilter = 'pending';
     let rejectOpen = false;
     let appError = null, reportsError = null, disputesError = null, listingsError = null;
+    let analyticsData = null;
 
     // ── Init ──
     async function init() {
@@ -296,7 +311,7 @@
       document.getElementById('reviewOverlay').addEventListener('click', e => { if (e.target === document.getElementById('reviewOverlay')) closeModal(); });
       document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
 
-      await Promise.all([loadApplications(), loadReports(), loadDisputes(), loadListings(), loadTopups(), loadWithdrawals()]);
+      await Promise.all([loadApplications(), loadReports(), loadDisputes(), loadListings(), loadTopups(), loadWithdrawals(), loadAnalytics()]);
       renderShell();
     }
 
@@ -418,6 +433,97 @@
       renderShell();
     }
 
+    // ── Analytics ──────────────────────────────────────────────────
+    async function loadAnalytics() {
+      try {
+        const [txRes, ordersRes, usersRes] = await Promise.all([
+          sb.from('transactions').select('type, amount, status, created_at'),
+          sb.from('orders').select('escrow_status, amount, created_at'),
+          sb.from('profiles').select('id', { count: 'exact', head: true }),
+        ]);
+        analyticsData = {
+          transactions: txRes.data || [],
+          orders:       ordersRes.data || [],
+          userCount:    usersRes.count || 0,
+        };
+      } catch { analyticsData = { transactions: [], orders: [], userCount: 0 }; }
+    }
+
+    function renderAnalytics() {
+      const el = document.getElementById('sectionContent');
+      if (!analyticsData) { el.innerHTML = '<p style="color:var(--text-faint);padding:20px 0;">Loading…</p>'; return; }
+
+      const { transactions, orders, userCount } = analyticsData;
+
+      const revenue       = transactions.filter(t => t.type === 'credit' && t.status === 'completed').reduce((s, t) => s + Number(t.amount || 0), 0);
+      const totalTx       = transactions.length;
+      const completedOrds = orders.filter(o => o.status === 'released' || o.escrow_status === 'released').length;
+      const totalOrds     = orders.length;
+      const openDisp      = allDisputes.filter(d => d.status === 'open').length;
+      const pendingTopups = allTopups.filter(t => t.status === 'pending').length;
+
+      const fmt = n => '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      // Last 7 days chart
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const key   = d.toISOString().slice(0, 10);
+        const count = orders.filter(o => o.created_at?.slice(0, 10) === key).length;
+        days.push({ label, count });
+      }
+      const maxCount = Math.max(...days.map(d => d.count), 1);
+
+      el.innerHTML = `
+        <div class="analytics-grid">
+          <div class="stat-box">
+            <div class="stat-box-num" style="color:var(--success);">${fmt(revenue)}</div>
+            <div class="stat-box-label">Total Revenue</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-num">${totalOrds}</div>
+            <div class="stat-box-label">Total Orders</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-num" style="color:var(--success);">${completedOrds}</div>
+            <div class="stat-box-label">Completed Sales</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-num">${userCount}</div>
+            <div class="stat-box-label">Registered Users</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-num">${totalTx}</div>
+            <div class="stat-box-label">Transactions</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-num" style="color:${openDisp > 0 ? 'var(--danger)' : 'var(--text)'};">${openDisp}</div>
+            <div class="stat-box-label">Open Disputes</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-num" style="color:${pendingTopups > 0 ? 'var(--warning)' : 'var(--text)'};">${pendingTopups}</div>
+            <div class="stat-box-label">Pending Top-ups</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-num">${allListings.length}</div>
+            <div class="stat-box-label">Active Listings</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Orders — last 7 days</div>
+          <div class="chart-bars">
+            ${days.map(d => `
+              <div class="chart-bar-wrap">
+                <div class="chart-val">${d.count || ''}</div>
+                <div class="chart-bar" style="height:${Math.max(4, Math.round((d.count / maxCount) * 100))}%;"></div>
+                <div class="chart-label">${d.label}</div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+
     // ── Shell with section tabs ──
     function renderShell() {
       const pendingApps     = allApps.filter(a => a.status === 'pending').length;
@@ -426,6 +532,9 @@
 
       document.getElementById('pageContent').innerHTML = `
         <div class="section-nav">
+          <button class="section-tab ${activeSection === 'analytics' ? 'active' : ''}" data-section="analytics">
+            Analytics
+          </button>
           <button class="section-tab ${activeSection === 'applications' ? 'active' : ''}" data-section="applications">
             Seller Applications
             <span class="tab-count ${pendingApps > 0 ? 'has-items' : ''}">${pendingApps}</span>
@@ -467,6 +576,7 @@
     }
 
     function renderActiveSection() {
+      if (activeSection === 'analytics')     renderAnalytics();
       if (activeSection === 'applications')  renderApplications();
       if (activeSection === 'reports')       renderReports();
       if (activeSection === 'disputes')      renderDisputes();
