@@ -477,7 +477,7 @@
       // Fetch wallet
       const { data: wallet } = await sb
         .from('wallets')
-        .select('balance, escrow, total_earned')
+        .select('balance, escrow, total_earned, frozen')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -485,6 +485,15 @@
       document.getElementById('balanceAmount').textContent = formatAmount(currentBalance);
       document.getElementById('escrowAmount').textContent  = formatAmount(wallet?.escrow || 0);
       document.getElementById('totalEarned').textContent   = formatAmount(wallet?.total_earned || 0);
+
+      // Show frozen notice if wallet is locked due to a dispute
+      if (wallet?.frozen) {
+        const notice = document.createElement('div');
+        notice.style.cssText = 'background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--danger);line-height:1.6;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;';
+        notice.innerHTML = `<span style="font-size:18px;flex-shrink:0;">🔒</span><div><strong>Wallet frozen</strong><br>Your wallet is locked due to an open dispute. Withdrawals are disabled until the dispute is resolved by the admin.</div>`;
+        const main = document.querySelector('main .container');
+        if (main) main.insertBefore(notice, main.firstChild);
+      }
 
       // Fetch transactions
       const { data: txs } = await sb

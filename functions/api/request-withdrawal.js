@@ -29,10 +29,15 @@ export async function onRequestPost({ request, env }) {
     if (!amount || amount < 100)            return Response.json({ error: 'Minimum withdrawal is ₱100.' }, { status: 400 });
     if (!method || !details)                return Response.json({ error: 'Missing method or details.' }, { status: 400 });
 
-    // Read current balance
-    const walletRes  = await sb(env, `wallets?user_id=eq.${user.id}&select=balance`, { method: 'GET', headers: { Prefer: '' } });
+    // Read current balance and frozen status
+    const walletRes  = await sb(env, `wallets?user_id=eq.${user.id}&select=balance,frozen`, { method: 'GET', headers: { Prefer: '' } });
     const walletData = await walletRes.json();
     const balance    = Number(walletData?.[0]?.balance || 0);
+    const frozen     = walletData?.[0]?.frozen === true;
+
+    if (frozen) {
+      return Response.json({ error: 'Your wallet is frozen due to an open dispute. Withdrawals are disabled until the dispute is resolved.' }, { status: 403 });
+    }
 
     if (balance < amount) {
       return Response.json({ error: `Insufficient balance. Available: ₱${balance.toFixed(2)}.` }, { status: 422 });

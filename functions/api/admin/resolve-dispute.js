@@ -119,6 +119,10 @@ export async function onRequestPost({ request, env }) {
       body: JSON.stringify({ status: 'resolved', resolution: action, resolution_notes: notes || null, resolved_at: new Date().toISOString() }),
     });
 
+    // Unfreeze both wallets
+    await sb(env, `wallets?user_id=eq.${buyerId}`,  { method: 'PATCH', body: JSON.stringify({ frozen: false }) });
+    await sb(env, `wallets?user_id=eq.${sellerId}`, { method: 'PATCH', body: JSON.stringify({ frozen: false }) });
+
     return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
