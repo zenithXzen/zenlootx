@@ -1034,10 +1034,17 @@
               body: JSON.stringify({ userId: sellerId, action: 'ban', reason: 'Dispute resolved against seller' }),
             });
           } else if (consequence.type === 'freeze') {
+            const disputeAmt = Number(allDisputes.find(d => d.id === id)?.amount || 0);
             await fetch('/api/admin/freeze-user', {
               method: 'POST',
               headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: sellerId, action: 'freeze', duration: consequence.duration }),
+              body: JSON.stringify({
+                userId:       sellerId,
+                action:       'freeze',
+                duration:     consequence.duration,
+                deductAmount: disputeAmt,
+                deductReason: 'Dispute penalty — refund deducted from balance',
+              }),
             });
           }
         }

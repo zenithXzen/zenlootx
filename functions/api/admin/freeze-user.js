@@ -13,7 +13,7 @@ export async function onRequestPost({ request, env }) {
     const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
     if (!await verifyAdmin(token, env)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { userId, action, duration } = await request.json();
+    const { userId, action, duration, deductAmount, deductReason } = await request.json();
     if (!userId || !['freeze', 'unfreeze'].includes(action)) {
       return Response.json({ error: 'Invalid request' }, { status: 400 });
     }
@@ -61,6 +61,33 @@ export async function onRequestPost({ request, env }) {
         }),
       }),
     ]);
+
+    // Optional: deduct from seller balance (e.g. dispute refund penalty)
+    if (isFreezing && deductAmount && Number(deductAmount) > 0) {
+      const walletRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${userId}&select=balance`, {
+        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
+      });
+      const walletData = await walletRes.json();
+      const balance    = Number(walletData?.[0]?.balance || 0);
+      const newBalance = Math.max(0, balance - Number(deductAmount));
+      await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${userId}`, {
+        method: 'PATCH',
+        headers: { ...hdr },
+        body: JSON.stringify({ balance: newBalance }),
+      });
+      // Log deduction transaction
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: { ...hdr },
+        body: JSON.stringify({
+          user_id:     userId,
+          type:        'debit',
+          amount:      Number(deductAmount),
+          description: deductReason || 'Deduction — dispute penalty',
+          status:      'completed',
+        }),
+      });
+    }
 
     return Response.json({ success: true, action });
   } catch (e) {
