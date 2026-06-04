@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispute Process — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --warning:#F5B947;--danger:#EF4444;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:800px;margin:0 auto;padding:0 24px; }
+
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px; }
+    .logo .green { color:var(--accent); }
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s; }
+    .btn-primary { background:var(--accent);color:var(--bg-base); }
+    .btn-primary:hover { background:var(--accent-hover); }
+    .btn-secondary { background:transparent;color:var(--text);border-color:var(--border-hi); }
+    .btn-secondary:hover { background:var(--bg-elevated); }
+
+    main { flex:1;padding:64px 0 80px; }
+
+    .page-header { text-align:center;margin-bottom:64px; }
+    .page-label { display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--warning);background:rgba(245,185,71,0.1);border:1px solid rgba(245,185,71,0.2);padding:4px 14px;border-radius:999px;margin-bottom:20px; }
+    .page-title { font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:14px; }
+    .page-sub { font-size:16px;color:var(--text-dim);max-width:480px;margin:0 auto; }
+
+    .section-block { margin-bottom:48px; }
+    .section-block h2 { font-size:18px;font-weight:700;margin-bottom:14px;letter-spacing:-0.01em;padding-bottom:12px;border-bottom:1px solid var(--border); }
+    .section-block p { font-size:14px;color:var(--text-dim);line-height:1.8;margin-bottom:12px; }
+    .section-block p:last-child { margin-bottom:0; }
+
+    .warning-box { background:rgba(245,185,71,0.07);border:1px solid rgba(245,185,71,0.2);border-radius:10px;padding:20px 24px;margin-bottom:48px; }
+    .warning-box p { font-size:14px;color:var(--text-dim);line-height:1.7;margin:0; }
+    .warning-box strong { color:var(--warning); }
+
+    .step-row { display:grid;grid-template-columns:44px 1fr;gap:20px;padding:24px 0;border-bottom:1px solid var(--border); }
+    .step-row:last-child { border-bottom:none; }
+    .step-num { width:36px;height:36px;border-radius:50%;background:rgba(245,185,71,0.1);border:1.5px solid rgba(245,185,71,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--warning);flex-shrink:0; }
+    .step-body h3 { font-size:15px;font-weight:600;margin-bottom:6px; }
+    .step-body p { font-size:14px;color:var(--text-dim);line-height:1.7; }
+
+    .outcome-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px; }
+    .outcome-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:20px; }
+    .outcome-label { font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px; }
+    .outcome-label.refund { color:var(--accent); }
+    .outcome-label.release { color:var(--warning); }
+    .outcome-card p { font-size:13px;color:var(--text-dim);line-height:1.7; }
+
+    .rule-list { list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:4px; }
+    .rule-list li { display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-dim);line-height:1.7; }
+    .rule-list li::before { content:'→';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px; }
+
+    footer { border-top:1px solid var(--border);padding:24px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:800px;margin:0 auto;padding:0 24px; }
+    .footer-inner p { font-size:13px;color:var(--text-faint); }
+    .footer-inner a { font-size:13px;color:var(--text-faint);transition:color 0.16s; }
+    .footer-inner a:hover { color:var(--text-dim); }
+
+    @media (max-width:600px) {
+      .page-title { font-size:26px; }
+      .outcome-grid { grid-template-columns:1fr; }
+      .step-row { grid-template-columns:36px 1fr;gap:14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container" style="max-width:1200px;">
+      <div class="nav-inner">
+        <a href="/" class="logo"><img src="/wallpaper/zx.png" alt="ZenLootX" style="height:32px;width:auto;"><span>Zen<span class="green">Loot</span>X</span></a>
+        <div id="navActions" style="display:flex;gap:10px;">
+          <a href="/login" class="btn btn-secondary">Sign in</a>
+          <a href="/register" class="btn btn-primary">Get started</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <div class="page-header">
+        <div class="page-label">Dispute Process</div>
+        <h1 class="page-title">Something went wrong? We've got you.</h1>
+        <p class="page-sub">If an order doesn't go as expected, open a dispute. Our team reviews both sides and makes a fair decision.</p>
+      </div>
+
+      <div class="warning-box">
+        <p><strong>Important:</strong> Do not confirm delivery if the account or items are not as described. Once you confirm, the payment is released and the order is marked complete. Open a dispute <em>before</em> confirming if there is a problem.</p>
+      </div>
+
+      <div class="section-block">
+        <h2>When to open a dispute</h2>
+        <ul class="rule-list">
+          <li>The account details don't match what was listed (wrong AR, missing characters, different server, etc.).</li>
+          <li>The seller delivered the wrong items or an incomplete order.</li>
+          <li>The seller never delivered within the required window.</li>
+          <li>The account was recovered by the original owner after delivery.</li>
+          <li>The listing description was materially misleading or false.</li>
+        </ul>
+      </div>
+
+      <div class="section-block">
+        <h2>How the dispute process works</h2>
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Open a dispute</h3>
+            <p>Go to your Orders page, find the order, and click "Open dispute." Describe the issue clearly and attach screenshots or evidence. Do not change account passwords or alter any details before the dispute is resolved.</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Seller responds</h3>
+            <p>The seller is notified and given a window to respond with their side of the story and any supporting evidence. Both sides are heard — we do not make decisions without giving the seller a chance to reply.</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>ZenLootX reviews</h3>
+            <p>Our team reviews the listing, the evidence from both sides, chat history, and delivery records. We compare what was promised in the listing against what was delivered. This is a human review — not automated.</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Decision is made</h3>
+            <p>We issue a final decision: either a full or partial refund to the buyer, or payment release to the seller. Both parties are notified. Our decision is final for that order.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h2>Possible outcomes</h2>
+        <div class="outcome-grid">
+          <div class="outcome-card">
+            <div class="outcome-label refund">Buyer refunded</div>
+            <p>The listing was misrepresented, delivery was incomplete, or the seller failed to deliver. Payment is returned to the buyer.</p>
+          </div>
+          <div class="outcome-card">
+            <div class="outcome-label release">Seller paid</div>
+            <p>The delivery matched the listing and the dispute was found to be without merit. Escrow is released to the seller.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h2>What we cannot help with</h2>
+        <ul class="rule-list">
+          <li>Disputes opened after the buyer already confirmed delivery.</li>
+          <li>Buyer's remorse — changing your mind after receiving a correct order.</li>
+          <li>Issues caused by the buyer (e.g. changing passwords and losing access).</li>
+          <li>Game bans or account restrictions that happen after a confirmed delivery.</li>
+        </ul>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>© 2026 ZenLootX. All rights reserved.</p>
+      <div style="display:flex;gap:20px;">
+        <a href="/how-it-works">How it works</a>
+        <a href="/escrow">Escrow policy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    (async () => {
+      const { createClient } = supabase;
+      const sb = createClient('https://msumlsqfergennhzxqon.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q');
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+      const user = session.user;
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const avatar = user.user_metadata?.avatar_url;
+      const initial = username.charAt(0).toUpperCase();
+      document.getElementById('navActions').innerHTML = `
+        <div style="position:relative;" id="userMenu">
+          <button id="userBtn" style="display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;padding:8px 14px;cursor:pointer;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text);">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);overflow:hidden;">${avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : initial}</div>
+            ${username} <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200;overflow:hidden;">
+            <div style="padding:12px 16px;font-size:12px;color:var(--text-faint);border-bottom:1px solid var(--border);">${user.email}</div>
+            <a href="/profile" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">View Profile</a>
+            <a href="/account" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">My account</a>
+            <a href="/listings/genshin" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">View listings</a>
+            <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+            <button id="navLogout" style="display:block;width:100%;padding:11px 16px;font-size:14px;color:#EF4444;background:none;border:none;font-family:'Geist',sans-serif;text-align:left;cursor:pointer;">Sign out</button>
+          </div>
+        </div>`;
+      document.getElementById('userBtn').addEventListener('click', () => {
+        const dd = document.getElementById('userDropdown');
+        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', e => {
+        const m = document.getElementById('userMenu');
+        if (m && !m.contains(e.target)) { const dd = document.getElementById('userDropdown'); if (dd) dd.style.display = 'none'; }
+      });
+      document.getElementById('navLogout').addEventListener('click', async () => {
+        localStorage.removeItem('zlx_session_row');
+        await sb.auth.signOut();
+        window.location.href = '/login';
+      });
+    })();
+  </script>
+
+</body>
+</html>

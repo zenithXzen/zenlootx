@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How It Works — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:800px;margin:0 auto;padding:0 24px; }
+
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px; }
+    .logo .green { color:var(--accent); }
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s; }
+    .btn-primary { background:var(--accent);color:var(--bg-base); }
+    .btn-primary:hover { background:var(--accent-hover); }
+    .btn-secondary { background:transparent;color:var(--text);border-color:var(--border-hi); }
+    .btn-secondary:hover { background:var(--bg-elevated); }
+
+    main { flex:1;padding:64px 0 80px; }
+
+    .page-header { text-align:center;margin-bottom:64px; }
+    .page-label { display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);padding:4px 14px;border-radius:999px;margin-bottom:20px; }
+    .page-title { font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:14px; }
+    .page-sub { font-size:16px;color:var(--text-dim);max-width:480px;margin:0 auto; }
+
+    .steps { display:flex;flex-direction:column;gap:0; }
+    .step-row { display:grid;grid-template-columns:56px 1fr;gap:24px;padding:32px 0;border-bottom:1px solid var(--border); }
+    .step-row:last-child { border-bottom:none; }
+    .step-num { width:48px;height:48px;border-radius:50%;background:var(--accent-glow);border:1.5px solid rgba(25,195,125,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--accent);flex-shrink:0; }
+    .step-body h3 { font-size:18px;font-weight:700;margin-bottom:8px;letter-spacing:-0.01em; }
+    .step-body p { font-size:14px;color:var(--text-dim);line-height:1.7; }
+
+    .faq-section { margin-top:64px; }
+    .faq-title { font-size:20px;font-weight:700;margin-bottom:28px;letter-spacing:-0.01em; }
+    .faq-item { border-top:1px solid var(--border);padding:20px 0; }
+    .faq-item:last-child { border-bottom:1px solid var(--border); }
+    .faq-q { font-size:15px;font-weight:600;margin-bottom:8px; }
+    .faq-a { font-size:14px;color:var(--text-dim);line-height:1.7; }
+
+    .cta-box { margin-top:64px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:40px;text-align:center; }
+    .cta-box h3 { font-size:20px;font-weight:700;margin-bottom:10px; }
+    .cta-box p { color:var(--text-dim);font-size:14px;margin-bottom:24px; }
+    .cta-box .actions { display:flex;gap:12px;justify-content:center;flex-wrap:wrap; }
+
+    footer { border-top:1px solid var(--border);padding:24px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:800px;margin:0 auto;padding:0 24px; }
+    .footer-inner p { font-size:13px;color:var(--text-faint); }
+    .footer-inner a { font-size:13px;color:var(--text-faint);transition:color 0.16s; }
+    .footer-inner a:hover { color:var(--text-dim); }
+
+    @media (max-width:600px) {
+      .page-title { font-size:26px; }
+      .step-row { grid-template-columns:44px 1fr;gap:16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container" style="max-width:1200px;">
+      <div class="nav-inner">
+        <a href="/" class="logo"><img src="/wallpaper/zx.png" alt="ZenLootX" style="height:32px;width:auto;"><span>Zen<span class="green">Loot</span>X</span></a>
+        <div id="navActions" style="display:flex;gap:10px;">
+          <a href="/login" class="btn btn-secondary">Sign in</a>
+          <a href="/register" class="btn btn-primary">Get started</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <div class="page-header">
+        <div class="page-label">How it works</div>
+        <h1 class="page-title">Trade safely in three steps</h1>
+        <p class="page-sub">Your money is protected from the moment you pay until you confirm — no exceptions.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Find a listing</h3>
+            <p>Browse verified listings across Genshin Impact, Mobile Legends, and Valorant. Filter by game, listing type (account, items, top-up), price range, and seller rating. Every listing shows exactly what you're getting — screenshots, account details, and attributes are required before a listing goes live.</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Pay into escrow</h3>
+            <p>When you're ready to buy, your payment goes into ZenLootX escrow — not to the seller. The seller is notified and has a set window to deliver the account or items. Your money is held securely and cannot be touched by the seller until you confirm delivery.</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Confirm delivery</h3>
+            <p>Once the seller delivers, log in, check the account or items match the listing, and confirm. That releases the payment to the seller. If something is wrong — wrong account, missing items, misrepresented details — open a dispute instead. We review both sides and make a fair call.</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Leave a review</h3>
+            <p>After every completed order, both buyer and seller can leave a review. Ratings are tied to real, completed transactions — not self-reported. This keeps the marketplace honest and helps future buyers make informed decisions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-section">
+        <div class="faq-title">Common questions</div>
+        <div class="faq-item">
+          <div class="faq-q">What if the seller doesn't deliver?</div>
+          <div class="faq-a">If the seller misses the delivery window or never responds, the order is cancelled and your payment is refunded in full. You will never lose money to a non-delivering seller.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">What if the account is different from the listing?</div>
+          <div class="faq-a">Don't confirm — open a dispute. Our team will review the listing details against what was delivered and decide whether to release the payment or issue a refund.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How are sellers verified?</div>
+          <div class="faq-a">Every seller goes through an ID verification process before they can list anything. Anonymous sellers are not allowed on ZenLootX.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How long does escrow hold the money?</div>
+          <div class="faq-a">Escrow holds the payment until you confirm delivery or a dispute is resolved. There is no automatic release — you are always in control of when the seller gets paid.</div>
+        </div>
+      </div>
+
+      <div class="cta-box">
+        <h3>Ready to start?</h3>
+        <p>Create a free account and browse listings in under a minute.</p>
+        <div class="actions">
+          <a href="/register" class="btn btn-primary">Create account</a>
+          <a href="/listings/genshin" class="btn btn-secondary">Browse listings</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>© 2026 ZenLootX. All rights reserved.</p>
+      <div style="display:flex;gap:20px;">
+        <a href="/escrow">Escrow policy</a>
+        <a href="/disputes">Dispute process</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    (async () => {
+      const { createClient } = supabase;
+      const sb = createClient('https://msumlsqfergennhzxqon.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q');
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+      const user = session.user;
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const avatar = user.user_metadata?.avatar_url;
+      const initial = username.charAt(0).toUpperCase();
+      document.getElementById('navActions').innerHTML = `
+        <div style="position:relative;" id="userMenu">
+          <button id="userBtn" style="display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;padding:8px 14px;cursor:pointer;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text);">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);overflow:hidden;">${avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : initial}</div>
+            ${username} <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200;overflow:hidden;">
+            <div style="padding:12px 16px;font-size:12px;color:var(--text-faint);border-bottom:1px solid var(--border);">${user.email}</div>
+            <a href="/profile" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">View Profile</a>
+            <a href="/account" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">My account</a>
+            <a href="/listings/genshin" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">View listings</a>
+            <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+            <button id="navLogout" style="display:block;width:100%;padding:11px 16px;font-size:14px;color:#EF4444;background:none;border:none;font-family:'Geist',sans-serif;text-align:left;cursor:pointer;">Sign out</button>
+          </div>
+        </div>`;
+      document.getElementById('userBtn').addEventListener('click', () => {
+        const dd = document.getElementById('userDropdown');
+        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', e => {
+        const m = document.getElementById('userMenu');
+        if (m && !m.contains(e.target)) { const dd = document.getElementById('userDropdown'); if (dd) dd.style.display = 'none'; }
+      });
+      document.getElementById('navLogout').addEventListener('click', async () => {
+        localStorage.removeItem('zlx_session_row');
+        await sb.auth.signOut();
+        window.location.href = '/login';
+      });
+    })();
+  </script>
+
+</body>
+</html>

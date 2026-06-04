@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escrow Policy — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:800px;margin:0 auto;padding:0 24px; }
+
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px; }
+    .logo .green { color:var(--accent); }
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s; }
+    .btn-primary { background:var(--accent);color:var(--bg-base); }
+    .btn-primary:hover { background:var(--accent-hover); }
+    .btn-secondary { background:transparent;color:var(--text);border-color:var(--border-hi); }
+    .btn-secondary:hover { background:var(--bg-elevated); }
+
+    main { flex:1;padding:64px 0 80px; }
+
+    .page-header { text-align:center;margin-bottom:64px; }
+    .page-label { display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);padding:4px 14px;border-radius:999px;margin-bottom:20px; }
+    .page-title { font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:14px; }
+    .page-sub { font-size:16px;color:var(--text-dim);max-width:480px;margin:0 auto; }
+
+    .section-block { margin-bottom:48px; }
+    .section-block h2 { font-size:18px;font-weight:700;margin-bottom:14px;letter-spacing:-0.01em;padding-bottom:12px;border-bottom:1px solid var(--border); }
+    .section-block p { font-size:14px;color:var(--text-dim);line-height:1.8;margin-bottom:12px; }
+    .section-block p:last-child { margin-bottom:0; }
+
+    .highlight-box { background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);border-radius:10px;padding:20px 24px;margin-bottom:48px; }
+    .highlight-box p { font-size:14px;color:var(--text-dim);line-height:1.7;margin:0; }
+    .highlight-box strong { color:var(--accent); }
+
+    .rule-list { list-style:none;display:flex;flex-direction:column;gap:12px;margin-top:4px; }
+    .rule-list li { display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-dim);line-height:1.7; }
+    .rule-list li::before { content:'→';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px; }
+
+    footer { border-top:1px solid var(--border);padding:24px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:800px;margin:0 auto;padding:0 24px; }
+    .footer-inner p { font-size:13px;color:var(--text-faint); }
+    .footer-inner a { font-size:13px;color:var(--text-faint);transition:color 0.16s; }
+    .footer-inner a:hover { color:var(--text-dim); }
+
+    @media (max-width:600px) { .page-title { font-size:26px; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container" style="max-width:1200px;">
+      <div class="nav-inner">
+        <a href="/" class="logo"><img src="/wallpaper/zx.png" alt="ZenLootX" style="height:32px;width:auto;"><span>Zen<span class="green">Loot</span>X</span></a>
+        <div id="navActions" style="display:flex;gap:10px;">
+          <a href="/login" class="btn btn-secondary">Sign in</a>
+          <a href="/register" class="btn btn-primary">Get started</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <div class="page-header">
+        <div class="page-label">Escrow Policy</div>
+        <h1 class="page-title">How your money is protected</h1>
+        <p class="page-sub">ZenLootX holds every payment in escrow until the buyer confirms delivery. No exceptions.</p>
+      </div>
+
+      <div class="highlight-box">
+        <p><strong>The core rule:</strong> Money never goes directly from buyer to seller. Every peso, dollar, or currency unit passes through ZenLootX escrow first — and is only released when the buyer confirms the order is correct.</p>
+      </div>
+
+      <div class="section-block">
+        <h2>What is escrow?</h2>
+        <p>Escrow is a neutral holding system. When you pay for a listing, ZenLootX holds that money in a secure account that neither the buyer nor the seller can access directly. The seller only gets paid after you — the buyer — confirm that the account or items were delivered as described.</p>
+        <p>This protects buyers from scams and gives sellers a legitimate, trustworthy way to get paid without the buyer being able to claim a refund after receiving the goods.</p>
+      </div>
+
+      <div class="section-block">
+        <h2>How escrow works step by step</h2>
+        <ul class="rule-list">
+          <li>Buyer submits payment — funds are held by ZenLootX, not sent to the seller.</li>
+          <li>Seller is notified and has a set window to deliver the account credentials or items.</li>
+          <li>Buyer logs in, verifies the account or items match the listing description.</li>
+          <li>Buyer clicks "Confirm delivery" — escrow releases the payment to the seller.</li>
+          <li>If there's a problem, the buyer opens a dispute instead of confirming. No payment is released during an open dispute.</li>
+        </ul>
+      </div>
+
+      <div class="section-block">
+        <h2>When is payment released?</h2>
+        <p>Payment is released to the seller only when one of the following happens:</p>
+        <ul class="rule-list">
+          <li>The buyer clicks "Confirm delivery" and marks the order as complete.</li>
+          <li>A dispute is resolved in the seller's favor by the ZenLootX team.</li>
+          <li>The buyer's confirmation window expires without action (auto-release — specific window disclosed at checkout).</li>
+        </ul>
+      </div>
+
+      <div class="section-block">
+        <h2>When is payment refunded?</h2>
+        <ul class="rule-list">
+          <li>The seller does not deliver within the required window.</li>
+          <li>A dispute is opened and resolved in the buyer's favor.</li>
+          <li>The listing is found to be materially misrepresented.</li>
+          <li>The order is cancelled before the seller begins delivery.</li>
+        </ul>
+      </div>
+
+      <div class="section-block">
+        <h2>What escrow does not cover</h2>
+        <p>Escrow protects the transaction — not decisions made after delivery is confirmed. Once you click "Confirm delivery," the order is complete and payment is released. Only confirm when you have fully verified the account or items.</p>
+        <p>If you confirm delivery before checking and later discover an issue, this falls outside escrow coverage. Always verify before confirming.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>© 2026 ZenLootX. All rights reserved.</p>
+      <div style="display:flex;gap:20px;">
+        <a href="/how-it-works">How it works</a>
+        <a href="/disputes">Dispute process</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    (async () => {
+      const { createClient } = supabase;
+      const sb = createClient('https://msumlsqfergennhzxqon.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q');
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+      const user = session.user;
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const avatar = user.user_metadata?.avatar_url;
+      const initial = username.charAt(0).toUpperCase();
+      document.getElementById('navActions').innerHTML = `
+        <div style="position:relative;" id="userMenu">
+          <button id="userBtn" style="display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;padding:8px 14px;cursor:pointer;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;color:var(--text);">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);overflow:hidden;">${avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : initial}</div>
+            ${username} <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200;overflow:hidden;">
+            <div style="padding:12px 16px;font-size:12px;color:var(--text-faint);border-bottom:1px solid var(--border);">${user.email}</div>
+            <a href="/profile" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">View Profile</a>
+            <a href="/account" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">My account</a>
+            <a href="/listings/genshin" style="display:block;padding:11px 16px;font-size:14px;color:var(--text-dim);">View listings</a>
+            <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+            <button id="navLogout" style="display:block;width:100%;padding:11px 16px;font-size:14px;color:#EF4444;background:none;border:none;font-family:'Geist',sans-serif;text-align:left;cursor:pointer;">Sign out</button>
+          </div>
+        </div>`;
+      document.getElementById('userBtn').addEventListener('click', () => {
+        const dd = document.getElementById('userDropdown');
+        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', e => {
+        const m = document.getElementById('userMenu');
+        if (m && !m.contains(e.target)) { const dd = document.getElementById('userDropdown'); if (dd) dd.style.display = 'none'; }
+      });
+      document.getElementById('navLogout').addEventListener('click', async () => {
+        localStorage.removeItem('zlx_session_row');
+        await sb.auth.signOut();
+        window.location.href = '/login';
+      });
+    })();
+  </script>
+
+</body>
+</html>
