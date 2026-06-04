@@ -75,12 +75,16 @@ export async function onRequestPost({ request, env }) {
       if (!Array.isArray(walletData) || !walletData[0]) {
         return Response.json({ error: 'Wallet not found for this user.' }, { status: 404 });
       }
-      const balance   = Number(walletData[0].balance || 0);
-      const refundRes = await sb(env, `wallets?user_id=eq.${userId}`, {
+      const balance    = Number(walletData[0].balance || 0);
+      const refundRes  = await sb(env, `wallets?user_id=eq.${userId}`, {
         method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
         body: JSON.stringify({ balance: balance + Number(amount) }),
       });
-      if (!refundRes.ok) return Response.json({ error: 'Failed to refund balance. Please try again.' }, { status: 500 });
+      const refundData = await refundRes.json();
+      if (!refundRes.ok || !Array.isArray(refundData) || refundData.length === 0) {
+        return Response.json({ error: 'Failed to refund wallet balance. Please try again.' }, { status: 500 });
+      }
     }
 
     // Mark the request

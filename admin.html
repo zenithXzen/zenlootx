@@ -1246,7 +1246,7 @@
             </div>
           </div>
           <div class="app-right">
-            <span class="status-badge ${badgeCls}">${w.status}</span>
+            ${w.status !== 'pending' ? `<span class="status-badge ${badgeCls}">${w.status}</span>` : ''}
             ${w.status === 'pending' ? `
               <button class="btn btn-primary btn-sm wd-approve" data-id="${w.id}" data-uid="${w.user_id}" data-amt="${w.amount}">Approve</button>
               <button class="btn btn-danger  btn-sm wd-reject"  data-id="${w.id}" data-uid="${w.user_id}" data-amt="${w.amount}">Reject</button>
