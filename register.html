@@ -552,6 +552,19 @@
           return;
         }
 
+        // Create profile row via server function (service key, bypasses RLS/triggers)
+        const session = signUpData.session;
+        if (session?.access_token) {
+          await fetch('/api/create-profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ username }),
+          });
+        }
+
         btn.textContent = 'Account created!';
         const s = document.getElementById('step2Success');
         s.textContent = 'Account created! Redirecting…';
