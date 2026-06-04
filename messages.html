@@ -201,51 +201,26 @@
 
   // ── Conversations ─────────────────────────────────────────────
   async function loadConversations() {
-    // 1. Load existing conversations
-    const { data: convData, error: convErr } = await sb
-      .from('conversations')
-      .select('*, listing:listing_id(title,game)')
-      .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
-      .order('created_at', { ascending: false });
+    // Use service-key API to bypass RLS issues
+    const { data: { session } } = await sb.auth.getSession();
+    const res  = await fetch('/api/my-conversations', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
 
-    if (convErr) console.error('conversations error:', convErr);
-
-    const existing = convData || [];
-    const coveredOrders   = new Set(existing.map(c => c.order_id).filter(Boolean));
-    const coveredListings = new Set(existing.map(c => c.listing_id).filter(Boolean));
-
-    // 2. Load orders — create missing conversations for any order that has none
-    const { data: orders, error: ordErr } = await sb
-      .from('orders')
-      .select('id,buyer_id,seller_id,listing_id')
-      .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
-      .order('created_at', { ascending: false });
-
-    if (ordErr) console.error('orders error:', ordErr);
-
-    for (const o of (orders || [])) {
-      if (coveredOrders.has(o.id) || coveredListings.has(o.listing_id)) continue;
-      // Auto-create missing conversation
-      const { data: nc, error: ncErr } = await sb.from('conversations').insert({
-        buyer_id:   o.buyer_id,
-        seller_id:  o.seller_id,
-        order_id:   o.id,
-        listing_id: o.listing_id,
-      }).select('*, listing:listing_id(title,game)').single();
-
-      if (ncErr) console.error('create conv error:', ncErr);
-      if (nc) {
-        // Send welcome message for this newly created conversation
-        await sb.from('messages').insert({
-          conversation_id: nc.id,
-          sender_id:       o.buyer_id,
-          content:         `__system__ 🎉 Congratulations on your purchase! Thank you for doing business on ZenLootX. The seller will deliver your account details shortly. Feel free to ask any questions here — we're happy to help make this a smooth experience for both of you.`,
-        });
-        existing.push(nc);
-        coveredOrders.add(o.id);
-        if (o.listing_id) coveredListings.add(o.listing_id);
-      }
+    if (!res.ok) {
+      console.error('Conversations API error:', await res.text());
+      document.getElementById('convList').innerHTML = `
+        <div class="sidebar-empty">
+          <div style="font-size:32px;">⚠️</div>
+          <p style="color:var(--danger);">Could not load conversations.<br>Please refresh and try again.</p>
+        </div>`;
+      return;
     }
+
+    const data     = await res.json();
+    const existing = data.conversations || [];
+    const profiles = data.profiles      || {};
+    Object.assign(profileCache, profiles);
 
     if (!existing.length) {
       document.getElementById('convList').innerHTML = `
@@ -257,11 +232,6 @@
     }
 
     conversations = existing;
-
-    // Load other-party profiles
-    const otherIds = [...new Set(existing.map(c => c.buyer_id === currentUser.id ? c.seller_id : c.buyer_id))];
-    const { data: profiles } = await sb.from('profiles').select('id,username,avatar_url').in('id', otherIds);
-    (profiles || []).forEach(p => { profileCache[p.id] = p; });
 
     renderConvList();
 

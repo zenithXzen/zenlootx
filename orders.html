@@ -482,52 +482,26 @@
     currentUserId = userId;
     await initNav(session.user);
 
-    // Fetch purchases (as buyer)
-    const { data: rawPurchases, error: buyErr } = await sb
-      .from('orders').select('*').eq('buyer_id', userId).order('created_at', { ascending: false });
+    // Fetch via service-key API (bypasses RLS issues)
+    const ordRes  = await fetch('/api/my-orders', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
 
-    // Fetch sales (as seller)
-    const { data: rawSales, error: sellErr } = await sb
-      .from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false });
-
-    if (buyErr || sellErr) {
-      console.error('Orders load error:', buyErr || sellErr);
-      const errMsg = (buyErr || sellErr).message || 'Unknown error';
+    if (!ordRes.ok) {
+      const err = await ordRes.json().catch(() => ({}));
+      console.error('Orders API error:', err);
       document.getElementById('purchaseList').innerHTML = `
         <div class="empty" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px;padding:28px;">
           <div style="font-size:13px;color:var(--danger);font-weight:600;margin-bottom:6px;">Could not load orders</div>
-          <div style="font-size:12px;color:var(--text-faint);">${errMsg}</div>
+          <div style="font-size:12px;color:var(--text-faint);">${err.error || 'Unknown error'}</div>
         </div>`;
       document.getElementById('saleList').innerHTML = '';
       return;
     }
 
-    // Enrich with listing + profile data
-    async function enrich(orders, role) {
-      if (!orders?.length) return orders || [];
-      const listingIds = [...new Set(orders.map(o => o.listing_id).filter(Boolean))];
-      const userIds    = [...new Set(orders.map(o => role === 'buyer' ? o.seller_id : o.buyer_id).filter(Boolean))];
-
-      const [{ data: listings }, { data: profiles }] = await Promise.all([
-        listingIds.length ? sb.from('listings').select('id,title,game').in('id', listingIds) : { data: [] },
-        userIds.length    ? sb.from('profiles').select('id,username,avatar_url').in('id', userIds) : { data: [] },
-      ]);
-
-      const listingMap = Object.fromEntries((listings || []).map(l => [l.id, l]));
-      const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
-
-      return orders.map(o => ({
-        ...o,
-        listings: listingMap[o.listing_id] || null,
-        seller_profile: role === 'buyer' ? (profileMap[o.seller_id] || null) : null,
-        buyer_profile:  role === 'seller' ? (profileMap[o.buyer_id]  || null) : null,
-      }));
-    }
-
-    const [purchases, sales] = await Promise.all([
-      enrich(rawPurchases, 'buyer'),
-      enrich(rawSales,     'seller'),
-    ]);
+    const ordData = await ordRes.json();
+    const purchases = ordData.purchases || [];
+    const sales     = ordData.sales     || [];
 
     allPurchases = purchases || [];
     allSales     = sales     || [];
