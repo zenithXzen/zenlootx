@@ -318,13 +318,10 @@
     const GAME_ATTRS = {
       genshin: {
         account: [
-          { key:'ar_level',         label:'AR Level',           type:'number', placeholder:'e.g. 55', min:1, max:60 },
-          { key:'server',           label:'Server',             type:'select', options:['Asia','America','Europe','TW/HK/MO'] },
-          { key:'primogems',        label:'Primogems',          type:'number', placeholder:'e.g. 5000' },
-          { key:'five_star_chars',  label:'5★ Characters',      type:'text',   placeholder:'e.g. Hu Tao, Raiden, Kazuha' },
-          { key:'five_star_weapons',label:'5★ Weapons',         type:'text',   placeholder:'e.g. Staff of Homa, Aquila Favonia' },
-          { key:'welkin_moon',      label:'Welkin Moon',        type:'select', options:['No','Yes'] },
-          { key:'battle_pass',      label:'Battle Pass',        type:'select', options:['No','Yes'] },
+          { key:'ar_level',       label:'AR Level',             type:'number', placeholder:'e.g. 55', min:1, max:60 },
+          { key:'server',         label:'Server',               type:'select', options:['Asia','America','Europe','TW/HK/MO'] },
+          { key:'five_star_count',label:'Number of 5 Stars',    type:'number', placeholder:'e.g. 12' },
+          { key:'deadlink',       label:'Deadlink Email',       type:'select', options:['Yes — original email is inaccessible','No — original email is still active'], hint:'Deadlink = original email no longer accessible. Safer for buyer.' },
         ],
         topup: [
           { key:'server',           label:'Server',             type:'select', options:['Asia','America','Europe','TW/HK/MO'] },
@@ -333,12 +330,11 @@
       },
       mlbb: {
         account: [
-          { key:'season_rank',      label:'Season Rank',        type:'select', options:['Warrior','Elite','Master','Grandmaster','Epic','Legend','Mythic','Mythical Glory','Mythical Immortal'] },
+          { key:'current_rank',     label:'Current Rank',       type:'select', options:['Warrior','Elite','Master','Grandmaster','Epic','Legend','Mythic','Mythical Glory','Mythical Immortal','Mythical Immortal (Top)'] },
+          { key:'collection_level', label:'Collection Level',   type:'select', options:['None','Renowned Collector I','Renowned Collector II','Renowned Collector III','Renowned Collector IV','Renowned Collector V','Exalted Collector I','Exalted Collector II','Exalted Collector III','Exalted Collector IV','Exalted Collector V','Mega Collector','World Collector'] },
+          { key:'max_emblems',      label:'Number of Max Emblem',type:'number', placeholder:'e.g. 5', min:0, max:8 },
           { key:'total_skins',      label:'Total Skins',        type:'number', placeholder:'e.g. 120' },
-          { key:'total_heroes',     label:'Total Heroes',       type:'number', placeholder:'e.g. 80' },
-          { key:'diamonds',         label:'Diamonds',           type:'number', placeholder:'e.g. 1000' },
           { key:'server',           label:'Server',             type:'select', options:['Southeast Asia','North America','Europe','Middle East','South Asia'] },
-          { key:'notable_skins',    label:'Notable Skins',      type:'text',   placeholder:'e.g. Collector: Gusion, Epic: Layla' },
         ],
         items: [
           { key:'item_name',        label:'Item Name',          type:'text',   placeholder:'e.g. Collector Skin — Fanny' },
@@ -351,12 +347,11 @@
       },
       valorant: {
         account: [
-          { key:'rank',             label:'Rank',               type:'select', options:['Unranked','Iron','Bronze','Silver','Gold','Platinum','Diamond','Ascendant','Immortal','Radiant'] },
-          { key:'region',           label:'Region',             type:'select', options:['NA','EU','AP','KR','BR','LATAM','TR'] },
-          { key:'agents_unlocked',  label:'Agents Unlocked',    type:'number', placeholder:'e.g. 20' },
-          { key:'skin_count',       label:'Skins',              type:'number', placeholder:'e.g. 15' },
-          { key:'vp_balance',       label:'VP Balance',         type:'number', placeholder:'e.g. 300' },
-          { key:'notable_skins',    label:'Notable Skins',      type:'text',   placeholder:'e.g. Prime Vandal, Reaver Operator' },
+          { key:'current_rank',       label:'Current Rank',         type:'select', options:['Unranked','Iron 1','Iron 2','Iron 3','Bronze 1','Bronze 2','Bronze 3','Silver 1','Silver 2','Silver 3','Gold 1','Gold 2','Gold 3','Platinum 1','Platinum 2','Platinum 3','Diamond 1','Diamond 2','Diamond 3','Ascendant 1','Ascendant 2','Ascendant 3','Immortal 1','Immortal 2','Immortal 3','Radiant'] },
+          { key:'peak_rank',          label:'Peak Rank',            type:'select', options:['Unranked','Iron','Bronze','Silver','Gold','Platinum','Diamond','Ascendant','Immortal','Radiant'] },
+          { key:'account_level',      label:'Account Level',        type:'number', placeholder:'e.g. 120' },
+          { key:'premium_skins',      label:'Number of Premium Skins', type:'number', placeholder:'e.g. 15' },
+          { key:'region',             label:'Region',               type:'select', options:['NA','EU','AP','KR','BR','LATAM','TR'] },
         ],
         items: [
           { key:'skin_name',        label:'Skin Name',          type:'text',   placeholder:'e.g. Prime Vandal' },
@@ -381,10 +376,11 @@
       document.getElementById('attrSectionTitle').textContent = ATTR_TITLES[selectedType] || 'Details';
       fieldsEl.innerHTML = defs.map(f => {
         const id = `attr_${f.key}`;
+        const hint = f.hint ? `<span class="hint" style="color:var(--text-faint)">${f.hint}</span>` : '';
         if (f.type === 'select') {
-          return `<div class="field"><label>${f.label}</label><select id="${id}"><option value="">— Select —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+          return `<div class="field"><label>${f.label}</label><select id="${id}"><option value="">— Select —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>${hint}</div>`;
         }
-        return `<div class="field"><label>${f.label}</label><input type="${f.type}" id="${id}" placeholder="${f.placeholder||''}"${f.min!==undefined?` min="${f.min}"`:''}${f.max!==undefined?` max="${f.max}"`:''}></div>`;
+        return `<div class="field"><label>${f.label}</label><input type="${f.type}" id="${id}" placeholder="${f.placeholder||''}"${f.min!==undefined?` min="${f.min}"`:''}${f.max!==undefined?` max="${f.max}"`:''}>${hint}</div>`;
       }).join('');
       section.style.display = '';
     }
