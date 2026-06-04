@@ -330,10 +330,28 @@
     const av      = other.avatar_url ? `<img src="${other.avatar_url}" alt="${name}">` : initial;
     const isBuyer = conv?.buyer_id === currentUser.id;
 
-    // Use order data already enriched by the API
-    const orderData   = conv?.order || null;
-    let escrowStatus  = orderData?.escrow_status || null;
-    let orderId       = conv?.order_id || orderData?.id || null;
+    // Use order data enriched by API, or fall back to my-orders lookup
+    let orderData    = conv?.order || null;
+    let orderId      = conv?.order_id || orderData?.id || null;
+    let escrowStatus = orderData?.escrow_status || null;
+
+    if (!orderData && isBuyer) {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const r = await fetch('/api/my-orders', { headers: { Authorization: `Bearer ${session.access_token}` } });
+        if (r.ok) {
+          const d = await r.json();
+          const otherId = conv?.seller_id;
+          // Try listing match first, then any escrow order with that seller
+          const byListing = conv?.listing_id
+            ? (d.purchases || []).find(o => o.listing_id === conv.listing_id && o.escrow_status === 'holding')
+            : null;
+          const bySeller  = (d.purchases || []).find(o => o.seller_id === otherId && o.escrow_status === 'holding');
+          const match = byListing || bySeller;
+          if (match) { orderData = match; orderId = match.id; escrowStatus = match.escrow_status; }
+        }
+      } catch {}
+    }
 
     const releaseBtn = isBuyer && orderId
       ? escrowStatus === 'released'
