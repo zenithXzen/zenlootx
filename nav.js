@@ -121,6 +121,7 @@ async function initMsgBadge(userId) {
   }
   function isUnread(c) {
     if (!c.last_message_at) return false;
+    if (c.last_message_sender_id === userId) return false; // your own message, not unread
     return new Date(c.last_message_at).getTime() > getLastRead(c.id);
   }
   function setBadge(count) {
