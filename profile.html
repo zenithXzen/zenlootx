@@ -587,6 +587,7 @@
       initTabs();
       initReportModal(user);
       await initNav(user);
+      initEditModal();
       loadListings(user.id);
       loadTierTrophy(user.id);
       loadReviews(user.id);
@@ -959,13 +960,12 @@
       editingListingId = null;
     }
 
-    document.getElementById('editListingOverlay').addEventListener('click', e => {
-      if (e.target === document.getElementById('editListingOverlay')) closeEditModal();
-    });
-
-    document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
-
-    document.getElementById('editSaveBtn').addEventListener('click', async () => {
+    function initEditModal() {
+      document.getElementById('editListingOverlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('editListingOverlay')) closeEditModal();
+      });
+      document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+      document.getElementById('editSaveBtn').addEventListener('click', async () => {
       const btn   = document.getElementById('editSaveBtn');
       const errEl = document.getElementById('editListingErr');
       errEl.style.display = 'none';
@@ -1005,7 +1005,8 @@
         closeEditModal();
         toast('Listing updated.', 'success');
       } catch { errEl.textContent = 'Something went wrong.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Save changes'; }
-    });
+      });
+    }
 
     async function loadListings(userId) {
       const wrap = document.getElementById('listingsWrap');
