@@ -172,6 +172,36 @@
 
 </div>
 
+  <!-- Rate Modal -->
+  <div id="rateOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:420px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;">
+      <h3 style="font-size:18px;font-weight:700;text-align:center;margin-bottom:6px;">Leave a review</h3>
+      <p style="font-size:13px;color:var(--text-faint);text-align:center;margin-bottom:24px;">How was your experience with this transaction?</p>
+
+      <!-- Stars -->
+      <div id="starRow" style="display:flex;justify-content:center;gap:8px;margin-bottom:20px;">
+        ${[1,2,3,4,5].map(n => `
+          <button data-star="${n}" onclick="selectStar(${n})"
+            style="font-size:32px;background:none;border:none;cursor:pointer;opacity:0.3;transition:opacity 0.15s,transform 0.15s;line-height:1;"
+            onmouseover="hoverStar(${n})" onmouseout="unhoverStar()">★</button>`).join('')}
+      </div>
+      <div id="starLabel" style="text-align:center;font-size:13px;font-weight:600;color:var(--warning);margin-bottom:16px;height:18px;"></div>
+
+      <!-- Comment -->
+      <textarea id="rateComment" placeholder="Share details about your experience (optional)…"
+        style="width:100%;background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:90px;transition:border-color 0.16s;"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+
+      <div id="rateErr" style="display:none;font-size:13px;color:var(--danger);margin-top:10px;text-align:center;"></div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="closeRateModal()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text);border:1px solid var(--border-hi);">Cancel</button>
+        <button id="rateSubmitBtn" onclick="submitReview()"
+          style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:var(--warning);color:#1B1B1B;border:none;">Submit review</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Release Payment Confirm Modal -->
   <div id="releaseConfirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:center;justify-content:center;padding:20px;">
     <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:400px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;">
@@ -362,16 +392,30 @@
     const statusLabel  = { holding:'In Escrow', released:'Completed', disputed:'Disputed', refunded:'Refunded' }[escrowStatus] || null;
     const statusColor  = { holding:'var(--warning)', released:'var(--success)', disputed:'var(--danger)', refunded:'var(--text-faint)' }[escrowStatus] || 'var(--text-faint)';
 
-    // Release button — show for buyers when status is not released/refunded/cancelled
+    // Determine what action button to show
     const DONE_STATUSES = ['released','refunded','cancelled'];
-    const showRelease = isBuyer && !DONE_STATUSES.includes(escrowStatus);
-    const releaseArea = showRelease
-      ? `<button onclick="releaseFromConv('${conv.id}','${conv.seller_id}','${conv.listing_id || ''}')" id="releaseBtn"
-           style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(34,197,94,0.4);background:rgba(34,197,94,0.08);color:var(--success);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
-           🔓 Release Payment
-         </button>`
-      : escrowStatus === 'released'
-        ? `<span style="font-size:12px;font-weight:600;color:var(--success);padding:6px 12px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2);">✓ Payment released</span>`
+    const otherId2 = isBuyer ? conv.seller_id : conv.buyer_id;
+
+    // Check if already reviewed this order
+    let alreadyReviewed = false;
+    if (escrowStatus === 'released' && orderId) {
+      const { data: existing } = await sb.from('reviews')
+        .select('id').eq('reviewer_id', currentUser.id).eq('order_id', orderId).maybeSingle();
+      alreadyReviewed = !!existing;
+    }
+
+    const releaseArea = escrowStatus === 'released'
+      ? alreadyReviewed
+        ? `<span style="font-size:12px;font-weight:600;color:var(--text-faint);padding:6px 12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);">✓ Reviewed</span>`
+        : `<button id="rateBtn" onclick="openRateModal('${orderId || ''}','${otherId2}')"
+             style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(245,185,71,0.4);background:rgba(245,185,71,0.08);color:var(--warning);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
+             ⭐ Rate them
+           </button>`
+      : isBuyer && !DONE_STATUSES.includes(escrowStatus)
+        ? `<button onclick="releaseFromConv('${conv.id}','${conv.seller_id}','${conv.listing_id || ''}')" id="releaseBtn"
+             style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(34,197,94,0.4);background:rgba(34,197,94,0.08);color:var(--success);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
+             🔓 Release Payment
+           </button>`
         : '';
 
     const purchaseSummary = `
@@ -558,6 +602,84 @@
   }
 
   // ── Release Payment ───────────────────────────────────────────
+  // ── Rating Modal ──────────────────────────────────────────────
+  let _rateOrderId = '', _rateRevieweeId = '', _selectedStar = 0;
+  const STAR_LABELS = { 1:'Poor', 2:'Fair', 3:'Good', 4:'Great', 5:'Excellent!' };
+
+  function openRateModal(orderId, revieweeId) {
+    _rateOrderId   = orderId;
+    _rateRevieweeId = revieweeId;
+    _selectedStar  = 0;
+    document.getElementById('rateComment').value = '';
+    document.getElementById('rateErr').style.display = 'none';
+    document.getElementById('rateSubmitBtn').disabled = false;
+    document.getElementById('rateSubmitBtn').textContent = 'Submit review';
+    document.getElementById('starLabel').textContent = '';
+    renderStars(0);
+    const overlay = document.getElementById('rateOverlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    overlay.onclick = e => { if (e.target === overlay) closeRateModal(); };
+  }
+
+  function closeRateModal() {
+    document.getElementById('rateOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function renderStars(filled) {
+    document.querySelectorAll('#starRow button').forEach(btn => {
+      const n = parseInt(btn.dataset.star);
+      btn.style.opacity  = n <= filled ? '1' : '0.25';
+      btn.style.color    = n <= filled ? 'var(--warning)' : 'var(--text-faint)';
+      btn.style.transform = n <= filled ? 'scale(1.15)' : 'scale(1)';
+    });
+  }
+
+  function selectStar(n) {
+    _selectedStar = n;
+    renderStars(n);
+    document.getElementById('starLabel').textContent = STAR_LABELS[n] || '';
+  }
+  function hoverStar(n)  { renderStars(n); }
+  function unhoverStar() { renderStars(_selectedStar); }
+
+  async function submitReview() {
+    const btn = document.getElementById('rateSubmitBtn');
+    const err = document.getElementById('rateErr');
+    err.style.display = 'none';
+
+    if (!_selectedStar) {
+      err.textContent = 'Please select a star rating.';
+      err.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const comment = document.getElementById('rateComment').value.trim();
+    const { error } = await sb.from('reviews').insert({
+      order_id:    _rateOrderId || null,
+      reviewer_id: currentUser.id,
+      reviewee_id: _rateRevieweeId,
+      rating:      _selectedStar,
+      comment:     comment || null,
+    });
+
+    if (error) {
+      err.textContent = error.message || 'Failed to submit. Please try again.';
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Submit review';
+      return;
+    }
+
+    closeRateModal();
+    const rateBtn = document.getElementById('rateBtn');
+    if (rateBtn) rateBtn.outerHTML = `<span style="font-size:12px;font-weight:600;color:var(--text-faint);padding:6px 12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);">✓ Reviewed</span>`;
+  }
+
   let _releaseConvId = '', _releaseSellerId = '', _releaseListingId = '';
 
   function releaseFromConv(convId, sellerId, listingId) {
@@ -622,7 +744,12 @@
 
     closeReleaseConfirm();
     const releaseBtn = document.getElementById('releaseBtn');
-    if (releaseBtn) releaseBtn.outerHTML = `<span style="font-size:12px;font-weight:600;color:var(--success);padding:6px 12px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2);">✓ Payment released</span>`;
+    const revieweeId = _releaseSellerId;
+    const oid        = order.id;
+    if (releaseBtn) releaseBtn.outerHTML = `<button id="rateBtn" onclick="openRateModal('${oid}','${revieweeId}')"
+      style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(245,185,71,0.4);background:rgba(245,185,71,0.08);color:var(--warning);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
+      ⭐ Rate them
+    </button>`;
   }
 
   async function releasePayment(orderId) {
