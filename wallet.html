@@ -240,13 +240,13 @@
             <div class="action-sub">Cash out to GCash, Maya, bank, or crypto</div>
           </div>
         </div>
-        <div class="action-card disabled" id="addFundsCard">
-          <div class="action-icon gray">
+        <div class="action-card" id="addFundsCard" onclick="openAddFundsModal()">
+          <div class="action-icon green">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
           </div>
           <div>
-            <div class="action-title" style="display:flex;align-items:center;gap:8px;">Add funds <span class="soon-badge">Coming soon</span></div>
-            <div class="action-sub">Top up via GCash, card, or bank transfer</div>
+            <div class="action-title">Add funds</div>
+            <div class="action-sub">Top up via GCash, Maya, Wise, or Binance</div>
           </div>
         </div>
         <div class="action-card" onclick="window.location.href='/orders'">
@@ -360,6 +360,75 @@
       <div class="modal-footer" id="withdrawFooter">
         <button class="btn btn-ghost" onclick="closeWithdrawModal()">Cancel</button>
         <button class="btn btn-primary" id="withdrawSubmitBtn" onclick="submitWithdrawal()">Request withdrawal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD FUNDS MODAL -->
+  <div class="modal-overlay" id="addFundsModal" onclick="handleAddFundsOverlayClick(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Add Funds</h2>
+        <button class="modal-close" onclick="closeAddFundsModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-success" id="addFundsSuccess">
+          <div class="modal-success-icon">✅</div>
+          <h3>Request submitted!</h3>
+          <p>We received your top-up request. Once your payment is confirmed, your balance will be updated within 1–3 business days.</p>
+          <button class="btn btn-primary" style="margin-top:8px;min-width:160px;" onclick="closeAddFundsModal()">Done</button>
+        </div>
+
+        <div id="addFundsForm">
+          <div class="form-group">
+            <div class="form-label">Payment method</div>
+            <div class="method-grid" style="grid-template-columns:repeat(2,1fr);">
+              <button class="method-btn" id="af-gcash"   onclick="selectAddMethod('gcash')">
+                <div class="method-icon" style="background:#0070E0;color:#fff;font-size:14px;font-weight:700;">G</div>
+                <span class="method-label">GCash</span>
+              </button>
+              <button class="method-btn" id="af-maya"    onclick="selectAddMethod('maya')">
+                <div class="method-icon" style="background:#00C389;color:#fff;font-size:14px;font-weight:700;">M</div>
+                <span class="method-label">Maya</span>
+              </button>
+              <button class="method-btn" id="af-wise"    onclick="selectAddMethod('wise')">
+                <div class="method-icon" style="background:#9FE870;color:#163300;font-size:14px;font-weight:800;">W</div>
+                <span class="method-label">Wise</span>
+              </button>
+              <button class="method-btn" id="af-binance" onclick="selectAddMethod('binance')">
+                <div class="method-icon" style="background:#F3BA2F;color:#1B1B1B;font-size:14px;font-weight:700;">B</div>
+                <span class="method-label">Binance</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Payment instructions shown after method selected -->
+          <div id="afInstructions" style="display:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text-dim);line-height:1.6;"></div>
+
+          <div class="form-group" id="afAmountGroup" style="display:none;">
+            <label class="form-label" for="addFundsAmount">Amount you're sending (PHP)</label>
+            <div class="amount-wrap">
+              <span class="amount-prefix">₱</span>
+              <input class="form-input" id="addFundsAmount" type="number" min="100" step="0.01" placeholder="0.00">
+            </div>
+            <span class="form-hint">Minimum top-up: ₱100.00</span>
+          </div>
+
+          <div class="form-group" id="afRefGroup" style="display:none;">
+            <label class="form-label" for="addFundsRef">Your name or reference (so we can match your payment)</label>
+            <input class="form-input" id="addFundsRef" type="text" placeholder="e.g. Juan Dela Cruz">
+          </div>
+
+          <div class="modal-error" id="addFundsError"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer" id="addFundsFooter">
+        <button class="btn btn-ghost" onclick="closeAddFundsModal()">Cancel</button>
+        <button class="btn btn-primary" id="addFundsSubmitBtn" onclick="submitAddFunds()">Submit request</button>
       </div>
     </div>
   </div>
@@ -695,6 +764,97 @@
 
     function showErr(msg) {
       const el = document.getElementById('withdrawError');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    // ── Add Funds Modal ─────────────────────────────────────────
+    let selectedAddMethod = null;
+
+    const ADD_INSTRUCTIONS = {
+      gcash:   'Send your payment to our GCash number: <strong>09XX-XXX-XXXX</strong> (ZenLootX). Use your username or full name as the reference.',
+      maya:    'Send your payment to our Maya number: <strong>09XX-XXX-XXXX</strong> (ZenLootX). Use your username or full name as the reference.',
+      wise:    'Send to our Wise account: <strong>payments@zenlootexchange.com</strong>. Set currency to PHP and use your username as the reference.',
+      binance: 'Send USDT (BEP-20 or TRC-20) to our Binance Pay UID: <strong>XXXXXXXXX</strong>. We will convert at the current PHP rate. Use your username as the memo.',
+    };
+
+    function openAddFundsModal() {
+      selectedAddMethod = null;
+      document.getElementById('addFundsForm').style.display = '';
+      document.getElementById('addFundsSuccess').classList.remove('show');
+      document.getElementById('addFundsFooter').style.display = '';
+      document.getElementById('addFundsError').classList.remove('show');
+      document.getElementById('addFundsError').textContent = '';
+      document.getElementById('addFundsAmount').value = '';
+      document.getElementById('addFundsRef').value = '';
+      document.getElementById('afInstructions').style.display = 'none';
+      document.getElementById('afAmountGroup').style.display = 'none';
+      document.getElementById('afRefGroup').style.display = 'none';
+      document.querySelectorAll('[id^="af-"]').forEach(b => b.classList.remove('selected'));
+      document.getElementById('addFundsModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeAddFundsModal() {
+      document.getElementById('addFundsModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function handleAddFundsOverlayClick(e) {
+      if (e.target === document.getElementById('addFundsModal')) closeAddFundsModal();
+    }
+
+    function selectAddMethod(m) {
+      selectedAddMethod = m;
+      document.querySelectorAll('[id^="af-"]').forEach(b => b.classList.remove('selected'));
+      document.getElementById('af-' + m).classList.add('selected');
+      document.getElementById('afInstructions').innerHTML = ADD_INSTRUCTIONS[m];
+      document.getElementById('afInstructions').style.display = 'block';
+      document.getElementById('afAmountGroup').style.display = '';
+      document.getElementById('afRefGroup').style.display = '';
+    }
+
+    async function submitAddFunds() {
+      const errEl = document.getElementById('addFundsError');
+      const btn   = document.getElementById('addFundsSubmitBtn');
+      errEl.classList.remove('show');
+
+      if (!selectedAddMethod) { showAddErr('Please select a payment method.'); return; }
+
+      const amount = parseFloat(document.getElementById('addFundsAmount').value);
+      if (!amount || amount < 100) { showAddErr('Minimum top-up amount is ₱100.00.'); return; }
+
+      const ref = document.getElementById('addFundsRef').value.trim();
+      if (!ref) { showAddErr('Please enter your name or reference.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      const { data: { session } } = await sb.auth.getSession();
+      const { error } = await sb.from('topup_requests').insert({
+        user_id: session.user.id,
+        amount,
+        method: selectedAddMethod,
+        reference: ref,
+        status: 'pending',
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Submit request';
+
+      if (error) {
+        showAddErr('Something went wrong. Please try again later.');
+        console.error(error);
+        return;
+      }
+
+      document.getElementById('addFundsForm').style.display = 'none';
+      document.getElementById('addFundsFooter').style.display = 'none';
+      document.getElementById('addFundsSuccess').classList.add('show');
+    }
+
+    function showAddErr(msg) {
+      const el = document.getElementById('addFundsError');
       el.textContent = msg;
       el.classList.add('show');
     }
