@@ -49,6 +49,11 @@
 
 ## 🗓️ Change Log (newest first)
 
+### 2026-06-04
+- Fixed "logged out when clicking View listings" bug: `listings.html` (at `/listings`) had no auth-aware nav — it always showed Sign in/Get started. Added Supabase client + `initNav()` IIFE to detect the session and render the user dropdown if logged in.
+
+
+
 ### 2026-06-03 (session 2)
 - Created `profile.html` — user's own public profile page at `/profile`.
 - Profile shows: avatar, username, member-since date, listing count, bio (editable inline), active listings grid, reviews empty state.
