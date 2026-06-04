@@ -814,7 +814,7 @@
       const gt     = GAME_META[l.game] || { cls: '', label: l.game };
       const [pc, pl] = TYPE_META[l.type] || ['', l.type];
       return `
-        <div class="listing-card">
+        <div class="listing-card" style="position:relative;">
           <a href="/listings/detail?id=${l.id}">
             <div class="card-img">${img}</div>
             <div class="card-body">
@@ -828,10 +828,38 @@
               </div>
             </div>
           </a>
+          <div style="display:flex;gap:6px;padding:0 12px 12px;">
+            <button onclick="delistListing('${l.id}','delist',this)" style="flex:1;padding:6px 0;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:transparent;border:1px solid var(--border-hi);color:var(--text-faint);font-family:'Geist',sans-serif;transition:all 0.16s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border-hi)';this.style.color='var(--text-faint)'">Delist</button>
+            <button onclick="delistListing('${l.id}','delete',this)" style="flex:1;padding:6px 0;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:transparent;border:1px solid rgba(239,68,68,0.3);color:var(--danger);font-family:'Geist',sans-serif;transition:all 0.16s;" onmouseover="this.style.background='rgba(239,68,68,0.07)'" onmouseout="this.style.background='transparent'">Delete</button>
+          </div>
         </div>`;
     }
 
     let allListings = [];
+
+    async function delistListing(listingId, action, btn) {
+      if (action === 'delete' && !confirm('Permanently delete this listing?')) return;
+      const orig = btn.textContent;
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res  = await fetch('/api/delist-listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ listingId, action }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Failed.'); btn.disabled = false; btn.textContent = orig; return; }
+        // Remove card from UI
+        btn.closest('.listing-card').remove();
+        allListings = allListings.filter(l => l.id !== listingId);
+        const tab = document.querySelector('[data-tab="listings"]');
+        if (tab) tab.textContent = `Listings (${allListings.length})`;
+        if (!allListings.length) {
+          document.getElementById('listingsWrap').innerHTML = `<div class="empty-state"><div class="empty-icon">🏷️</div><h3>No active listings</h3><p>List your first account or item to start selling.</p><a href="/create-listing" class="btn btn-primary" style="margin-top:16px;">Create listing</a></div>`;
+        }
+      } catch { btn.disabled = false; btn.textContent = orig; }
+    }
 
     async function loadListings(userId) {
       const wrap = document.getElementById('listingsWrap');

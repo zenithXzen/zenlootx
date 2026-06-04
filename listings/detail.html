@@ -339,6 +339,10 @@
             </div>
 
             <button class="btn btn-primary btn-buy" id="buyBtn">Buy now — ${price}</button>
+            <div id="sellerControls" style="display:none;flex-direction:column;gap:10px;">
+              <button id="delistBtn" class="btn btn-secondary" style="width:100%;justify-content:center;">📦 Delist listing</button>
+              <button id="deleteListingBtn" class="btn" style="width:100%;justify-content:center;background:transparent;border-color:rgba(239,68,68,0.35);color:var(--danger);">🗑 Delete listing</button>
+            </div>
 
             <div style="text-align:center;font-size:12px;color:var(--text-faint);">
               Listed ${new Date(l.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
@@ -370,19 +374,46 @@
         openLightbox(allImages, currentLbIndex);
       });
 
-      // Buy button
+      // Buy button — check if viewer is the seller
       document.getElementById('buyBtn').addEventListener('click', async () => {
         const { data: { session } } = await sb.auth.getSession();
         if (!session) {
           window.location.href = `/login?redirect=/listings/detail?id=${listingId}`;
           return;
         }
-        if (session.user.id === l.seller_id) {
-          alert('You cannot buy your own listing.');
-          return;
-        }
+        if (session.user.id === l.seller_id) return; // seller can't buy their own
         openBuyModal(l, session.access_token);
       });
+
+      // Show seller controls if viewer owns this listing
+      (async () => {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session || session.user.id !== l.seller_id) return;
+        document.getElementById('buyBtn').style.display = 'none';
+        document.getElementById('sellerControls').style.display = 'flex';
+
+        async function callDelist(action, label) {
+          if (action === 'delete' && !confirm('Permanently delete this listing? This cannot be undone.')) return;
+          const btn = action === 'delist'
+            ? document.getElementById('delistBtn')
+            : document.getElementById('deleteListingBtn');
+          btn.disabled = true;
+          btn.textContent = 'Working…';
+          try {
+            const res  = await fetch('/api/delist-listing', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              body: JSON.stringify({ listingId, action }),
+            });
+            const data = await res.json();
+            if (!res.ok) { alert(data.error || 'Failed.'); btn.disabled = false; btn.textContent = label; return; }
+            window.location.href = '/profile';
+          } catch { btn.disabled = false; btn.textContent = label; }
+        }
+
+        document.getElementById('delistBtn').addEventListener('click', () => callDelist('delist', '📦 Delist listing'));
+        document.getElementById('deleteListingBtn').addEventListener('click', () => callDelist('delete', '🗑 Delete listing'));
+      })();
     }
 
     async function loadSeller(sellerId) {
