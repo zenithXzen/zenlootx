@@ -331,10 +331,7 @@
     .edit-actions { display:flex;gap:10px;justify-content:flex-end;margin-top:24px; }
     .edit-err { font-size:13px;color:var(--danger);margin-top:12px;display:none; }
 
-    /* DELISTED STATE */
-    .card-delisted { opacity:0.55;pointer-events:none; }
-    .card-delisted .card-menu-btn { display:none; }
-    .delisted-tag { position:absolute;top:10px;left:10px;z-index:3;background:rgba(107,119,111,0.85);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.1);color:#E8EDE9;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;pointer-events:none; }
+    /* LIVE TAG */
     .live-tag { position:absolute;top:10px;left:10px;z-index:3;background:rgba(25,195,125,0.18);backdrop-filter:blur(6px);border:1px solid rgba(25,195,125,0.35);color:#19C37D;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;pointer-events:none;display:flex;align-items:center;gap:5px; }
     .live-tag::before { content:'';width:5px;height:5px;border-radius:50%;background:#19C37D;animation:live-pulse 1.8s ease-in-out infinite; }
     @keyframes live-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.75)} }
@@ -890,13 +887,9 @@
           Edit listing
         </button>
         <div class="card-menu-sep"></div>
-        <button class="card-menu-item" onclick="doDelistAction('${id}','delist');closeCardMenu()">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
-          Delist
-        </button>
-        <button class="card-menu-item danger" onclick="doDelistAction('${id}','delete');closeCardMenu()">
+        <button class="card-menu-item danger" onclick="deleteListingAction('${id}');closeCardMenu()">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
-          Delete permanently
+          Delete listing
         </button>`;
 
       // Position near the button
@@ -922,44 +915,26 @@
       if (dd && dd.style.display !== 'none' && !dd.contains(e.target)) closeCardMenu();
     });
 
-    // ── Delist / Delete ──
-    async function doDelistAction(listingId, action) {
-      if (action === 'delete' && !await zConfirm('This listing will be permanently removed. This cannot be undone.', { title: 'Delete listing?', confirmText: 'Delete', confirmDanger: true })) return;
+    // ── Delete listing ──
+    async function deleteListingAction(listingId) {
+      if (!await zConfirm('This listing will be permanently removed. This cannot be undone.', { title: 'Delete listing?', confirmText: 'Delete', confirmDanger: true })) return;
       try {
         const { data: { session } } = await sb.auth.getSession();
         const res  = await fetch('/api/delist-listing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ listingId, action }),
+          body: JSON.stringify({ listingId, action: 'delete' }),
         });
         const data = await res.json();
         if (!res.ok) { toast(data.error || 'Failed.', 'error'); return; }
-
-        if (action === 'delete') {
-          document.getElementById(`lcard_${listingId}`)?.remove();
-          allListings = allListings.filter(l => l.id !== listingId);
-          const remaining = allListings.filter(l => l.status !== 'inactive').length;
-          const tab = document.querySelector('[data-tab="listings"]');
-          if (tab) tab.textContent = `Listings (${remaining})`;
-          if (!allListings.length) {
-            document.getElementById('listingsWrap').innerHTML = `<div class="empty-state"><div class="empty-icon">🏷️</div><h3>No active listings</h3><p>List your first account or item to start selling.</p><a href="/create-listing" class="btn btn-primary" style="margin-top:16px;">Create listing</a></div>`;
-          }
-          toast('Listing deleted.', 'success');
-        } else {
-          const idx = allListings.findIndex(l => l.id === listingId);
-          if (idx >= 0) allListings[idx].status = 'inactive';
-          const card = document.getElementById(`lcard_${listingId}`);
-          if (card) {
-            card.classList.add('card-delisted');
-            if (!card.querySelector('.delisted-tag')) {
-              const tag = document.createElement('span');
-              tag.className = 'delisted-tag';
-              tag.textContent = 'Delisted';
-              card.insertBefore(tag, card.firstChild);
-            }
-          }
-          toast('Listing delisted. It\'s no longer visible to buyers.', 'success');
+        document.getElementById(`lcard_${listingId}`)?.remove();
+        allListings = allListings.filter(l => l.id !== listingId);
+        const tab = document.querySelector('[data-tab="listings"]');
+        if (tab) tab.textContent = `Listings (${allListings.length})`;
+        if (!allListings.length) {
+          document.getElementById('listingsWrap').innerHTML = `<div class="empty-state"><div class="empty-icon">🏷️</div><h3>No active listings</h3><p>List your first account or item to start selling.</p><a href="/create-listing" class="btn btn-primary" style="margin-top:16px;">Create listing</a></div>`;
         }
+        toast('Listing deleted.', 'success');
       } catch { toast('Something went wrong. Please try again.', 'error'); }
     }
 
