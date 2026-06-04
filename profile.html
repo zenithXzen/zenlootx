@@ -365,8 +365,11 @@
 
     @media (max-width: 768px) {
       .profile-header { flex-direction: column; align-items: center; text-align: center; }
+      .username-row   { justify-content: center; }
+      .profile-stats  { justify-content: center; }
       .bio-display    { align-items: center; }
       .listings-grid  { grid-template-columns: repeat(2, 1fr); }
+      .report-btn     { display: none; }
     }
     @media (max-width: 500px) {
       .listings-grid { grid-template-columns: 1fr; }
@@ -413,7 +416,10 @@
               <div class="stat-num"   id="statReviews">—</div>
               <div class="stat-label">Reviews</div>
             </div>
-            <div id="profileTierTrophy"></div>
+            <div id="tierStatWrap" style="display:none;">
+              <div class="stat-num" id="tierStatLabel" style="font-size:14px;"></div>
+              <div class="stat-label">Tier</div>
+            </div>
           </div>
 
           <!-- Bio -->
@@ -440,7 +446,7 @@
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" data-tab="listings">My Listings</button>
+        <button class="tab active" data-tab="listings">Listings</button>
         <button class="tab"        data-tab="reviews">Reviews</button>
       </div>
 
@@ -1036,16 +1042,20 @@
         const sellerTotal = parseFloat(wallet?.total_earned || 0);
         const total = Math.max(txTotal, sellerTotal);
         const t = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
-        const el = document.getElementById('profileTierTrophy');
-        if (!el) return;
-        el.innerHTML = `
-          <div class="tier-trophy tt-${t.tier}">
-            ${getTierIcon(t.tier, t.color)}
-            <div class="tier-trophy-info">
-              <span class="tier-trophy-num">TIER ${t.tier}</span>
-              <span class="tier-trophy-name">${t.name}</span>
-            </div>
-          </div>`;
+
+        const wrap  = document.getElementById('tierStatWrap');
+        const label = document.getElementById('tierStatLabel');
+        if (!wrap || !label) return;
+        const iconColor = t.color.startsWith('url') ? '#a78bfa' : t.color;
+        const iconSvg = getTierIcon(t.tier, t.color).replace('<svg ', '<svg width="18" height="18" ');
+        label.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;">${iconSvg}<span style="color:${iconColor};font-weight:700;">${t.name}</span></span>`;
+        wrap.style.display = '';
+
+        sb.channel(`own-tier-${userId}`)
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'wallets', filter: `user_id=eq.${userId}` }, () => {
+            loadTierTrophy(userId);
+          })
+          .subscribe();
       } catch {}
     }
 
