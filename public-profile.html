@@ -394,7 +394,7 @@
 
       // Fetch profile + listings + verified seller status in parallel
       const [profileRes, listingsRes, sellerAppRes] = await Promise.all([
-        sb.from('profiles').select('id,username,avatar_url,bio,created_at,is_banned,ban_reason').eq('id', sellerId).single(),
+        sb.from('profiles').select('id,username,avatar_url,bio,created_at,is_banned,ban_reason,is_admin').eq('id', sellerId).single(),
         sb.from('listings').select('id,title,price,currency,type,images,game,created_at').eq('seller_id', sellerId).eq('status','active').order('created_at',{ascending:false}),
         sb.from('seller_applications').select('status').eq('user_id', sellerId).eq('status','approved').maybeSingle(),
       ]);
@@ -414,9 +414,11 @@
 
       // Check viewer session
       const { data: { session } } = await sb.auth.getSession();
-      const viewerIsOwner = session?.user?.id === sellerId;
-      const isAdmin       = session?.user?.app_metadata?.is_admin === true;
-      const showReport    = session && !viewerIsOwner && !isAdmin;
+      const viewerIsOwner  = session?.user?.id === sellerId;
+      const viewerIsAdmin  = session?.user?.app_metadata?.is_admin === true;
+      const targetIsAdmin  = profile.is_admin === true;
+      const showReport     = session && !viewerIsOwner && !viewerIsAdmin && !targetIsAdmin;
+      const isAdmin        = viewerIsAdmin; // keep alias for rest of page
 
       document.getElementById('profileWrap').innerHTML = `
         <div class="profile-header">

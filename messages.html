@@ -507,8 +507,9 @@
       alreadyReviewed = !!existing;
     }
 
-    // Both buyer and seller can dispute on active or completed orders
-    const canDispute = ['holding','released'].includes(escrowStatus);
+    // Both buyer and seller can dispute — unless the other party is an admin
+    const otherProfile = profileCache[otherId2] || {};
+    const canDispute = ['holding','released'].includes(escrowStatus) && !otherProfile.is_admin;
     const disputeIconBtn = canDispute
       ? `<button onclick="openMsgDispute('${orderId || ''}','${listingTitle || 'Order'}','${orderAmount || ''}')"
            title="File a Dispute"

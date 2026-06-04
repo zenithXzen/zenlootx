@@ -256,8 +256,12 @@
     const s = STATUS_MAP[status] || { label: status || 'Unknown', cls: 'badge-cancelled' };
     return `<span class="badge ${s.cls}"><span class="badge-dot"></span>${s.label}</span>`;
   }
-  function canDispute(order) {
-    return ['holding', 'released'].includes(order.escrow_status);
+  function canDispute(order, role) {
+    if (!['holding', 'released'].includes(order.escrow_status)) return false;
+    // Block disputes against admin accounts
+    const otherProfile = role === 'buyer' ? order.seller_profile : order.buyer_profile;
+    if (otherProfile?.is_admin) return false;
+    return true;
   }
   function isOngoing(order) { return ONGOING.includes(order.escrow_status); }
 
@@ -318,7 +322,7 @@
             <div class="order-actions">
               ${listingId ? `<button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="openListingModal('${listingId}')">View Listing</button>` : ''}
               ${releaseBtn}
-              ${canDispute(o) ? `<button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="openDispute('${o.id}', '${title.replace(/'/g,"\\'")}', '${formatAmount(o.amount || 0)}')">File a Dispute</button>` : ''}
+              ${canDispute(o, role) ? `<button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="openDispute('${o.id}', '${title.replace(/'/g,"\\'")}', '${formatAmount(o.amount || 0)}')">File a Dispute</button>` : ''}
             </div>
           </div>
         </div>`;

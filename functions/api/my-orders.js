@@ -41,7 +41,7 @@ export async function onRequestGet({ request, env }) {
         ? fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=in.(${listingIds.join(',')})&select=id,title,game`, { headers: hdr })
         : Promise.resolve({ json: () => [] }),
       userIds.length
-        ? fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=in.(${userIds.join(',')})&select=id,username,avatar_url`, { headers: hdr })
+        ? fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=in.(${userIds.join(',')})&select=id,username,avatar_url,is_admin`, { headers: hdr })
         : Promise.resolve({ json: () => [] }),
       orderIds.length
         ? fetch(`${env.SUPABASE_URL}/rest/v1/conversations?order_id=in.(${orderIds.join(',')})&select=id,order_id`, { headers: hdr })
