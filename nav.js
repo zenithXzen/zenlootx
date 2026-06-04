@@ -108,4 +108,59 @@ async function initNav(user) {
     await sb.auth.signOut();
     window.location.href = '/login';
   });
+
+  // Message badge — skip on the messages page (it manages its own badge)
+  if (!window.location.pathname.startsWith('/messages')) {
+    initMsgBadge(user.id);
+  }
+}
+
+async function initMsgBadge(userId) {
+  function getLastRead(convId) {
+    return parseInt(localStorage.getItem(`zlx_lr_${convId}`) || '0', 10);
+  }
+  function isUnread(c) {
+    if (!c.last_message_at) return false;
+    return new Date(c.last_message_at).getTime() > getLastRead(c.id);
+  }
+  function setBadge(count) {
+    document.querySelectorAll('.nav-msg-badge').forEach(el => el.remove());
+    if (count <= 0) return;
+    document.querySelectorAll('a[href="/messages"]').forEach(link => {
+      const badge = document.createElement('span');
+      badge.className = 'nav-msg-badge';
+      badge.textContent = count;
+      badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:999px;background:var(--accent);color:var(--bg-base);font-size:10px;font-weight:700;padding:0 4px;margin-left:5px;line-height:1;';
+      link.appendChild(badge);
+    });
+  }
+
+  // Load conversations and calculate initial unread count
+  let convs = [];
+  try {
+    const { data } = await sb
+      .from('conversations')
+      .select('id, last_message_at, buyer_id, seller_id')
+      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
+    convs = data || [];
+  } catch {}
+
+  setBadge(convs.filter(isUnread).length);
+
+  // Real-time: watch for new messages (last_message_at update on any conversation)
+  function onConvUpdate(payload) {
+    const updated = payload.new;
+    const idx = convs.findIndex(c => c.id === updated.id);
+    if (idx >= 0) convs[idx] = { ...convs[idx], ...updated };
+    else convs.push(updated);
+    setBadge(convs.filter(isUnread).length);
+  }
+
+  sb.channel(`nav-msg-buyer-${userId}`)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations', filter: `buyer_id=eq.${userId}` }, onConvUpdate)
+    .subscribe();
+
+  sb.channel(`nav-msg-seller-${userId}`)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations', filter: `seller_id=eq.${userId}` }, onConvUpdate)
+    .subscribe();
 }
