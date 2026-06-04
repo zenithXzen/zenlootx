@@ -307,6 +307,30 @@
     .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); margin-top: auto; }
     .card-price { font-size: 20px; font-weight: 700; }
 
+    /* CARD MENU */
+    .card-menu-btn { position:absolute;top:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:6px;background:rgba(10,14,12,0.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.16s,border-color 0.16s;font-family:'Geist',sans-serif;letter-spacing:0.05em; }
+    .card-menu-btn:hover { background:rgba(10,14,12,0.9);border-color:var(--border-hi);color:var(--text); }
+    #cardMenuDropdown { position:fixed;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:10px;padding:5px;min-width:168px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:9990; }
+    .card-menu-item { display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text-dim);cursor:pointer;background:none;border:none;width:100%;text-align:left;font-family:'Geist',sans-serif;transition:background 0.14s,color 0.14s; }
+    .card-menu-item:hover { background:var(--bg-surface);color:var(--text); }
+    .card-menu-item.danger { color:#F87171; }
+    .card-menu-item.danger:hover { background:rgba(239,68,68,0.08);color:#F87171; }
+    .card-menu-sep { height:1px;background:var(--border);margin:4px 0; }
+
+    /* EDIT MODAL */
+    .edit-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9998;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px); }
+    .edit-modal { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:28px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,0.6); }
+    .edit-modal h3 { font-size:16px;font-weight:700;margin-bottom:20px;letter-spacing:-0.01em; }
+    .edit-field { margin-bottom:16px; }
+    .edit-field label { display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase; }
+    .edit-field input, .edit-field textarea, .edit-field select { width:100%;background:var(--bg-elevated);border:1px solid var(--border-hi);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;transition:border-color 0.18s; }
+    .edit-field input:focus, .edit-field textarea:focus, .edit-field select:focus { border-color:var(--accent); }
+    .edit-field textarea { resize:vertical;min-height:80px;line-height:1.5; }
+    .edit-field select option { background:var(--bg-elevated); }
+    .edit-price-row { display:grid;grid-template-columns:1fr 100px;gap:10px; }
+    .edit-actions { display:flex;gap:10px;justify-content:flex-end;margin-top:24px; }
+    .edit-err { font-size:13px;color:var(--danger);margin-top:12px;display:none; }
+
     /* EMPTY STATE */
     .empty-state {
       display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -815,7 +839,8 @@
       const gt     = GAME_META[l.game] || { cls: '', label: l.game };
       const [pc, pl] = TYPE_META[l.type] || ['', l.type];
       return `
-        <div class="listing-card" style="position:relative;">
+        <div class="listing-card" id="lcard_${l.id}" style="position:relative;">
+          <button class="card-menu-btn" onclick="openCardMenu('${l.id}',event)" title="Listing options">···</button>
           <a href="/listings/detail?id=${l.id}">
             <div class="card-img">${img}</div>
             <div class="card-body">
@@ -829,19 +854,67 @@
               </div>
             </div>
           </a>
-          <div style="display:flex;gap:6px;padding:0 12px 12px;">
-            <button onclick="delistListing('${l.id}','delist',this)" style="flex:1;padding:6px 0;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:transparent;border:1px solid var(--border-hi);color:var(--text-faint);font-family:'Geist',sans-serif;transition:all 0.16s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border-hi)';this.style.color='var(--text-faint)'">Delist</button>
-            <button onclick="delistListing('${l.id}','delete',this)" style="flex:1;padding:6px 0;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:transparent;border:1px solid rgba(239,68,68,0.3);color:var(--danger);font-family:'Geist',sans-serif;transition:all 0.16s;" onmouseover="this.style.background='rgba(239,68,68,0.07)'" onmouseout="this.style.background='transparent'">Delete</button>
-          </div>
         </div>`;
     }
 
     let allListings = [];
+    let activeMenuId = null;
 
-    async function delistListing(listingId, action, btn) {
+    // ── Card dropdown ──
+    function openCardMenu(id, e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const dropdown = document.getElementById('cardMenuDropdown');
+
+      // Toggle off if same card
+      if (activeMenuId === id && dropdown.style.display !== 'none') {
+        closeCardMenu(); return;
+      }
+
+      activeMenuId = id;
+      const listing = allListings.find(l => l.id === id);
+
+      dropdown.innerHTML = `
+        <button class="card-menu-item" onclick="openEditModal('${id}');closeCardMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg>
+          Edit listing
+        </button>
+        <div class="card-menu-sep"></div>
+        <button class="card-menu-item" onclick="doDelistAction('${id}','delist');closeCardMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+          Delist
+        </button>
+        <button class="card-menu-item danger" onclick="doDelistAction('${id}','delete');closeCardMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+          Delete permanently
+        </button>`;
+
+      // Position near the button
+      const btn  = document.querySelector(`#lcard_${id} .card-menu-btn`);
+      const rect = btn.getBoundingClientRect();
+      dropdown.style.display = 'block';
+      const dw = dropdown.offsetWidth;
+      let left = rect.right - dw;
+      let top  = rect.bottom + 6;
+      if (left < 8) left = 8;
+      if (top + dropdown.offsetHeight > window.innerHeight - 8) top = rect.top - dropdown.offsetHeight - 6;
+      dropdown.style.left = left + 'px';
+      dropdown.style.top  = top  + 'px';
+    }
+
+    function closeCardMenu() {
+      document.getElementById('cardMenuDropdown').style.display = 'none';
+      activeMenuId = null;
+    }
+
+    document.addEventListener('click', e => {
+      const dd = document.getElementById('cardMenuDropdown');
+      if (dd && dd.style.display !== 'none' && !dd.contains(e.target)) closeCardMenu();
+    });
+
+    // ── Delist / Delete ──
+    async function doDelistAction(listingId, action) {
       if (action === 'delete' && !await zConfirm('This listing will be permanently removed. This cannot be undone.', { title: 'Delete listing?', confirmText: 'Delete', confirmDanger: true })) return;
-      const orig = btn.textContent;
-      btn.disabled = true; btn.textContent = '…';
       try {
         const { data: { session } } = await sb.auth.getSession();
         const res  = await fetch('/api/delist-listing', {
@@ -850,17 +923,89 @@
           body: JSON.stringify({ listingId, action }),
         });
         const data = await res.json();
-        if (!res.ok) { toast(data.error || 'Failed.', 'error'); btn.disabled = false; btn.textContent = orig; return; }
-        // Remove card from UI
-        btn.closest('.listing-card').remove();
+        if (!res.ok) { toast(data.error || 'Failed.', 'error'); return; }
+        document.getElementById(`lcard_${listingId}`)?.remove();
         allListings = allListings.filter(l => l.id !== listingId);
         const tab = document.querySelector('[data-tab="listings"]');
         if (tab) tab.textContent = `Listings (${allListings.length})`;
         if (!allListings.length) {
           document.getElementById('listingsWrap').innerHTML = `<div class="empty-state"><div class="empty-icon">🏷️</div><h3>No active listings</h3><p>List your first account or item to start selling.</p><a href="/create-listing" class="btn btn-primary" style="margin-top:16px;">Create listing</a></div>`;
         }
-      } catch { btn.disabled = false; btn.textContent = orig; }
+        toast(action === 'delete' ? 'Listing deleted.' : 'Listing delisted.', 'success');
+      } catch { toast('Something went wrong. Please try again.', 'error'); }
     }
+
+    // ── Edit modal ──
+    let editingListingId = null;
+
+    function openEditModal(id) {
+      const listing = allListings.find(l => l.id === id);
+      if (!listing) return;
+      editingListingId = id;
+
+      document.getElementById('edit_title').value       = listing.title || '';
+      document.getElementById('edit_price').value       = listing.price || '';
+      document.getElementById('edit_currency').value    = listing.currency || 'PHP';
+      document.getElementById('edit_desc').value        = listing.description || '';
+      document.getElementById('editListingErr').style.display = 'none';
+      document.getElementById('editSaveBtn').disabled   = false;
+      document.getElementById('editSaveBtn').textContent = 'Save changes';
+      document.getElementById('editListingOverlay').style.display = 'flex';
+      document.getElementById('edit_title').focus();
+    }
+
+    function closeEditModal() {
+      document.getElementById('editListingOverlay').style.display = 'none';
+      editingListingId = null;
+    }
+
+    document.getElementById('editListingOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('editListingOverlay')) closeEditModal();
+    });
+
+    document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+
+    document.getElementById('editSaveBtn').addEventListener('click', async () => {
+      const btn   = document.getElementById('editSaveBtn');
+      const errEl = document.getElementById('editListingErr');
+      errEl.style.display = 'none';
+
+      const title       = document.getElementById('edit_title').value.trim();
+      const price       = parseFloat(document.getElementById('edit_price').value);
+      const currency    = document.getElementById('edit_currency').value;
+      const description = document.getElementById('edit_desc').value.trim();
+
+      if (!title)          { errEl.textContent = 'Title is required.';          errEl.style.display = 'block'; return; }
+      if (!price || price <= 0) { errEl.textContent = 'Enter a valid price.';   errEl.style.display = 'block'; return; }
+
+      btn.disabled = true; btn.textContent = 'Saving…';
+
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res  = await fetch('/api/edit-listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ listingId: editingListingId, title, price, currency, description }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || 'Failed to save.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Save changes'; return; }
+
+        // Update local data and re-render card
+        const idx = allListings.findIndex(l => l.id === editingListingId);
+        if (idx >= 0) {
+          allListings[idx] = { ...allListings[idx], title, price, currency, description };
+          const card = document.getElementById(`lcard_${editingListingId}`);
+          if (card) {
+            const newCard = document.createElement('div');
+            newCard.innerHTML = listingCard(allListings[idx]);
+            const newEl = newCard.firstElementChild;
+            card.replaceWith(newEl);
+          }
+        }
+        closeEditModal();
+        toast('Listing updated.', 'success');
+      } catch { errEl.textContent = 'Something went wrong.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Save changes'; }
+    });
 
     async function loadListings(userId) {
       const wrap = document.getElementById('listingsWrap');
@@ -877,7 +1022,7 @@
 
       const { data, error } = await sb
         .from('listings')
-        .select('id, title, price, currency, type, images, game, created_at')
+        .select('id, title, price, currency, type, images, game, description, created_at')
         .eq('seller_id', userId)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
@@ -1137,6 +1282,42 @@
       return Uint8Array.from(atob(s), c => c.charCodeAt(0));
     }
   </script>
+
+  <!-- Card options dropdown (shared, repositioned per card) -->
+  <div id="cardMenuDropdown" style="display:none;"></div>
+
+  <!-- Edit listing modal -->
+  <div id="editListingOverlay" class="edit-overlay" style="display:none;">
+    <div class="edit-modal">
+      <h3>Edit listing</h3>
+      <div class="edit-field">
+        <label>Title</label>
+        <input id="edit_title" type="text" maxlength="120" placeholder="Listing title">
+      </div>
+      <div class="edit-price-row">
+        <div class="edit-field">
+          <label>Price</label>
+          <input id="edit_price" type="number" min="1" step="any" placeholder="0">
+        </div>
+        <div class="edit-field">
+          <label>Currency</label>
+          <select id="edit_currency">
+            <option value="PHP">PHP</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+      <div class="edit-field">
+        <label>Description <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);">(optional)</span></label>
+        <textarea id="edit_desc" maxlength="2000" placeholder="Describe what makes this account special…"></textarea>
+      </div>
+      <div id="editListingErr" class="edit-err"></div>
+      <div class="edit-actions">
+        <button id="editCancelBtn" style="padding:9px 18px;border-radius:8px;border:1px solid var(--border-hi);background:transparent;color:var(--text);font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="editSaveBtn" style="padding:9px 20px;border-radius:8px;border:none;background:var(--accent);color:var(--bg-base);font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Save changes</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
