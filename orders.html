@@ -330,7 +330,7 @@
   }
 
   async function releaseFromOrder(orderId, btn) {
-    if (!confirm('Release payment to the seller? This confirms you received the account and cannot be undone.')) return;
+    if (!await zConfirm('This confirms you received the account and cannot be undone.', { title: 'Release payment to seller?', confirmText: 'Release Payment' })) return;
     btn.disabled = true; btn.textContent = 'Releasing…';
     const { data: { session } } = await sb.auth.getSession();
     const res  = await fetch('/api/release-payment', {
@@ -339,7 +339,7 @@
       body: JSON.stringify({ orderId }),
     });
     const data = await res.json();
-    if (!res.ok) { alert(data.error || 'Failed. Please try again.'); btn.disabled = false; btn.textContent = '🔓 Release Payment'; return; }
+    if (!res.ok) { toast(data.error || 'Failed. Please try again.', 'error'); btn.disabled = false; btn.textContent = '🔓 Release Payment'; return; }
     // Update card badge and remove button
     const card = document.getElementById(`ocard_${orderId}`);
     if (card) {

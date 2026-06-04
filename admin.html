@@ -851,7 +851,7 @@
       } else {
         btn.disabled    = false;
         btn.textContent = 'Mark reviewed';
-        alert('Failed: ' + error.message);
+        toast('Failed: ' + error.message, 'error');
       }
     }
 
@@ -937,7 +937,7 @@
     async function submitResolution(id, btn) {
       const action = document.querySelector(`.resolution-action-btn[data-id="${id}"].active`)?.dataset.action || null;
       const note   = document.getElementById(`resNote_${id}`)?.value.trim() || '';
-      if (!action) { alert('Select refund buyer or release to seller first.'); return; }
+      if (!action) { toast('Select refund buyer or release to seller first.', 'error'); return; }
 
       btn.disabled = true;
       btn.textContent = 'Saving…';
@@ -1183,7 +1183,7 @@
         body: JSON.stringify({ id, userId, amount, action }),
       });
       if (res.ok) { await loadTopups(); renderTopups(); }
-      else { btn.disabled = false; btn.textContent = action === 'approve' ? 'Approve' : 'Reject'; alert('Error: ' + (await res.json()).error); }
+      else { btn.disabled = false; btn.textContent = action === 'approve' ? 'Approve' : 'Reject'; toast('Error: ' + (await res.json()).error, 'error'); }
     }
 
     // ════════════════════════════════════
@@ -1262,7 +1262,7 @@
         body: JSON.stringify({ id, userId, amount, action }),
       });
       if (res.ok) { await loadWithdrawals(); renderWithdrawals(); }
-      else { btn.disabled = false; btn.textContent = action === 'approve' ? 'Approve' : 'Reject'; alert('Error: ' + (await res.json()).error); }
+      else { btn.disabled = false; btn.textContent = action === 'approve' ? 'Approve' : 'Reject'; toast('Error: ' + (await res.json()).error, 'error'); }
     }
 
     function fmtNum(n) { return Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); }

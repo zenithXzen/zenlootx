@@ -393,7 +393,7 @@
         document.getElementById('sellerControls').style.display = 'flex';
 
         async function callDelist(action, label) {
-          if (action === 'delete' && !confirm('Permanently delete this listing? This cannot be undone.')) return;
+          if (action === 'delete' && !await zConfirm('This listing will be permanently removed. This cannot be undone.', { title: 'Delete listing?', confirmText: 'Delete', confirmDanger: true })) return;
           const btn = action === 'delist'
             ? document.getElementById('delistBtn')
             : document.getElementById('deleteListingBtn');
@@ -406,7 +406,7 @@
               body: JSON.stringify({ listingId, action }),
             });
             const data = await res.json();
-            if (!res.ok) { alert(data.error || 'Failed.'); btn.disabled = false; btn.textContent = label; return; }
+            if (!res.ok) { toast(data.error || 'Failed.', 'error'); btn.disabled = false; btn.textContent = label; return; }
             window.location.href = '/profile';
           } catch { btn.disabled = false; btn.textContent = label; }
         }

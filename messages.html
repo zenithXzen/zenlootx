@@ -754,7 +754,7 @@
     btn.disabled = false;
     if (error) {
       input.value = text;
-      alert('Failed to send message. Please try again.');
+      toast('Failed to send message. Please try again.', 'error');
     }
   }
 
@@ -1018,7 +1018,7 @@
   }
 
   async function releasePayment(orderId) {
-    if (!confirm('Release payment to the seller? This confirms you received the account and cannot be undone.')) return;
+    if (!await zConfirm('This confirms you received the account and cannot be undone.', { title: 'Release payment to seller?', confirmText: 'Release Payment' })) return;
 
     const btn = document.getElementById('releaseBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Releasing…'; }
@@ -1032,7 +1032,7 @@
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.error || 'Failed to release payment. Please try again.');
+      toast(data.error || 'Failed to release payment. Please try again.', 'error');
       if (btn) { btn.disabled = false; btn.textContent = '🔓 Release Payment'; }
       return;
     }

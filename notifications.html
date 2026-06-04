@@ -269,7 +269,7 @@
     }
 
     async function deleteAll(userId) {
-      if (!confirm('Delete all notifications?')) return;
+      if (!await zConfirm('This will remove all your notifications.', { title: 'Delete all notifications?', confirmText: 'Delete all', confirmDanger: true })) return;
       await sb.from('notifications').delete().eq('user_id', userId);
       document.getElementById('deleteAllBtn').style.display = 'none';
       document.getElementById('markAllBtn').style.display = 'none';

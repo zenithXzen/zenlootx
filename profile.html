@@ -838,7 +838,7 @@
     let allListings = [];
 
     async function delistListing(listingId, action, btn) {
-      if (action === 'delete' && !confirm('Permanently delete this listing?')) return;
+      if (action === 'delete' && !await zConfirm('This listing will be permanently removed. This cannot be undone.', { title: 'Delete listing?', confirmText: 'Delete', confirmDanger: true })) return;
       const orig = btn.textContent;
       btn.disabled = true; btn.textContent = '…';
       try {
@@ -849,7 +849,7 @@
           body: JSON.stringify({ listingId, action }),
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || 'Failed.'); btn.disabled = false; btn.textContent = orig; return; }
+        if (!res.ok) { toast(data.error || 'Failed.', 'error'); btn.disabled = false; btn.textContent = orig; return; }
         // Remove card from UI
         btn.closest('.listing-card').remove();
         allListings = allListings.filter(l => l.id !== listingId);

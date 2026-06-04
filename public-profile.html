@@ -502,10 +502,10 @@
       let reason = null;
 
       if (!currentlyBanned) {
-        reason = window.prompt('Ban reason (optional — visible to you in admin):');
+        reason = await zPrompt('Enter a ban reason. Only visible to you in the admin panel.', { title: 'Ban user', placeholder: 'e.g. spam, fraud, chargebacks…', optional: true });
         if (reason === null) return; // cancelled
       } else {
-        if (!window.confirm('Unban this user? Their listings will be restored.')) return;
+        if (!await zConfirm('Their listings will be restored and they can use the platform again.', { title: 'Unban this user?', confirmText: 'Unban' })) return;
       }
 
       const btn = document.getElementById('banBtn');
@@ -521,7 +521,7 @@
         window.location.reload();
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.error || 'Failed. Please try again.');
+        toast(err.error || 'Failed. Please try again.', 'error');
         if (btn) { btn.disabled = false; btn.textContent = currentlyBanned ? 'Unban user' : 'Ban user'; }
       }
     }

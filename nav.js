@@ -2,6 +2,76 @@
 // Requires: `sb` (Supabase client) defined globally on the page before calling initNav.
 // Usage: await initNav(user)
 
+// ─── Toast ────────────────────────────────────────────────────────
+function toast(message, type = 'error') {
+  let container = document.getElementById('zlx-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'zlx-toast-container';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+    document.body.appendChild(container);
+  }
+  if (!document.getElementById('zlx-toast-style')) {
+    const s = document.createElement('style');
+    s.id = 'zlx-toast-style';
+    s.textContent = '@keyframes zlx-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}@keyframes zlx-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(14px)}}@keyframes zlx-overlay-in{from{opacity:0}to{opacity:1}}@keyframes zlx-modal-in{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  const cfg = {
+    error:   { border:'#EF4444', icon:'✕', iconBg:'rgba(239,68,68,0.12)', iconColor:'#F87171' },
+    success: { border:'#19C37D', icon:'✓', iconBg:'rgba(25,195,125,0.12)', iconColor:'#19C37D' },
+    info:    { border:'#9BA8A0', icon:'i', iconBg:'rgba(107,119,111,0.15)', iconColor:'#9BA8A0' },
+  }[type] || { border:'#EF4444', icon:'✕', iconBg:'rgba(239,68,68,0.12)', iconColor:'#F87171' };
+
+  const el = document.createElement('div');
+  el.style.cssText = `display:flex;align-items:flex-start;gap:10px;padding:13px 16px;background:#1A211C;border:1px solid #232B26;border-left:3px solid ${cfg.border};border-radius:10px;max-width:320px;min-width:220px;box-shadow:0 4px 24px rgba(0,0,0,0.5);pointer-events:all;cursor:pointer;animation:zlx-in 0.22s ease;`;
+  el.innerHTML = `<span style="width:18px;height:18px;border-radius:50%;background:${cfg.iconBg};border:1px solid ${cfg.border}33;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${cfg.iconColor};flex-shrink:0;margin-top:1px;">${cfg.icon}</span><span style="font-size:13px;color:#E8EDE9;line-height:1.5;flex:1;">${message}</span>`;
+  container.appendChild(el);
+  const dismiss = () => { el.style.animation = 'zlx-out 0.2s ease forwards'; setTimeout(() => el.remove(), 200); };
+  setTimeout(dismiss, 4500);
+  el.addEventListener('click', dismiss);
+}
+
+// ─── Confirm dialog ───────────────────────────────────────────────
+function zConfirm(message, { title = 'Are you sure?', confirmText = 'Confirm', confirmDanger = false } = {}) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9998;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);animation:zlx-overlay-in 0.18s ease;';
+    const confirmBg = confirmDanger ? '#EF4444' : '#19C37D';
+    const confirmColor = confirmDanger ? '#fff' : '#0A0E0C';
+    overlay.innerHTML = `<div style="background:#121814;border:1px solid #232B26;border-radius:12px;padding:28px;max-width:400px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,0.6);animation:zlx-modal-in 0.2s ease;"><h3 style="font-size:16px;font-weight:700;color:#E8EDE9;margin-bottom:10px;letter-spacing:-0.01em;">${title}</h3><p style="font-size:14px;color:#9BA8A0;line-height:1.6;margin-bottom:24px;">${message}</p><div style="display:flex;gap:10px;justify-content:flex-end;"><button id="zlx-c-cancel" style="padding:9px 18px;border-radius:8px;border:1px solid #33403A;background:transparent;color:#E8EDE9;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancel</button><button id="zlx-c-ok" style="padding:9px 18px;border-radius:8px;border:none;background:${confirmBg};color:${confirmColor};font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">${confirmText}</button></div></div>`;
+    document.body.appendChild(overlay);
+    const close = v => { overlay.remove(); resolve(v); };
+    overlay.querySelector('#zlx-c-cancel').addEventListener('click', () => close(false));
+    overlay.querySelector('#zlx-c-ok').addEventListener('click', () => close(true));
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+  });
+}
+
+// ─── Prompt dialog ────────────────────────────────────────────────
+function zPrompt(message, { title = '', placeholder = '', optional = false } = {}) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9998;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);animation:zlx-overlay-in 0.18s ease;';
+    overlay.innerHTML = `<div style="background:#121814;border:1px solid #232B26;border-radius:12px;padding:28px;max-width:400px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,0.6);animation:zlx-modal-in 0.2s ease;">${title ? `<h3 style="font-size:16px;font-weight:700;color:#E8EDE9;margin-bottom:10px;letter-spacing:-0.01em;">${title}</h3>` : ''}<p style="font-size:14px;color:#9BA8A0;line-height:1.6;margin-bottom:16px;">${message}</p><input id="zlx-p-input" type="text" placeholder="${placeholder}" style="width:100%;background:#1A211C;border:1px solid #33403A;border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:#E8EDE9;outline:none;box-sizing:border-box;margin-bottom:20px;"><div style="display:flex;gap:10px;justify-content:flex-end;"><button id="zlx-p-cancel" style="padding:9px 18px;border-radius:8px;border:1px solid #33403A;background:transparent;color:#E8EDE9;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancel</button><button id="zlx-p-ok" style="padding:9px 18px;border-radius:8px;border:none;background:#EF4444;color:#fff;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Confirm</button></div></div>`;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector('#zlx-p-input');
+    input.focus();
+    const close = v => { overlay.remove(); resolve(v); };
+    overlay.querySelector('#zlx-p-cancel').addEventListener('click', () => close(null));
+    overlay.querySelector('#zlx-p-ok').addEventListener('click', () => {
+      const v = input.value.trim();
+      if (!optional && !v) { input.style.borderColor = '#EF4444'; return; }
+      close(v);
+    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') overlay.querySelector('#zlx-p-ok').click();
+      if (e.key === 'Escape') close(null);
+    });
+  });
+}
+
 async function initNav(user) {
   const username = user.user_metadata?.username || user.email.split('@')[0];
   const initial  = username.charAt(0).toUpperCase();
