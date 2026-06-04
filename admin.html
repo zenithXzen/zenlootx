@@ -1137,7 +1137,6 @@
     }
 
     async function doTopupAction(id, userId, amount, action, btn) {
-      if (!confirm(`${action === 'approve' ? 'Approve' : 'Reject'} this ₱${fmtNum(amount)} top-up?`)) return;
       btn.disabled = true; btn.textContent = '…';
       const res  = await fetch('/api/admin/topup-action', {
         method: 'POST',
@@ -1217,7 +1216,6 @@
     }
 
     async function doWithdrawalAction(id, userId, amount, action, btn) {
-      if (!confirm(`${action === 'approve' ? 'Approve and deduct ₱' + fmtNum(amount) + ' from user wallet?' : 'Reject this withdrawal request?'}`)) return;
       btn.disabled = true; btn.textContent = '…';
       const res  = await fetch('/api/admin/withdrawal-action', {
         method: 'POST',
@@ -1409,7 +1407,6 @@
     }
 
     async function deleteListing(id, btn) {
-      if (!confirm('Delete this listing? This cannot be undone.')) return;
       btn.disabled    = true;
       btn.textContent = 'Deleting…';
 
