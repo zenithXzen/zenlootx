@@ -422,8 +422,9 @@
           </div>
 
           <div class="form-group" id="afRefGroup" style="display:none;">
-            <label class="form-label" for="addFundsRef">Your name or reference (so we can match your payment)</label>
-            <input class="form-input" id="addFundsRef" type="text" placeholder="e.g. Juan Dela Cruz">
+            <label class="form-label" for="addFundsRef">Transaction reference number</label>
+            <input class="form-input" id="addFundsRef" type="text" placeholder="e.g. 1234567890">
+            <span class="form-hint">Copy the reference/receipt number from your payment app after sending.</span>
           </div>
 
           <div class="modal-error" id="addFundsError"></div>
@@ -842,7 +843,7 @@
       if (!amount || amount < 100) { showAddErr('Minimum top-up amount is ₱100.00.'); return; }
 
       const ref = document.getElementById('addFundsRef').value.trim();
-      if (!ref) { showAddErr('Please enter your name or reference.'); return; }
+      if (!ref) { showAddErr('Please enter the transaction reference number.'); return; }
 
       btn.disabled = true;
       btn.textContent = 'Submitting…';
