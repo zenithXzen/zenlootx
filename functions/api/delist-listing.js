@@ -21,7 +21,7 @@ export async function onRequestPost({ request, env }) {
     };
 
     // Verify user is the seller
-    const lRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}&select=seller_id,escrow_status`, { headers: { ...hdr, Prefer: '' } });
+    const lRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}&select=seller_id`, { headers: { ...hdr, Prefer: '' } });
     const lData = await lRes.json();
     const listing = lData[0];
 
