@@ -172,6 +172,26 @@
 
 </div>
 
+  <!-- Release Payment Confirm Modal -->
+  <div id="releaseConfirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:400px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;">
+      <div style="font-size:36px;text-align:center;margin-bottom:16px;">🔓</div>
+      <h3 style="font-size:18px;font-weight:700;text-align:center;margin-bottom:10px;">Release payment?</h3>
+      <p style="font-size:14px;color:var(--text-dim);text-align:center;line-height:1.65;margin-bottom:10px;">Before confirming, please make sure you have:</p>
+      <ul style="font-size:13px;color:var(--text-dim);line-height:1.9;margin:0 0 18px 20px;">
+        <li>Received the account credentials from the seller</li>
+        <li>Logged in and verified the account is as described</li>
+        <li>Confirmed all items and details match the listing</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-faint);text-align:center;margin-bottom:22px;">Once released, the payment goes to the seller and <strong style="color:var(--text);">cannot be reversed.</strong></p>
+      <div id="releaseConfirmErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;text-align:center;"></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeReleaseConfirm()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text);border:1px solid var(--border-hi);">Cancel</button>
+        <button id="releaseConfirmBtn" onclick="doRelease()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:var(--success);color:#fff;border:none;">Yes, release payment</button>
+      </div>
+    </div>
+  </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
   const { createClient } = supabase;
@@ -538,32 +558,71 @@
   }
 
   // ── Release Payment ───────────────────────────────────────────
-  async function releaseFromConv(convId, sellerId, listingId) {
-    if (!confirm('Release payment to the seller? This confirms you received the account and cannot be undone.')) return;
-    const btn = document.getElementById('releaseBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Looking up order…'; }
+  let _releaseConvId = '', _releaseSellerId = '', _releaseListingId = '';
 
-    // Find the order for this conversation via API
+  function releaseFromConv(convId, sellerId, listingId) {
+    _releaseConvId    = convId;
+    _releaseSellerId  = sellerId;
+    _releaseListingId = listingId;
+    document.getElementById('releaseConfirmErr').style.display = 'none';
+    document.getElementById('releaseConfirmBtn').disabled = false;
+    document.getElementById('releaseConfirmBtn').textContent = 'Yes, release payment';
+    const overlay = document.getElementById('releaseConfirmOverlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    overlay.onclick = e => { if (e.target === overlay) closeReleaseConfirm(); };
+  }
+
+  function closeReleaseConfirm() {
+    document.getElementById('releaseConfirmOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  async function doRelease() {
+    const btn = document.getElementById('releaseConfirmBtn');
+    const err = document.getElementById('releaseConfirmErr');
+    btn.disabled = true;
+    btn.textContent = 'Looking up order…';
+    err.style.display = 'none';
+
     const { data: { session } } = await sb.auth.getSession();
     const r = await fetch('/api/my-orders', { headers: { Authorization: `Bearer ${session.access_token}` } });
-    if (!r.ok) { alert('Could not load orders. Please try again.'); if (btn) { btn.disabled = false; btn.textContent = '🔓 Release Payment'; } return; }
+    if (!r.ok) {
+      err.textContent = 'Could not load orders. Please try again.';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Yes, release payment';
+      return;
+    }
 
     const d = await r.json();
-    const byListing = listingId ? (d.purchases || []).find(o => o.listing_id === listingId) : null;
-    const bySeller  = (d.purchases || []).find(o => o.seller_id === sellerId && ['holding','active'].includes(o.escrow_status));
+    const byListing = _releaseListingId ? (d.purchases || []).find(o => o.listing_id === _releaseListingId) : null;
+    const bySeller  = (d.purchases || []).find(o => o.seller_id === _releaseSellerId && !['released','refunded','cancelled'].includes(o.escrow_status));
     const order     = byListing || bySeller;
 
-    if (!order) { alert('No active order found for this conversation. It may have already been released.'); if (btn) { btn.disabled = false; btn.textContent = '🔓 Release Payment'; } return; }
+    if (!order) {
+      err.textContent = 'No active order found. It may have already been released.';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Yes, release payment';
+      return;
+    }
 
-    if (btn) btn.textContent = 'Releasing…';
+    btn.textContent = 'Releasing…';
     const res  = await fetch('/api/release-payment', {
       method: 'POST',
       headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId: order.id }),
     });
     const data = await res.json();
-    if (!res.ok) { alert(data.error || 'Failed. Please try again.'); if (btn) { btn.disabled = false; btn.textContent = '🔓 Release Payment'; } return; }
-    if (btn) btn.outerHTML = `<span style="font-size:12px;font-weight:600;color:var(--success);padding:6px 12px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2);">✓ Payment released</span>`;
+    if (!res.ok) {
+      err.textContent = data.error || 'Failed. Please try again.';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Yes, release payment';
+      return;
+    }
+
+    closeReleaseConfirm();
+    const releaseBtn = document.getElementById('releaseBtn');
+    if (releaseBtn) releaseBtn.outerHTML = `<span style="font-size:12px;font-weight:600;color:var(--success);padding:6px 12px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2);">✓ Payment released</span>`;
   }
 
   async function releasePayment(orderId) {
