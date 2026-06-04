@@ -28,27 +28,36 @@ export async function onRequestGet({ request, env }) {
     const listingIds = [...new Set(allOrders.map(o => o.listing_id).filter(Boolean))];
     const userIds    = [...new Set(allOrders.flatMap(o => [o.buyer_id, o.seller_id]).filter(Boolean))];
 
-    const [listingsRes, profilesRes] = await Promise.all([
+    // Fetch conversations, listings, and profiles in parallel
+    const orderIds = allOrders.map(o => o.id).filter(Boolean);
+
+    const [listingsRes, profilesRes, convsRes] = await Promise.all([
       listingIds.length
         ? fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=in.(${listingIds.join(',')})&select=id,title,game`, { headers: hdr })
         : Promise.resolve({ json: () => [] }),
       userIds.length
         ? fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=in.(${userIds.join(',')})&select=id,username,avatar_url`, { headers: hdr })
         : Promise.resolve({ json: () => [] }),
+      orderIds.length
+        ? fetch(`${env.SUPABASE_URL}/rest/v1/conversations?order_id=in.(${orderIds.join(',')})&select=id,order_id`, { headers: hdr })
+        : Promise.resolve({ json: () => [] }),
     ]);
 
     const listings = await listingsRes.json();
     const profiles = await profilesRes.json();
+    const convs    = await convsRes.json();
 
     const listingMap = Object.fromEntries((Array.isArray(listings) ? listings : []).map(l => [l.id, l]));
     const profileMap = Object.fromEntries((Array.isArray(profiles) ? profiles : []).map(p => [p.id, p]));
+    const convMap    = Object.fromEntries((Array.isArray(convs)    ? convs    : []).map(c => [c.order_id, c.id]));
 
     function enrich(orders, role) {
       return (Array.isArray(orders) ? orders : []).map(o => ({
         ...o,
-        listings:       listingMap[o.listing_id] || null,
-        seller_profile: role === 'buyer'  ? (profileMap[o.seller_id] || null) : null,
-        buyer_profile:  role === 'seller' ? (profileMap[o.buyer_id]  || null) : null,
+        listings:        listingMap[o.listing_id] || null,
+        conversation_id: convMap[o.id]            || null,
+        seller_profile:  role === 'buyer'  ? (profileMap[o.seller_id] || null) : null,
+        buyer_profile:   role === 'seller' ? (profileMap[o.buyer_id]  || null) : null,
       }));
     }
 

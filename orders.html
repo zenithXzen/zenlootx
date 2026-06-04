@@ -311,9 +311,10 @@
         ? `<button class="btn" style="font-size:12px;padding:6px 12px;background:rgba(34,197,94,0.1);color:var(--success);border:1px solid rgba(34,197,94,0.3);" onclick="releaseFromOrder('${o.id}', this)">🔓 Release Payment</button>`
         : '';
 
-      const msgBtn = o.listing_id
-        ? `<a href="/messages?with=${otherId}" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">💬 Message</a>`
-        : '';
+      const msgHref = o.conversation_id
+        ? `/messages?conv=${o.conversation_id}`
+        : `/messages?with=${otherId}`;
+      const msgBtn = `<a href="${msgHref}" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">💬 Message</a>`;
 
       return `
         <div class="order-card" id="ocard_${o.id}" style="${ongoing ? 'border-color:rgba(245,185,71,0.2);' : ''}">
