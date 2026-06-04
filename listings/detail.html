@@ -123,6 +123,34 @@
     .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
     .footer-inner p { font-size:13px;color:var(--text-faint); }
 
+    /* BUY MODAL */
+    .buy-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;align-items:center;justify-content:center;padding:16px; }
+    .buy-overlay.open { display:flex; }
+    .buy-modal { background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .buy-modal-head { padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between; }
+    .buy-modal-head h3 { font-size:17px;font-weight:700; }
+    .buy-modal-close { background:none;border:none;cursor:pointer;color:var(--text-faint);padding:4px;border-radius:6px;display:flex;transition:color 0.15s; }
+    .buy-modal-close:hover { color:var(--text); }
+    .buy-modal-body { padding:20px 24px;display:flex;flex-direction:column;gap:16px; }
+    .buy-row { display:flex;justify-content:space-between;align-items:center;font-size:14px; }
+    .buy-row-label { color:var(--text-faint); }
+    .buy-row-val { font-weight:600; }
+    .buy-divider { height:1px;background:var(--border); }
+    .buy-total { font-size:18px;font-weight:700; }
+    .buy-after { font-size:13px;color:var(--text-faint); }
+    .buy-modal-foot { padding:0 24px 24px;display:flex;gap:10px; }
+    .buy-modal-foot .btn { flex:1;justify-content:center; }
+    .buy-err { font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;display:none; }
+    .buy-err.show { display:block; }
+    .buy-success { display:none;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:8px 0 4px; }
+    .buy-success.show { display:flex; }
+    .buy-success-icon { font-size:40px; }
+    .buy-success h3 { font-size:17px;font-weight:700; }
+    .buy-success p { font-size:13px;color:var(--text-dim);line-height:1.6; }
+    .buy-success-btns { display:flex;gap:10px;margin-top:4px;width:100%; }
+    .buy-success-btns .btn { flex:1;justify-content:center;font-size:13px; }
+
     @media (max-width:900px) {
       .detail-grid { grid-template-columns:1fr; }
       .buy-panel { position:static; }
@@ -335,8 +363,11 @@
           window.location.href = `/login?redirect=/listings/detail?id=${listingId}`;
           return;
         }
-        // TODO: wire to orders/escrow flow
-        alert('Order flow coming soon!');
+        if (session.user.id === l.seller_id) {
+          alert('You cannot buy your own listing.');
+          return;
+        }
+        openBuyModal(l, session.access_token);
       });
     }
 
@@ -438,9 +469,149 @@
       });
     }
 
+    // ── Buy Modal ───────────────────────────────────────────────
+    let _buyToken = '', _buyListingId = '', _buyPrice = 0;
+
+    async function openBuyModal(listing, token) {
+      _buyToken     = token;
+      _buyListingId = listing.id;
+      _buyPrice     = Number(listing.price);
+
+      // Reset state
+      document.getElementById('buySuccess').classList.remove('show');
+      document.getElementById('buyForm').style.display = '';
+      document.getElementById('buyModalFoot').style.display = '';
+      document.getElementById('buyErr').classList.remove('show');
+      document.getElementById('buyErr').textContent = '';
+      document.getElementById('buyConfirmBtn').disabled = false;
+      document.getElementById('buyConfirmBtn').textContent = 'Confirm & Pay';
+
+      const fmt = n => '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      document.getElementById('buyItemName').textContent = listing.title;
+      document.getElementById('buyPrice').textContent    = '-' + fmt(_buyPrice);
+
+      // Fetch balance
+      const { data: wallet } = await sb.from('wallets').select('balance').eq('user_id', (await sb.auth.getSession()).data.session.user.id).maybeSingle();
+      const balance = Number(wallet?.balance || 0);
+      const after   = balance - _buyPrice;
+
+      document.getElementById('buyBalance').textContent = fmt(balance);
+      document.getElementById('buyAfter').textContent   = fmt(after);
+      document.getElementById('buyAfter').style.color   = after < 0 ? 'var(--danger)' : 'var(--success)';
+
+      if (after < 0) {
+        document.getElementById('buyErr').innerHTML = `Insufficient balance. You need <strong>${fmt(Math.abs(after))}</strong> more. <a href="/wallet" style="color:var(--accent);text-decoration:underline;">Top up wallet →</a>`;
+        document.getElementById('buyErr').classList.add('show');
+        document.getElementById('buyConfirmBtn').disabled = true;
+      }
+
+      document.getElementById('buyOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeBuyModal() {
+      document.getElementById('buyOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('buyOverlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('buyOverlay')) closeBuyModal();
+      });
+    });
+
+    async function confirmPurchase() {
+      const btn = document.getElementById('buyConfirmBtn');
+      btn.disabled    = true;
+      btn.textContent = 'Processing…';
+      document.getElementById('buyErr').classList.remove('show');
+
+      const res  = await fetch('/api/purchase', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${_buyToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: _buyListingId }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('buyErr').textContent = data.error || 'Something went wrong. Please try again.';
+        document.getElementById('buyErr').classList.add('show');
+        btn.disabled    = false;
+        btn.textContent = 'Confirm & Pay';
+        return;
+      }
+
+      // Success
+      if (data.conversationId) {
+        document.getElementById('msgSellerBtn').href = `/messages?conv=${data.conversationId}`;
+      } else if (data.sellerId) {
+        document.getElementById('msgSellerBtn').href = `/messages?with=${data.sellerId}`;
+      }
+
+      document.getElementById('buyForm').style.display = 'none';
+      document.getElementById('buyModalFoot').style.display = 'none';
+      document.getElementById('buySuccess').classList.add('show');
+
+      // Mark buy button as sold
+      const buyBtn = document.getElementById('buyBtn');
+      if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = 'Sold'; }
+    }
+
     initNav();
     load();
   </script>
+
+  <!-- Buy Modal -->
+  <div class="buy-overlay" id="buyOverlay">
+    <div class="buy-modal">
+      <div class="buy-modal-head">
+        <h3 id="buyModalTitle">Confirm Purchase</h3>
+        <button class="buy-modal-close" onclick="closeBuyModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="buy-modal-body">
+        <div class="buy-success" id="buySuccess">
+          <div class="buy-success-icon">✅</div>
+          <h3>Purchase complete!</h3>
+          <p>Your payment is held in escrow. The seller will deliver the account details shortly. You can now message them directly.</p>
+          <div class="buy-success-btns">
+            <a id="msgSellerBtn" href="/messages" class="btn btn-primary">💬 Message Seller</a>
+            <a href="/orders" class="btn btn-secondary">View Order</a>
+          </div>
+        </div>
+        <div id="buyForm">
+          <div class="buy-row">
+            <span class="buy-row-label">Item</span>
+            <span class="buy-row-val" id="buyItemName" style="max-width:200px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          </div>
+          <div class="buy-divider"></div>
+          <div class="buy-row">
+            <span class="buy-row-label">Your balance</span>
+            <span class="buy-row-val" id="buyBalance"></span>
+          </div>
+          <div class="buy-row">
+            <span class="buy-row-label">Listing price</span>
+            <span class="buy-row-val" id="buyPrice" style="color:var(--danger);"></span>
+          </div>
+          <div class="buy-divider"></div>
+          <div class="buy-row">
+            <span class="buy-row-label">Balance after</span>
+            <span class="buy-row-val buy-total" id="buyAfter"></span>
+          </div>
+          <div class="escrow-note" style="font-size:12px;">
+            🔒 <strong>Escrow protected.</strong> Funds are released to the seller only after you confirm delivery.
+          </div>
+          <div class="buy-err" id="buyErr"></div>
+        </div>
+      </div>
+      <div class="buy-modal-foot" id="buyModalFoot">
+        <button class="btn btn-secondary" onclick="closeBuyModal()">Cancel</button>
+        <button class="btn btn-primary" id="buyConfirmBtn" onclick="confirmPurchase()">Confirm & Pay</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Lightbox -->
   <div class="lightbox" id="lightbox">
