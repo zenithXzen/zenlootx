@@ -330,9 +330,19 @@
     const av      = other.avatar_url ? `<img src="${other.avatar_url}" alt="${name}">` : initial;
     const isBuyer = conv?.buyer_id === currentUser.id;
 
-    // Fetch order escrow status
+    // Fetch order — use order_id if set, else find by buyer+seller
     let escrowStatus = null, orderId = conv?.order_id || null;
-    if (orderId) {
+    if (!orderId && conv?.buyer_id && conv?.seller_id) {
+      const { data: found } = await sb.from('orders')
+        .select('id,escrow_status')
+        .eq('buyer_id',  conv.buyer_id)
+        .eq('seller_id', conv.seller_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (found) { orderId = found.id; escrowStatus = found.escrow_status; }
+    }
+    if (orderId && !escrowStatus) {
       const { data: ord } = await sb.from('orders').select('escrow_status').eq('id', orderId).maybeSingle();
       escrowStatus = ord?.escrow_status || null;
     }

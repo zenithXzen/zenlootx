@@ -25,6 +25,7 @@ export async function onRequestGet({ request, env }) {
 
     const coveredOrders   = new Set(convs.map(c => c.order_id).filter(Boolean));
     const coveredListings = new Set(convs.map(c => c.listing_id).filter(Boolean));
+    const coveredPairs    = new Set(convs.map(c => `${c.buyer_id}:${c.seller_id}`));
 
     // Fetch orders to auto-create missing conversations
     const ordRes  = await fetch(
@@ -34,7 +35,8 @@ export async function onRequestGet({ request, env }) {
     const orders = await ordRes.json();
 
     for (const o of (Array.isArray(orders) ? orders : [])) {
-      if (coveredOrders.has(o.id) || (o.listing_id && coveredListings.has(o.listing_id))) continue;
+      const pair = `${o.buyer_id}:${o.seller_id}`;
+      if (coveredOrders.has(o.id) || coveredPairs.has(pair) || (o.listing_id && coveredListings.has(o.listing_id))) continue;
 
       const ncRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/conversations`, {
         method: 'POST', headers: hdr,
@@ -56,6 +58,7 @@ export async function onRequestGet({ request, env }) {
         });
         convs.push(nc);
         coveredOrders.add(o.id);
+        coveredPairs.add(pair);
         if (o.listing_id) coveredListings.add(o.listing_id);
       }
     }
