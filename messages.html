@@ -272,7 +272,8 @@
       <div style="padding:22px 24px 24px;">
         <div id="orderModalGame" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:6px;"></div>
         <div id="orderModalTitle" style="font-size:19px;font-weight:700;letter-spacing:-0.01em;margin-bottom:10px;color:var(--text);"></div>
-        <div id="orderModalDesc" style="font-size:14px;color:var(--text-dim);line-height:1.65;max-height:120px;overflow-y:auto;"></div>
+        <div id="orderModalDesc" style="font-size:14px;color:var(--text-dim);line-height:1.65;max-height:80px;overflow-y:auto;margin-bottom:0;"></div>
+        <div id="orderModalAttrs" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
         <button onclick="closeOrderModal()" style="margin-top:20px;width:100%;padding:11px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-hi);transition:background 0.16s;" onmouseover="this.style.background='var(--bg-base)'" onmouseout="this.style.background='var(--bg-elevated)'">Close</button>
       </div>
     </div>
@@ -1058,7 +1059,7 @@
 
     const { data, error } = await sb
       .from('listings')
-      .select('title, description, images, game')
+      .select('title, description, images, game, attributes')
       .eq('id', listingId)
       .maybeSingle();
 
@@ -1071,6 +1072,32 @@
     document.getElementById('orderModalGame').textContent  = GAME_LABELS[data.game] || data.game || '';
     document.getElementById('orderModalTitle').textContent = data.title || 'Untitled';
     document.getElementById('orderModalDesc').textContent  = data.description || 'No description provided.';
+
+    // Render game attributes
+    const ATTR_LABELS = {
+      ar_level:'AR Level', server:'Server', five_star_count:'Total 5★',
+      honest_issue:'Honest Issue', genesis_crystals:'Genesis Crystals',
+      welkin_moon:'Welkin Moon', battle_pass:'Battle Pass',
+      season_rank:'Season Rank', total_skins:'Total Skins',
+      collection_level:'Collection Level', diamonds_amount:'Diamonds Amount',
+      item_name:'Item Name', delivery_method:'Delivery Method',
+      rank:'Rank', region:'Region', premium_skins:'Premium Skins',
+      skin_name:'Skin Name', bundle:'Bundle / Collection',
+      weapon_type:'Weapon Type', vp_amount:'VP Amount',
+    };
+    const attrsEl = document.getElementById('orderModalAttrs');
+    const attrs   = data.attributes && typeof data.attributes === 'object' ? data.attributes : {};
+    const entries = Object.entries(attrs).filter(([,v]) => v !== '' && v !== null);
+    if (entries.length) {
+      attrsEl.style.display = 'flex';
+      attrsEl.innerHTML = entries.map(([k, v]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:12px;">
+          <span style="color:var(--text-faint);">${ATTR_LABELS[k] || k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>
+          <span style="font-weight:600;color:var(--text);text-align:right;">${v}</span>
+        </div>`).join('');
+    } else {
+      attrsEl.style.display = 'none';
+    }
 
     // Images: jsonb array — could be strings or objects with a url field
     const imgs   = Array.isArray(data.images) ? data.images : [];
