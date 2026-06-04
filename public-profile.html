@@ -280,9 +280,12 @@
         .eq('reviewee_id', userId)
         .order('created_at', { ascending: false });
 
-      const countEl = document.getElementById('reviewCount');
+      const countEl  = document.getElementById('reviewCount');
+      const ratingEl = document.getElementById('profileRating');
+
       if (!reviews?.length) {
-        if (countEl) countEl.textContent = '0';
+        if (countEl)  countEl.textContent  = '0';
+        if (ratingEl) ratingEl.textContent = '';
         wrap.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">★</div>
@@ -298,7 +301,8 @@
       const pMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
 
       const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
-      if (countEl) countEl.textContent = reviews.length;
+      if (countEl)  countEl.textContent  = reviews.length;
+      if (ratingEl) ratingEl.textContent = `★ ${avg}`;
       updateReviewTab(reviews.length, avg);
 
       wrap.innerHTML = `
@@ -385,7 +389,7 @@
             <div class="username-row">
               <div class="username-wrap">
                 <div class="profile-username" style="${isBanned ? 'color:var(--text-faint);' : ''}">${profile.username}</div>
-                ${isVerified && !isBanned ? `<span class="verified-badge"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg> Verified seller</span>` : ''}
+                <span id="profileRating" style="font-size:14px;color:var(--warning);font-weight:600;"></span>
                 ${isBanned ? `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;color:#F87171;">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                   Banned
