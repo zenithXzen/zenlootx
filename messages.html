@@ -91,6 +91,7 @@
     .msg-row.other .msg-bubble{background:var(--bg-elevated);color:var(--text);border-bottom-left-radius:4px}
     .msg-time{font-size:11px;color:var(--text-faint);margin-top:3px;text-align:right}
     .msg-row.other .msg-time{text-align:left}
+    .read-receipt{font-size:10px;color:var(--accent);margin-left:6px;opacity:0.8;}
     .msg-system{display:flex;justify-content:center;margin:8px 0}
     .msg-system-bubble{background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text-dim);line-height:1.6;max-width:80%;text-align:center}
 
@@ -525,6 +526,22 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
 
+    // Mark conversation as read — updates last_read_at so other person sees receipt
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.access_token) return;
+      fetch('/api/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ conversationId: convId }),
+      }).catch(() => {});
+      // Also update local state immediately
+      const c = conversations.find(x => x.id === convId);
+      if (c && currentUser) {
+        if (c.buyer_id === currentUser.id) { c.buyer_unread_count = 0; c.buyer_last_read_at = new Date().toISOString(); }
+        else { c.seller_unread_count = 0; c.seller_last_read_at = new Date().toISOString(); }
+      }
+    });
+
     await loadMessages(convId);
     subscribeMessages(convId);
     subscribeConversations();
@@ -552,10 +569,36 @@
     const mine = m.sender_id === currentUser.id;
     const time = new Date(m.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     return `
-      <div class="msg-row ${mine ? 'mine' : 'other'}">
+      <div class="msg-row ${mine ? 'mine' : 'other'}" data-msg-id="${m.id}">
         <div class="msg-bubble">${escHtml(m.content)}</div>
       </div>
-      <div class="msg-time" style="text-align:${mine ? 'right' : 'left'};padding:0 4px;">${time}</div>`;
+      <div class="msg-time" style="text-align:${mine ? 'right' : 'left'};padding:0 4px;">
+        ${time}${mine ? `<span class="read-receipt" id="rr-${m.id}"></span>` : ''}
+      </div>`;
+  }
+
+  let activeMessages = [];
+
+  function updateReadReceipt() {
+    document.querySelectorAll('.read-receipt').forEach(el => el.textContent = '');
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv || !currentUser) return;
+    const isBuyer      = conv.buyer_id === currentUser.id;
+    const otherReadAt  = isBuyer ? conv.seller_last_read_at : conv.buyer_last_read_at;
+    if (!otherReadAt) return;
+    const otherReadTs  = new Date(otherReadAt).getTime();
+    const myReadMsgs   = activeMessages.filter(m =>
+      m.sender_id === currentUser.id &&
+      !isSystem(m.content) &&
+      new Date(m.created_at).getTime() <= otherReadTs
+    );
+    if (!myReadMsgs.length) return;
+    const last  = myReadMsgs[myReadMsgs.length - 1];
+    const rrEl  = document.getElementById(`rr-${last.id}`);
+    if (rrEl) {
+      const t = new Date(otherReadAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      rrEl.textContent = `· Read ${t}`;
+    }
   }
 
   function renderMessages(msgs) {
@@ -572,7 +615,9 @@
       return;
     }
 
+    activeMessages = msgs;
     el.innerHTML = msgs.map(msgHtml).join('');
+    updateReadReceipt();
     el.scrollTop = el.scrollHeight;
   }
 
@@ -594,6 +639,7 @@
         if (empty) el.innerHTML = '';
 
         const row = document.createElement('div');
+        activeMessages.push(m);
         row.innerHTML = msgHtml(m);
         el.appendChild(row);
         el.scrollTop = el.scrollHeight;
@@ -649,6 +695,7 @@
         if (idx !== -1) {
           conversations[idx] = { ...conversations[idx], ...updated };
           renderConvList();
+          if (updated.id === activeConvId) updateReadReceipt();
         }
       })
       .subscribe();

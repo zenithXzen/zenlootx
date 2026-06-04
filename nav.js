@@ -228,5 +228,10 @@ async function initNotifBadge(userId) {
     }, async () => {
       setBadge(await fetchCount());
     })
-    .subscribe();
+    .subscribe((status) => {
+      // Fallback poll every 30s if realtime isn't enabled on this table
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        setInterval(async () => setBadge(await fetchCount()), 30000);
+      }
+    });
 }

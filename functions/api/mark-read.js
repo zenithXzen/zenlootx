@@ -22,11 +22,13 @@ export async function onRequestPost({ request, env }) {
       const convData = await convRes.json();
       const conv     = convData[0];
       if (!conv) return Response.json({ error: 'Not found' }, { status: 404 });
-      const field = conv.buyer_id === user.id ? 'buyer_unread_count' : 'seller_unread_count';
+      const isBuyer   = conv.buyer_id === user.id;
+      const countField = isBuyer ? 'buyer_unread_count'  : 'seller_unread_count';
+      const readField  = isBuyer ? 'buyer_last_read_at'  : 'seller_last_read_at';
       await fetch(`${env.SUPABASE_URL}/rest/v1/conversations?id=eq.${conversationId}`, {
         method: 'PATCH',
         headers: { ...hdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({ [field]: 0 }),
+        body: JSON.stringify({ [countField]: 0, [readField]: new Date().toISOString() }),
       });
     } else {
       // Mark ALL conversations read for this user
