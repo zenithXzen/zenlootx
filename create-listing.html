@@ -376,10 +376,11 @@
       fieldsEl.innerHTML = defs.map(f => {
         const id = `attr_${f.key}`;
         const hint = f.hint ? `<span class="hint" style="color:var(--text-faint)">${f.hint}</span>` : '';
+        const req  = `<span style="color:var(--danger)"> *</span>`;
         if (f.type === 'select') {
-          return `<div class="field"><label>${f.label}</label><select id="${id}"><option value="">— Select —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>${hint}</div>`;
+          return `<div class="field"><label>${f.label}${req}</label><select id="${id}"><option value="">— Select —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>${hint}</div>`;
         }
-        return `<div class="field"><label>${f.label}</label><input type="${f.type}" id="${id}" placeholder="${f.placeholder||''}"${f.min!==undefined?` min="${f.min}"`:''}${f.max!==undefined?` max="${f.max}"`:''}>${hint}</div>`;
+        return `<div class="field"><label>${f.label}${req}</label><input type="${f.type}" id="${id}" placeholder="${f.placeholder||''}"${f.min!==undefined?` min="${f.min}"`:''}${f.max!==undefined?` max="${f.max}"`:''}>${hint}</div>`;
       }).join('');
       section.style.display = '';
     }
@@ -395,6 +396,25 @@
         }
       });
       return attrs;
+    }
+
+    function validateAttributes() {
+      const defs = GAME_ATTRS[selectedGame]?.[selectedType];
+      if (!defs?.length) return null;
+      for (const f of defs) {
+        const el = document.getElementById(`attr_${f.key}`);
+        if (!el) continue;
+        const empty = !el.value || el.value === '— Select —';
+        if (empty) {
+          el.style.borderColor = 'var(--danger)';
+          el.style.boxShadow   = '0 0 0 3px rgba(239,68,68,0.12)';
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return `Please fill in "${f.label}" in the ${ATTR_TITLES[selectedType] || 'details'} section.`;
+        }
+        el.style.borderColor = '';
+        el.style.boxShadow   = '';
+      }
+      return null;
     }
     const imgFiles = []; // { file, dataUrl, name, size }
     let featuredIndex = 0;
@@ -587,6 +607,8 @@
 
       if (!selectedGame)           { showError('Please select a game.'); return; }
       if (!selectedType)           { showError('Please select a listing type.'); return; }
+      const attrError = validateAttributes();
+      if (attrError)               { showError(attrError); return; }
       if (!title)                  { showError('Please enter a title.'); return; }
       if (!price || price <= 0)    { showError('Please enter a valid price.'); return; }
       if (!imgFiles.length) { showError('Please upload at least one screenshot.'); return; }
