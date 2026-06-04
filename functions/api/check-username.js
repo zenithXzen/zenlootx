@@ -11,37 +11,21 @@ export async function onRequestPost(context) {
       return Response.json({ available: false, error: 'Only letters, numbers, and underscores allowed.' });
     }
 
-    // Fetch all users and check metadata for matching username
-    let page = 1;
-    let found = false;
+    // Check profiles table (case-insensitive)
+    let url = `${env.SUPABASE_URL}/rest/v1/profiles?select=id&username=ilike.${encodeURIComponent(username)}`;
+    if (userId) url += `&id=neq.${userId}`;
 
-    while (true) {
-      const res = await fetch(
-        `${env.SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=1000`,
-        {
-          headers: {
-            Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-            apikey: env.SUPABASE_SERVICE_KEY,
-          },
-        }
-      );
-      const data = await res.json();
-      if (!data.users || data.users.length === 0) break;
+    const res = await fetch(url, {
+      headers: {
+        apikey: env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      },
+    });
 
-      for (const user of data.users) {
-        if (user.id === userId) continue; // skip self
-        const meta = user.user_metadata || user.raw_user_meta_data || {};
-        const storedUsername = meta.username || '';
-        if (storedUsername.toLowerCase() === username.toLowerCase()) {
-          found = true;
-          break;
-        }
-      }
-      if (found || data.users.length < 1000) break;
-      page++;
-    }
+    const data = await res.json();
+    const taken = Array.isArray(data) && data.length > 0;
 
-    return Response.json({ available: !found });
+    return Response.json({ available: !taken });
 
   } catch {
     return Response.json({ available: false, error: 'Server error.' });

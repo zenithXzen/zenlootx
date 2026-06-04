@@ -414,6 +414,28 @@
 
       const btn = document.getElementById('sendCodeBtn');
       btn.disabled = true;
+      btn.textContent = 'Checking…';
+
+      // Check username availability before sending code
+      try {
+        const uRes  = await fetch('/api/check-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+        const uData = await uRes.json();
+        if (!uData.available) {
+          err.textContent = uData.error || 'That username is already taken. Please choose another.';
+          err.classList.add('visible');
+          document.getElementById('username').classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Send verification code';
+          return;
+        }
+      } catch {
+        // If check fails, allow through — DB constraint will catch duplicates
+      }
+
       btn.textContent = 'Sending…';
 
       try {
