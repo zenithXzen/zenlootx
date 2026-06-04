@@ -385,20 +385,24 @@
         <div id="addFundsForm">
           <div class="form-group">
             <div class="form-label">Payment method</div>
-            <div class="method-grid" style="grid-template-columns:repeat(2,1fr);">
-              <button class="method-btn" id="af-gcash"   onclick="selectAddMethod('gcash')">
+            <div class="method-grid" style="grid-template-columns:repeat(3,1fr);">
+              <button class="method-btn" id="af-gcash"    onclick="selectAddMethod('gcash')">
                 <div class="method-icon" style="background:#0070E0;color:#fff;font-size:14px;font-weight:700;">G</div>
                 <span class="method-label">GCash</span>
               </button>
-              <button class="method-btn" id="af-maya"    onclick="selectAddMethod('maya')">
+              <button class="method-btn" id="af-maya"     onclick="selectAddMethod('maya')">
                 <div class="method-icon" style="background:#00C389;color:#fff;font-size:14px;font-weight:700;">M</div>
                 <span class="method-label">Maya</span>
               </button>
-              <button class="method-btn" id="af-wise"    onclick="selectAddMethod('wise')">
+              <button class="method-btn" id="af-maribank" onclick="selectAddMethod('maribank')">
+                <div class="method-icon" style="background:#E8145A;color:#fff;font-size:14px;font-weight:700;">Ma</div>
+                <span class="method-label">Maribank</span>
+              </button>
+              <button class="method-btn" id="af-wise"     onclick="selectAddMethod('wise')">
                 <div class="method-icon" style="background:#9FE870;color:#163300;font-size:14px;font-weight:800;">W</div>
                 <span class="method-label">Wise</span>
               </button>
-              <button class="method-btn" id="af-binance" onclick="selectAddMethod('binance')">
+              <button class="method-btn" id="af-binance"  onclick="selectAddMethod('binance')">
                 <div class="method-icon" style="background:#F3BA2F;color:#1B1B1B;font-size:14px;font-weight:700;">B</div>
                 <span class="method-label">Binance</span>
               </button>
@@ -406,7 +410,7 @@
           </div>
 
           <!-- Payment instructions shown after method selected -->
-          <div id="afInstructions" style="display:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text-dim);line-height:1.6;"></div>
+          <div id="afInstructions" style="display:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;color:var(--text-dim);line-height:1.7;"></div>
 
           <div class="form-group" id="afAmountGroup" style="display:none;">
             <label class="form-label" for="addFundsAmount">Amount you're sending (PHP)</label>
@@ -772,10 +776,23 @@
     let selectedAddMethod = null;
 
     const ADD_INSTRUCTIONS = {
-      gcash:   'Send your payment to our GCash number: <strong>09XX-XXX-XXXX</strong> (ZenLootX). Use your username or full name as the reference.',
-      maya:    'Send your payment to our Maya number: <strong>09XX-XXX-XXXX</strong> (ZenLootX). Use your username or full name as the reference.',
-      wise:    'Send to our Wise account: <strong>payments@zenlootexchange.com</strong>. Set currency to PHP and use your username as the reference.',
-      binance: 'Send USDT (BEP-20 or TRC-20) to our Binance Pay UID: <strong>XXXXXXXXX</strong>. We will convert at the current PHP rate. Use your username as the memo.',
+      gcash: `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;">
+          <img src="/qr/gcash.png" alt="GCash QR" style="width:180px;height:180px;border-radius:10px;border:1px solid var(--border);background:var(--bg-base);object-fit:contain;">
+          <div>Scan the QR code with your GCash app, or send manually to<br><strong style="color:var(--text);font-size:15px;">09XX-XXX-XXXX</strong> · ZenLootX<br><span style="color:var(--text-faint);font-size:12px;">Use your username or full name as the reference.</span></div>
+        </div>`,
+      maya: `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;">
+          <img src="/qr/maya.png" alt="Maya QR" style="width:180px;height:180px;border-radius:10px;border:1px solid var(--border);background:var(--bg-base);object-fit:contain;">
+          <div>Scan the QR code with your Maya app, or send manually to<br><strong style="color:var(--text);font-size:15px;">09XX-XXX-XXXX</strong> · ZenLootX<br><span style="color:var(--text-faint);font-size:12px;">Use your username or full name as the reference.</span></div>
+        </div>`,
+      maribank: `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;">
+          <img src="/qr/maribank.png" alt="Maribank QR" style="width:180px;height:180px;border-radius:10px;border:1px solid var(--border);background:var(--bg-base);object-fit:contain;">
+          <div>Scan the QR code with your Maribank app, or send manually to<br><strong style="color:var(--text);font-size:15px;">09XX-XXX-XXXX</strong> · ZenLootX<br><span style="color:var(--text-faint);font-size:12px;">Use your username or full name as the reference.</span></div>
+        </div>`,
+      wise:    'Send to our Wise account: <strong style="color:var(--text);">payments@zenlootexchange.com</strong>. Set currency to PHP and use your username as the reference.',
+      binance: 'Send USDT (BEP-20 or TRC-20) to our Binance Pay UID: <strong style="color:var(--text);">XXXXXXXXX</strong>. We will convert at the current PHP rate. Use your username as the memo.',
     };
 
     function openAddFundsModal() {
