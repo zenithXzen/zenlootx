@@ -937,13 +937,79 @@
       if (area) area.classList.toggle('open');
     }
 
+    function showConsequenceModal(sellerName) {
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);';
+        overlay.innerHTML = `
+          <div style="background:#121814;border:1px solid #232B26;border-radius:12px;padding:28px;max-width:420px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,0.6);">
+            <h3 style="font-size:16px;font-weight:700;color:#E8EDE9;margin-bottom:6px;">Consequence for seller</h3>
+            <p style="font-size:13px;color:#9BA8A0;margin-bottom:20px;">Dispute resolved in buyer's favor. What action should be taken against <strong style="color:#E8EDE9;">${sellerName}</strong>?</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;" id="consOptions">
+              <label id="consLabelNone" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #19C37D;border-radius:8px;cursor:pointer;">
+                <input type="radio" name="cons" value="none" checked style="accent-color:#19C37D;flex-shrink:0;">
+                <div><div style="font-size:14px;font-weight:500;color:#E8EDE9;">No action</div><div style="font-size:12px;color:#6B776F;">Refund only, no account penalty</div></div>
+              </label>
+              <label id="consLabelFreeze" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #232B26;border-radius:8px;cursor:pointer;">
+                <input type="radio" name="cons" value="freeze" style="accent-color:#19C37D;flex-shrink:0;">
+                <div style="flex:1;"><div style="font-size:14px;font-weight:500;color:#E8EDE9;">Freeze account</div><div style="font-size:12px;color:#6B776F;">Temporarily restrict the seller</div></div>
+                <select id="consDuration" style="background:#1A211C;border:1px solid #33403A;border-radius:6px;padding:5px 8px;font-family:Geist,sans-serif;font-size:12px;color:#E8EDE9;" onclick="event.stopPropagation()">
+                  <option value="1h">1 hour</option>
+                  <option value="24h" selected>24 hours</option>
+                  <option value="3d">3 days</option>
+                  <option value="7d">1 week</option>
+                  <option value="30d">30 days</option>
+                  <option value="permanent">Permanent</option>
+                </select>
+              </label>
+              <label id="consLabelBan" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #232B26;border-radius:8px;cursor:pointer;">
+                <input type="radio" name="cons" value="ban" style="accent-color:#EF4444;flex-shrink:0;">
+                <div><div style="font-size:14px;font-weight:500;color:#F87171;">Ban account</div><div style="font-size:12px;color:#6B776F;">Permanently ban this seller</div></div>
+              </label>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <button id="consCancel" style="padding:9px 18px;border-radius:8px;border:1px solid #33403A;background:transparent;color:#E8EDE9;font-family:Geist,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>
+              <button id="consConfirm" style="padding:9px 20px;border-radius:8px;border:none;background:#19C37D;color:#0A0E0C;font-family:Geist,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Apply & Resolve</button>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+
+        // Highlight selected option
+        overlay.querySelectorAll('input[name="cons"]').forEach(r => {
+          r.addEventListener('change', () => {
+            overlay.querySelectorAll('label[id^="consLabel"]').forEach(l => l.style.borderColor = '#232B26');
+            const lbl = overlay.querySelector(`#consLabel${r.value.charAt(0).toUpperCase()+r.value.slice(1)}`);
+            if (lbl) lbl.style.borderColor = r.value === 'ban' ? '#EF4444' : '#19C37D';
+          });
+        });
+
+        const close = v => { overlay.remove(); resolve(v); };
+        overlay.querySelector('#consCancel').addEventListener('click', () => close(null));
+        overlay.querySelector('#consConfirm').addEventListener('click', () => {
+          const sel = overlay.querySelector('input[name="cons"]:checked')?.value || 'none';
+          close(sel === 'freeze' ? { type:'freeze', duration: overlay.querySelector('#consDuration').value }
+               : sel === 'ban'   ? { type:'ban' }
+               :                   { type:'none' });
+        });
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+      });
+    }
+
     async function submitResolution(id, btn) {
       const action = document.querySelector(`.resolution-action-btn[data-id="${id}"].active`)?.dataset.action || null;
       const note   = document.getElementById(`resNote_${id}`)?.value.trim() || '';
       if (!action) { toast('Select refund buyer or release to seller first.', 'error'); return; }
 
+      let consequence = { type: 'none' };
+      if (action === 'refund_buyer') {
+        const dispute    = allDisputes.find(d => d.id === id);
+        const sellerName = dispute?._seller?.username || 'the seller';
+        consequence = await showConsequenceModal(sellerName);
+        if (consequence === null) return; // cancelled
+      }
+
       btn.disabled = true;
-      btn.textContent = 'Saving…';
+      btn.textContent = 'Resolving…';
 
       const res = await fetch('/api/admin/resolve-dispute', {
         method: 'POST',
@@ -951,8 +1017,33 @@
         body: JSON.stringify({ disputeId: id, action, notes: note }),
       });
 
-      if (res.ok) { await loadDisputes(); renderShell(); }
-      else { btn.disabled = false; btn.textContent = 'Confirm resolution'; }
+      if (!res.ok) {
+        btn.disabled = false; btn.textContent = 'Confirm resolution';
+        toast('Error: ' + (await res.json().catch(()=>({}))).error, 'error'); return;
+      }
+
+      // Apply seller consequence
+      if (consequence.type !== 'none') {
+        const dispute  = allDisputes.find(d => d.id === id);
+        const sellerId = dispute?.seller_id;
+        if (sellerId) {
+          if (consequence.type === 'ban') {
+            await fetch('/api/admin/ban-user', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: sellerId, action: 'ban', reason: 'Dispute resolved against seller' }),
+            });
+          } else if (consequence.type === 'freeze') {
+            await fetch('/api/admin/freeze-user', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: sellerId, action: 'freeze', duration: consequence.duration }),
+            });
+          }
+        }
+      }
+
+      await loadDisputes(); renderShell();
     }
 
     // Handle resolution action button selection
