@@ -321,22 +321,32 @@
   }
   function markRead(convId) {
     localStorage.setItem(`zlx_lr_${convId}`, Date.now());
-    // Reset server-side unread count (fire and forget)
-    sb.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.access_token) return;
-      fetch('/api/mark-read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ conversationId: convId }),
-      }).catch(() => {});
-    });
-    // Reset local count immediately
+    markReadNow(convId);
+  }
+
+  let _markReadTimer = null;
+  function markReadNow(convId) {
+    const now = new Date().toISOString();
+    // Update local state immediately so receipt advances in real-time
     const c = conversations.find(x => x.id === convId);
     if (c && currentUser) {
-      if (c.buyer_id === currentUser.id) c.buyer_unread_count = 0;
-      else c.seller_unread_count = 0;
+      if (c.buyer_id === currentUser.id) { c.buyer_unread_count = 0; c.buyer_last_read_at = now; }
+      else { c.seller_unread_count = 0; c.seller_last_read_at = now; }
     }
     updateNavBadge();
+    if (convId === activeConvId) updateReadReceipt();
+    // Debounce server call — don't spam on every incoming message
+    clearTimeout(_markReadTimer);
+    _markReadTimer = setTimeout(() => {
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.access_token) return;
+        fetch('/api/mark-read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ conversationId: convId }),
+        }).catch(() => {});
+      });
+    }, 1000);
   }
   function isUnread(c) {
     if (!c.last_message_at) return false;
@@ -644,12 +654,8 @@
         el.appendChild(row);
         el.scrollTop = el.scrollHeight;
         if (m.sender_id !== currentUser.id) {
-          // Update local unread count for sidebar dot only (don't reset server count)
-          const c = conversations.find(x => x.id === convId);
-          if (c) {
-            if (c.buyer_id === currentUser.id) c.buyer_unread_count = Math.max(0, (c.buyer_unread_count || 0) - 1);
-            else c.seller_unread_count = Math.max(0, (c.seller_unread_count || 0) - 1);
-          }
+          // User is actively viewing — advance their last_read_at so sender sees updated receipt
+          markReadNow(convId);
         }
       })
       .subscribe();
