@@ -116,13 +116,13 @@ async function initNav(user) {
 }
 
 async function initMsgBadge(userId) {
-  function getLastRead(convId) {
-    return parseInt(localStorage.getItem(`zlx_lr_${convId}`) || '0', 10);
+  function myUnreadCount(c) {
+    if (c.buyer_id === userId) return c.buyer_unread_count || 0;
+    if (c.seller_id === userId) return c.seller_unread_count || 0;
+    return 0;
   }
-  function isUnread(c) {
-    if (!c.last_message_at) return false;
-    if (c.last_message_sender_id === userId) return false; // your own message, not unread
-    return new Date(c.last_message_at).getTime() > getLastRead(c.id);
+  function totalUnread(convs) {
+    return convs.reduce((sum, c) => sum + myUnreadCount(c), 0);
   }
   function setBadge(count) {
     document.querySelectorAll('.nav-msg-badge').forEach(el => el.remove());
@@ -149,15 +149,15 @@ async function initMsgBadge(userId) {
     convs = data.conversations || [];
   } catch {}
 
-  setBadge(convs.filter(isUnread).length);
+  setBadge(totalUnread(convs));
 
-  // Real-time: watch conversations for last_message_at updates
+  // Real-time: watch conversations for unread count updates
   function onConvUpdate(payload) {
     const updated = payload.new;
     const idx = convs.findIndex(c => c.id === updated.id);
     if (idx >= 0) convs[idx] = { ...convs[idx], ...updated };
     else convs.push(updated);
-    setBadge(convs.filter(isUnread).length);
+    setBadge(totalUnread(convs));
   }
 
   sb.channel(`nav-msg-buyer-${userId}`)

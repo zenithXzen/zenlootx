@@ -320,17 +320,35 @@
   }
   function markRead(convId) {
     localStorage.setItem(`zlx_lr_${convId}`, Date.now());
+    // Reset server-side unread count (fire and forget)
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.access_token) return;
+      fetch('/api/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ conversationId: convId }),
+      }).catch(() => {});
+    });
+    // Reset local count immediately
+    const c = conversations.find(x => x.id === convId);
+    if (c && currentUser) {
+      if (c.buyer_id === currentUser.id) c.buyer_unread_count = 0;
+      else c.seller_unread_count = 0;
+    }
     updateNavBadge();
   }
   function isUnread(c) {
     if (!c.last_message_at) return false;
-    if (c.last_message_sender_id === currentUser?.id) return false; // your own last message
-    const msgTime  = new Date(c.last_message_at).getTime();
-    const lastRead = getLastRead(c.id);
-    return msgTime > lastRead;
+    if (c.last_message_sender_id === currentUser?.id) return false;
+    const myCount = currentUser && c.buyer_id === currentUser.id ? c.buyer_unread_count : c.seller_unread_count;
+    return (myCount || 0) > 0;
   }
   function totalUnread() {
-    return conversations.filter(c => isUnread(c)).length;
+    if (!currentUser) return 0;
+    return conversations.reduce((sum, c) => {
+      const count = c.buyer_id === currentUser.id ? (c.buyer_unread_count || 0) : (c.seller_unread_count || 0);
+      return sum + count;
+    }, 0);
   }
   function updateNavBadge() {
     const count = totalUnread();
