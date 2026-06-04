@@ -414,12 +414,12 @@
           <div id="afInstructions" style="display:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;color:var(--text-dim);line-height:1.7;"></div>
 
           <div class="form-group" id="afAmountGroup" style="display:none;">
-            <label class="form-label" for="addFundsAmount">Amount you're sending (PHP)</label>
+            <label class="form-label" id="afAmountLabel" for="addFundsAmount">Amount you're sending (PHP)</label>
             <div class="amount-wrap">
-              <span class="amount-prefix">₱</span>
+              <span class="amount-prefix" id="afAmountPrefix">₱</span>
               <input class="form-input" id="addFundsAmount" type="number" min="100" step="0.01" placeholder="0.00">
             </div>
-            <span class="form-hint">Minimum top-up: ₱100.00</span>
+            <span class="form-hint" id="afAmountHint">Minimum top-up: ₱100.00</span>
           </div>
 
           <div class="form-group" id="afRefGroup" style="display:none;">
@@ -753,6 +753,11 @@
       document.getElementById('afInstructions').style.display = 'block';
       document.getElementById('afAmountGroup').style.display = '';
       document.getElementById('afRefGroup').style.display = '';
+      // Binance uses USDT, all others use PHP
+      const isBinance = m === 'binance';
+      document.getElementById('afAmountLabel').textContent = isBinance ? 'Amount you\'re sending (USDT)' : 'Amount you\'re sending (PHP)';
+      document.getElementById('afAmountPrefix').textContent = isBinance ? 'USDT' : '₱';
+      document.getElementById('afAmountHint').textContent   = isBinance ? 'Enter the USDT amount you sent.' : 'Minimum top-up: ₱100.00';
     }
 
     async function submitAddFunds() {
