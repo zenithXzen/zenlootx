@@ -335,6 +335,9 @@
     .card-delisted { opacity:0.55;pointer-events:none; }
     .card-delisted .card-menu-btn { display:none; }
     .delisted-tag { position:absolute;top:10px;left:10px;z-index:3;background:rgba(107,119,111,0.85);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.1);color:#E8EDE9;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;pointer-events:none; }
+    .live-tag { position:absolute;top:10px;left:10px;z-index:3;background:rgba(25,195,125,0.18);backdrop-filter:blur(6px);border:1px solid rgba(25,195,125,0.35);color:#19C37D;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;pointer-events:none;display:flex;align-items:center;gap:5px; }
+    .live-tag::before { content:'';width:5px;height:5px;border-radius:50%;background:#19C37D;animation:live-pulse 1.8s ease-in-out infinite; }
+    @keyframes live-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.75)} }
 
     /* EMPTY STATE */
     .empty-state {
@@ -847,6 +850,7 @@
       return `
         <div class="listing-card" id="lcard_${l.id}" style="position:relative;">
           <button class="card-menu-btn" onclick="openCardMenu('${l.id}',event)" title="Listing options">···</button>
+          <span class="live-tag">Live</span>
           <a href="/listings/detail?id=${l.id}">
             <div class="card-img">${img}</div>
             <div class="card-body">
