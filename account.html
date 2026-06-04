@@ -1467,8 +1467,17 @@
 
     async function loadTier(userId) {
       try {
-        const { data, error } = await sb.from('transactions').select('amount').eq('user_id', userId);
-        const total = error || !data ? 0 : data.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+        // Sum purchase (escrow) + sale (credit) transactions — excludes withdrawals
+        const [{ data: txData }, { data: wallet }] = await Promise.all([
+          sb.from('transactions').select('amount,type').eq('user_id', userId),
+          sb.from('wallets').select('total_earned').eq('user_id', userId).maybeSingle(),
+        ]);
+        const txTotal     = (txData || [])
+          .filter(r => ['escrow','credit','refund'].includes(r.type))
+          .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+        const sellerTotal = parseFloat(wallet?.total_earned || 0);
+        // Use whichever is higher: transaction-based or wallet total_earned
+        const total = Math.max(txTotal, sellerTotal);
         const t     = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
         const next  = TIERS.find(n => n.tier === t.tier + 1);
 

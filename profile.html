@@ -952,8 +952,15 @@
 
     async function loadTierTrophy(userId) {
       try {
-        const { data } = await sb.from('transactions').select('amount').eq('user_id', userId);
-        const total = data?.reduce((s,r) => s + (parseFloat(r.amount)||0), 0) || 0;
+        const [{ data: txData }, { data: wallet }] = await Promise.all([
+          sb.from('transactions').select('amount,type').eq('user_id', userId),
+          sb.from('wallets').select('total_earned').eq('user_id', userId).maybeSingle(),
+        ]);
+        const txTotal     = (txData || [])
+          .filter(r => ['escrow','credit','refund'].includes(r.type))
+          .reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+        const sellerTotal = parseFloat(wallet?.total_earned || 0);
+        const total = Math.max(txTotal, sellerTotal);
         const t = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
         const el = document.getElementById('profileTierTrophy');
         if (!el) return;
