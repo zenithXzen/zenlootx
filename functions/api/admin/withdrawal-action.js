@@ -100,7 +100,7 @@ export async function onRequestPost({ request, env }) {
       await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}&status=eq.pending`, {
         method: 'PATCH',
         body: JSON.stringify({
-          status:      action === 'approve' ? 'completed' : 'failed',
+          status:      action === 'approve' ? 'completed' : 'rejected',
           description: action === 'approve'
             ? `Withdrawal via ${methodLabel} — approved`
             : `Withdrawal via ${methodLabel} — rejected`,
