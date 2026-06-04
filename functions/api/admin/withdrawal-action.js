@@ -124,22 +124,10 @@ export async function onRequestPost({ request, env }) {
         }
 
       } else {
-        // Rejection: mark the original withdrawal as rejected
-        const txCheckRes  = await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, { method: 'GET', headers: { Prefer: '' } });
-        const txCheckData = await txCheckRes.json();
-        if (Array.isArray(txCheckData) && txCheckData.length > 0) {
-          await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status: 'rejected', description: `Withdrawal via ${methodLabel} — rejected` }),
-          });
-        } else {
-          await sb(env, 'transactions', {
-            method: 'POST',
-            body: JSON.stringify({ user_id: userId, type: 'debit', amount: Number(amount), description: `Withdrawal via ${methodLabel} — rejected`, reference: id, status: 'rejected' }),
-          });
-        }
+        // Rejection: delete the pending transaction to keep history clean
+        await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}`, { method: 'DELETE' });
 
-        // Always insert a separate refund credit so the user sees their money returned
+        // Insert a refund credit so the user sees the money returned
         await sb(env, 'transactions', {
           method: 'POST',
           body: JSON.stringify({ user_id: userId, type: 'refund', amount: Number(amount), description: `Refunded — withdrawal rejected`, reference: id, status: 'completed' }),
