@@ -208,6 +208,15 @@
             </div>
           </div>
 
+          <!-- Dynamic Attributes (shown after game + type selected) -->
+          <div class="form-section" id="attrSection" style="display:none;">
+            <div class="form-section-head">
+              <h2 id="attrSectionTitle">Account Details</h2>
+              <p class="form-section-sub" style="font-size:13px;color:var(--text-faint);margin-top:4px;">Help buyers know exactly what they're getting.</p>
+            </div>
+            <div class="form-section-body" id="attrFields"></div>
+          </div>
+
           <!-- Details -->
           <div class="form-section">
             <div class="form-section-head"><h2>Listing details</h2></div>
@@ -305,6 +314,93 @@
     let currentUser = null;
     let selectedGame = null;
     let selectedType = null;
+
+    const GAME_ATTRS = {
+      genshin: {
+        account: [
+          { key:'ar_level',         label:'AR Level',           type:'number', placeholder:'e.g. 55', min:1, max:60 },
+          { key:'server',           label:'Server',             type:'select', options:['Asia','America','Europe','TW/HK/MO'] },
+          { key:'primogems',        label:'Primogems',          type:'number', placeholder:'e.g. 5000' },
+          { key:'five_star_chars',  label:'5★ Characters',      type:'text',   placeholder:'e.g. Hu Tao, Raiden, Kazuha' },
+          { key:'five_star_weapons',label:'5★ Weapons',         type:'text',   placeholder:'e.g. Staff of Homa, Aquila Favonia' },
+          { key:'welkin_moon',      label:'Welkin Moon',        type:'select', options:['No','Yes'] },
+          { key:'battle_pass',      label:'Battle Pass',        type:'select', options:['No','Yes'] },
+        ],
+        topup: [
+          { key:'server',           label:'Server',             type:'select', options:['Asia','America','Europe','TW/HK/MO'] },
+          { key:'genesis_crystals', label:'Genesis Crystals',   type:'number', placeholder:'e.g. 3280' },
+        ],
+      },
+      mlbb: {
+        account: [
+          { key:'season_rank',      label:'Season Rank',        type:'select', options:['Warrior','Elite','Master','Grandmaster','Epic','Legend','Mythic','Mythical Glory','Mythical Immortal'] },
+          { key:'total_skins',      label:'Total Skins',        type:'number', placeholder:'e.g. 120' },
+          { key:'total_heroes',     label:'Total Heroes',       type:'number', placeholder:'e.g. 80' },
+          { key:'diamonds',         label:'Diamonds',           type:'number', placeholder:'e.g. 1000' },
+          { key:'server',           label:'Server',             type:'select', options:['Southeast Asia','North America','Europe','Middle East','South Asia'] },
+          { key:'notable_skins',    label:'Notable Skins',      type:'text',   placeholder:'e.g. Collector: Gusion, Epic: Layla' },
+        ],
+        items: [
+          { key:'item_name',        label:'Item Name',          type:'text',   placeholder:'e.g. Collector Skin — Fanny' },
+          { key:'delivery_method',  label:'Delivery Method',    type:'select', options:['In-game Gift','Trade','Other'] },
+        ],
+        topup: [
+          { key:'server',           label:'Server',             type:'select', options:['Southeast Asia','North America','Europe','Middle East','South Asia'] },
+          { key:'diamonds_amount',  label:'Diamonds Amount',    type:'number', placeholder:'e.g. 500' },
+        ],
+      },
+      valorant: {
+        account: [
+          { key:'rank',             label:'Rank',               type:'select', options:['Unranked','Iron','Bronze','Silver','Gold','Platinum','Diamond','Ascendant','Immortal','Radiant'] },
+          { key:'region',           label:'Region',             type:'select', options:['NA','EU','AP','KR','BR','LATAM','TR'] },
+          { key:'agents_unlocked',  label:'Agents Unlocked',    type:'number', placeholder:'e.g. 20' },
+          { key:'skin_count',       label:'Skins',              type:'number', placeholder:'e.g. 15' },
+          { key:'vp_balance',       label:'VP Balance',         type:'number', placeholder:'e.g. 300' },
+          { key:'notable_skins',    label:'Notable Skins',      type:'text',   placeholder:'e.g. Prime Vandal, Reaver Operator' },
+        ],
+        items: [
+          { key:'skin_name',        label:'Skin Name',          type:'text',   placeholder:'e.g. Prime Vandal' },
+          { key:'bundle',           label:'Bundle / Collection',type:'text',   placeholder:'e.g. Prime Bundle' },
+          { key:'weapon_type',      label:'Weapon Type',        type:'select', options:['Vandal','Phantom','Operator','Knife/Melee','Classic','Ghost','Sheriff','Frenzy','Judge','Bucky','Guardian','Bulldog','Stinger','Spectre','Ares','Odin','Marshal','Other'] },
+        ],
+        topup: [
+          { key:'region',           label:'Region',             type:'select', options:['NA','EU','AP','KR','BR','LATAM','TR'] },
+          { key:'vp_amount',        label:'VP Amount',          type:'number', placeholder:'e.g. 1000' },
+        ],
+      },
+    };
+
+    const ATTR_TITLES = { account:'Account Details', items:'Item Details', topup:'Top-up Details' };
+
+    function renderAttrFields() {
+      const section = document.getElementById('attrSection');
+      const fieldsEl = document.getElementById('attrFields');
+      if (!selectedGame || !selectedType) { section.style.display = 'none'; return; }
+      const defs = GAME_ATTRS[selectedGame]?.[selectedType];
+      if (!defs?.length) { section.style.display = 'none'; return; }
+      document.getElementById('attrSectionTitle').textContent = ATTR_TITLES[selectedType] || 'Details';
+      fieldsEl.innerHTML = defs.map(f => {
+        const id = `attr_${f.key}`;
+        if (f.type === 'select') {
+          return `<div class="field"><label>${f.label}</label><select id="${id}"><option value="">— Select —</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+        }
+        return `<div class="field"><label>${f.label}</label><input type="${f.type}" id="${id}" placeholder="${f.placeholder||''}"${f.min!==undefined?` min="${f.min}"`:''}${f.max!==undefined?` max="${f.max}"`:''}></div>`;
+      }).join('');
+      section.style.display = '';
+    }
+
+    function collectAttributes() {
+      const defs = GAME_ATTRS[selectedGame]?.[selectedType];
+      if (!defs) return {};
+      const attrs = {};
+      defs.forEach(f => {
+        const el = document.getElementById(`attr_${f.key}`);
+        if (el?.value && el.value !== '— Select —') {
+          attrs[f.key] = f.type === 'number' ? Number(el.value) : el.value;
+        }
+      });
+      return attrs;
+    }
     const imgFiles = []; // { file, dataUrl, name, size }
     let featuredIndex = 0;
 
@@ -359,6 +455,7 @@
             itemsOpt.style.display = '';
           }
 
+          renderAttrFields();
           updatePreview();
         });
       });
@@ -369,6 +466,7 @@
           document.querySelectorAll('.type-opt').forEach(e => e.classList.remove('selected'));
           el.classList.add('selected');
           selectedType = el.dataset.type;
+          renderAttrFields();
         });
       });
 
@@ -535,7 +633,7 @@
         description: desc || null,
         images:      imageUrls,
         status:      'active',
-        attributes:  {},
+        attributes:  collectAttributes(),
       }).select('id').single();
 
       if (error) {

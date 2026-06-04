@@ -270,10 +270,21 @@
         ? images.map((img, i) => `<div class="thumb${i===0?' active':''}" data-img="${img}"><img src="${img}" alt=""></div>`).join('')
         : '';
 
-      // Attributes table
+      // Friendly labels for known attribute keys
+      const ATTR_LABELS = {
+        ar_level:'AR Level', server:'Server', primogems:'Primogems',
+        five_star_chars:'5★ Characters', five_star_weapons:'5★ Weapons',
+        welkin_moon:'Welkin Moon', battle_pass:'Battle Pass', genesis_crystals:'Genesis Crystals',
+        season_rank:'Season Rank', total_skins:'Total Skins', total_heroes:'Total Heroes',
+        diamonds:'Diamonds', notable_skins:'Notable Skins', item_name:'Item Name',
+        delivery_method:'Delivery Method', diamonds_amount:'Diamonds Amount',
+        rank:'Rank', region:'Region', agents_unlocked:'Agents Unlocked',
+        skin_count:'Skins', vp_balance:'VP Balance', skin_name:'Skin Name',
+        bundle:'Bundle / Collection', weapon_type:'Weapon Type', vp_amount:'VP Amount',
+      };
       const attrRows = Object.entries(attrs).map(([k, v]) => `
         <div class="info-row">
-          <span class="info-label">${k.replace(/_/g,' ')}</span>
+          <span class="info-label">${ATTR_LABELS[k] || k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>
           <span class="info-value">${v}</span>
         </div>
       `).join('');
