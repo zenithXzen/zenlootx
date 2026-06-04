@@ -88,6 +88,23 @@
     .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
     .footer-inner p { font-size:13px;color:var(--text-faint); }
 
+    .notif-delete-btn {
+      flex-shrink:0;align-self:flex-start;margin-top:2px;
+      background:none;border:none;cursor:pointer;
+      color:var(--text-faint);padding:4px;border-radius:6px;
+      display:flex;align-items:center;justify-content:center;
+      transition:color 0.16s,background 0.16s;opacity:0;
+    }
+    .notif-item:hover .notif-delete-btn { opacity:1; }
+    .notif-delete-btn:hover { color:var(--danger);background:rgba(239,68,68,0.08); }
+    .delete-all-btn {
+      font-size:13px;font-weight:500;color:var(--text-faint);background:none;
+      border:1px solid var(--border);cursor:pointer;padding:6px 12px;
+      border-radius:8px;transition:color 0.16s,border-color 0.16s,background 0.16s;
+    }
+    .delete-all-btn:hover { color:var(--danger);border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06); }
+    .head-actions { display:flex;align-items:center;gap:8px; }
+
     @media (max-width:480px) {
       .notif-icon { width:38px;height:38px;font-size:18px;border-radius:10px; }
       .notif-title { font-size:13px; }
@@ -116,7 +133,10 @@
           <div class="page-title">Notifications</div>
           <div id="unreadLabel" style="font-size:13px;color:var(--text-faint);margin-top:2px;"></div>
         </div>
-        <button class="mark-all-btn" id="markAllBtn" style="display:none;">Mark all as read</button>
+        <div class="head-actions">
+          <button class="mark-all-btn" id="markAllBtn" style="display:none;">Mark all as read</button>
+          <button class="delete-all-btn" id="deleteAllBtn" style="display:none;">Delete all</button>
+        </div>
       </div>
 
       <div id="notifList"></div>
@@ -168,6 +188,7 @@
         ? `${unread.length} unread`
         : 'All caught up';
       if (unread.length) document.getElementById('markAllBtn').style.display = '';
+      document.getElementById('deleteAllBtn').style.display = '';
 
       list.innerHTML = `<div class="notif-list">${notifications.map(n => {
         const t = TYPE_ICON[n.type] || TYPE_ICON.general;
@@ -183,11 +204,20 @@
                 <span class="notif-type-pill ${t.pill}">${t.label}</span>
               </div>
             </div>
+            <button class="notif-delete-btn" data-delete-id="${n.id}" title="Delete notification">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
           </div>`;
       }).join('')}</div>`;
 
       document.querySelectorAll('.notif-item').forEach(el => {
         el.addEventListener('click', () => handleClick(el));
+      });
+      document.querySelectorAll('.notif-delete-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          deleteOne(btn.dataset.deleteId, btn.closest('.notif-item'));
+        });
       });
     }
 
@@ -213,6 +243,43 @@
       document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
       document.getElementById('unreadLabel').textContent = 'All caught up';
       document.getElementById('markAllBtn').style.display = 'none';
+    }
+
+    async function deleteOne(id, el) {
+      await sb.from('notifications').delete().eq('id', id);
+      el.style.transition = 'opacity 0.2s';
+      el.style.opacity = '0';
+      setTimeout(() => {
+        el.remove();
+        const remaining = document.querySelectorAll('.notif-item').length;
+        if (!remaining) {
+          document.getElementById('deleteAllBtn').style.display = 'none';
+          document.getElementById('markAllBtn').style.display = 'none';
+          document.getElementById('notifList').innerHTML = `
+            <div class="empty">
+              <div class="empty-icon">🔔</div>
+              <h3>No notifications yet</h3>
+              <p>You'll be notified here about your application, listings, and announcements.</p>
+            </div>`;
+        }
+        const unread = document.querySelectorAll('.notif-item.unread').length;
+        document.getElementById('unreadLabel').textContent = unread ? `${unread} unread` : 'All caught up';
+        if (!unread) document.getElementById('markAllBtn').style.display = 'none';
+      }, 200);
+    }
+
+    async function deleteAll(userId) {
+      if (!confirm('Delete all notifications?')) return;
+      await sb.from('notifications').delete().eq('user_id', userId);
+      document.getElementById('deleteAllBtn').style.display = 'none';
+      document.getElementById('markAllBtn').style.display = 'none';
+      document.getElementById('unreadLabel').textContent = '';
+      document.getElementById('notifList').innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🔔</div>
+          <h3>No notifications yet</h3>
+          <p>You'll be notified here about your application, listings, and announcements.</p>
+        </div>`;
     }
 
     async function init() {
@@ -248,6 +315,7 @@
       renderNotifications(data || []);
 
       document.getElementById('markAllBtn').addEventListener('click', () => markAllRead(user.id));
+      document.getElementById('deleteAllBtn').addEventListener('click', () => deleteAll(user.id));
     }
 
     init();
