@@ -1268,8 +1268,7 @@
       const joined   = new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       const avatarUrl = user.user_metadata?.avatar_url;
 
-      const { data: _sa } = await sb.from('seller_applications').select('status').eq('user_id', user.id).eq('status','approved').maybeSingle();
-      const isSeller = !!_sa;
+      const isSeller = user.app_metadata?.is_seller === true;
 
       if (avatarUrl) {
         setAvatarImage(avatarUrl);

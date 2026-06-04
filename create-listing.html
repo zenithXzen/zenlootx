@@ -332,8 +332,7 @@
 
       currentUser = session.user;
 
-      const { data: _sa } = await sb.from('seller_applications').select('status').eq('user_id', currentUser.id).eq('status','approved').maybeSingle();
-      const isSeller = !!_sa || currentUser.app_metadata?.is_admin === true;
+      const isSeller = currentUser.app_metadata?.is_seller === true || currentUser.app_metadata?.is_admin === true;
 
       if (!isSeller) { window.location.href = '/sell'; return; }
 

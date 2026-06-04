@@ -7,8 +7,7 @@ async function initNav(user) {
   const initial  = username.charAt(0).toUpperCase();
   const avatar   = user.user_metadata?.avatar_url;
 
-  const { data: _sa } = await sb.from('seller_applications').select('status').eq('user_id', user.id).eq('status','approved').maybeSingle();
-  const isSeller = !!_sa;
+  const isSeller = user.app_metadata?.is_seller === true;
 
   const el = document.getElementById('navActions');
   if (!el) return;
