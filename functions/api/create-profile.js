@@ -34,6 +34,18 @@ export async function onRequestPost(context) {
       console.error('Profile insert failed:', err);
     }
 
+    // Create wallet row (replaces the broken on_signup_create_wallet trigger)
+    await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        Prefer: 'return=minimal,resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({ user_id: user.id, balance: 0, total_earned: 0 }),
+    });
+
     return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
