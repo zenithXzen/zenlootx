@@ -86,9 +86,8 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
-    // Log transaction on approve
-    if (action === 'approve') {
-      // Get method from DB if not passed
+    // Log transaction for both approve and reject
+    {
       let method = bodyMethod;
       if (!method) {
         const tRes  = await sb(env, `topup_requests?id=eq.${id}&select=method`, { method: 'GET', headers: { Prefer: '' } });
@@ -96,6 +95,7 @@ export async function onRequestPost({ request, env }) {
         method = tData[0]?.method;
       }
       const METHOD_LABEL = { gcash:'GCash', maya:'Maya', maribank:'Maribank', wise:'Wise', binance:'Binance' };
+      const label = METHOD_LABEL[method] || method || 'payment';
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -103,9 +103,11 @@ export async function onRequestPost({ request, env }) {
           user_id:     userId,
           type:        'credit',
           amount:      Number(amount),
-          description: `Top-up via ${METHOD_LABEL[method] || method || 'payment'}`,
+          description: action === 'approve'
+            ? `Top-up via ${label}`
+            : `Top-up rejected via ${label}`,
           reference:   id,
-          status:      'completed',
+          status:      action === 'approve' ? 'completed' : 'failed',
         }),
       });
     }
