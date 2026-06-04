@@ -55,7 +55,7 @@ export async function onRequestPost({ request, env }) {
     // Mark order as released + completed
     await fetch(`${env.SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
       method: 'PATCH', headers: { ...hdr, Prefer: 'return=minimal' },
-      body: JSON.stringify({ escrow_status: 'released', status: 'completed' }),
+      body: JSON.stringify({ escrow_status: 'released' }),
     });
 
     // Log transactions

@@ -57,7 +57,6 @@ export async function onRequestPost({ request, env }) {
         amount:        price,
         currency:      listing.currency || 'PHP',
         escrow_status: 'holding',
-        status:        'active',
       }),
     });
     if (!oRes.ok) {
