@@ -132,14 +132,14 @@
     .buy-modal-head h3 { font-size:17px;font-weight:700; }
     .buy-modal-close { background:none;border:none;cursor:pointer;color:var(--text-faint);padding:4px;border-radius:6px;display:flex;transition:color 0.15s; }
     .buy-modal-close:hover { color:var(--text); }
-    .buy-modal-body { padding:20px 24px;display:flex;flex-direction:column;gap:16px; }
-    .buy-row { display:flex;justify-content:space-between;align-items:center;font-size:14px; }
+    .buy-modal-body { padding:24px;display:flex;flex-direction:column;gap:16px; }
+    .buy-row { display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:2px 0; }
     .buy-row-label { color:var(--text-faint); }
     .buy-row-val { font-weight:600; }
-    .buy-divider { height:1px;background:var(--border); }
+    .buy-divider { height:1px;background:var(--border);margin:4px 0; }
     .buy-total { font-size:18px;font-weight:700; }
     .buy-after { font-size:13px;color:var(--text-faint); }
-    .buy-modal-foot { padding:0 24px 24px;display:flex;gap:10px; }
+    .buy-modal-foot { padding:8px 24px 24px;display:flex;gap:10px; }
     .buy-modal-foot .btn { flex:1;justify-content:center; }
     .buy-err { font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;display:none; }
     .buy-err.show { display:block; }
@@ -500,7 +500,7 @@
             <a href="/orders" class="btn btn-secondary">View Order</a>
           </div>
         </div>
-        <div id="buyForm">
+        <div id="buyForm" style="display:flex;flex-direction:column;gap:10px;">
           <div class="buy-row">
             <span class="buy-row-label">Item</span>
             <span class="buy-row-val" id="buyItemName" style="max-width:200px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
