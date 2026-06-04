@@ -226,6 +226,31 @@
     </div>
   </div>
 
+  <!-- Dispute Modal -->
+  <div id="msgDisputeOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+        <div style="font-size:16px;font-weight:700;">⚠️ File a Dispute</div>
+        <button onclick="closeMsgDispute()" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:20px;line-height:1;padding:4px;">✕</button>
+      </div>
+      <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+        <div id="msgDisputeOrderInfo" style="font-size:13px;color:var(--text-dim);background:var(--bg-elevated);border-radius:8px;padding:10px 14px;"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="font-size:13px;font-weight:500;color:var(--text-dim);">Describe the issue</label>
+          <textarea id="msgDisputeReason" placeholder="Explain what went wrong — e.g. account credentials were invalid, the seller is unresponsive, item was not as described…"
+            style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:90px;width:100%;box-sizing:border-box;transition:border-color 0.18s;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        </div>
+        <div id="msgDisputeErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;"></div>
+        <div id="msgDisputeOk"  style="display:none;font-size:13px;color:var(--success);background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px 14px;"></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 24px 24px;">
+        <button onclick="closeMsgDispute()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text);border:1px solid var(--border-hi);">Cancel</button>
+        <button id="msgDisputeSubmitBtn" onclick="submitMsgDispute()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:var(--danger);color:#fff;border:none;">Submit Dispute</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Order / Listing Detail Modal -->
   <div id="orderModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:center;justify-content:center;padding:20px;">
     <div id="orderModalCard" style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;">
@@ -471,18 +496,32 @@
       alreadyReviewed = !!existing;
     }
 
+    const canDispute = isBuyer && ['holding','released'].includes(escrowStatus);
+    const disputeBtn = canDispute
+      ? `<button onclick="openMsgDispute('${orderId || ''}','${listingTitle || 'Order'}','${orderAmount || ''}')"
+           style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);color:var(--danger);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
+           ⚠️ File Dispute
+         </button>`
+      : '';
+
     const releaseArea = escrowStatus === 'released'
-      ? alreadyReviewed
-        ? `<span style="font-size:12px;font-weight:600;color:var(--text-faint);padding:6px 12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);">✓ Reviewed</span>`
-        : `<button id="rateBtn" onclick="openRateModal('${orderId || ''}','${otherId2}')"
-             style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(245,185,71,0.4);background:rgba(245,185,71,0.08);color:var(--warning);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
-             ⭐ Rate them
-           </button>`
+      ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+           ${alreadyReviewed
+             ? `<span style="font-size:12px;font-weight:600;color:var(--text-faint);padding:6px 12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);">✓ Reviewed</span>`
+             : `<button id="rateBtn" onclick="openRateModal('${orderId || ''}','${otherId2}')"
+                  style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(245,185,71,0.4);background:rgba(245,185,71,0.08);color:var(--warning);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
+                  ⭐ Rate them
+                </button>`}
+           ${disputeBtn}
+         </div>`
       : isBuyer && !DONE_STATUSES.includes(escrowStatus)
-        ? `<button onclick="releaseFromConv('${conv.id}','${conv.seller_id}','${conv.listing_id || ''}')" id="releaseBtn"
-             style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(34,197,94,0.4);background:rgba(34,197,94,0.08);color:var(--success);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
-             🔓 Release Payment
-           </button>`
+        ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+             <button onclick="releaseFromConv('${conv.id}','${conv.seller_id}','${conv.listing_id || ''}')" id="releaseBtn"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(34,197,94,0.4);background:rgba(34,197,94,0.08);color:var(--success);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
+               🔓 Release Payment
+             </button>
+             ${disputeBtn}
+           </div>`
         : '';
 
     const purchaseSummary = `
@@ -722,6 +761,67 @@
         }
       })
       .subscribe();
+  }
+
+  // ── Dispute from message thread ──────────────────────────────
+  let _disputeOrderId = null;
+
+  function openMsgDispute(orderId, title, amount) {
+    _disputeOrderId = orderId;
+    document.getElementById('msgDisputeOrderInfo').innerHTML = `Order: <strong>${title}</strong>${amount ? ` — <strong>${amount}</strong>` : ''}`;
+    document.getElementById('msgDisputeReason').value = '';
+    document.getElementById('msgDisputeErr').style.display = 'none';
+    document.getElementById('msgDisputeOk').style.display  = 'none';
+    document.getElementById('msgDisputeSubmitBtn').disabled    = false;
+    document.getElementById('msgDisputeSubmitBtn').textContent = 'Submit Dispute';
+    document.getElementById('msgDisputeOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMsgDispute() {
+    document.getElementById('msgDisputeOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+    _disputeOrderId = null;
+  }
+
+  document.getElementById('msgDisputeOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('msgDisputeOverlay')) closeMsgDispute();
+  });
+
+  async function submitMsgDispute() {
+    const reason = document.getElementById('msgDisputeReason').value.trim();
+    const errEl  = document.getElementById('msgDisputeErr');
+    const okEl   = document.getElementById('msgDisputeOk');
+    const btn    = document.getElementById('msgDisputeSubmitBtn');
+
+    errEl.style.display = 'none';
+    if (!reason) { errEl.textContent = 'Please describe the issue.'; errEl.style.display = 'block'; return; }
+    if (!_disputeOrderId) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+      const { error } = await sb.from('disputes').insert({
+        order_id: _disputeOrderId,
+        filed_by: currentUser.id,
+        reason,
+        status:   'open',
+      });
+      if (error) throw error;
+
+      await sb.from('orders').update({ escrow_status: 'disputed' }).eq('id', _disputeOrderId);
+
+      okEl.textContent = 'Dispute submitted. Our team will review it shortly.';
+      okEl.style.display = 'block';
+      btn.textContent = 'Submitted';
+      setTimeout(closeMsgDispute, 2500);
+    } catch (e) {
+      errEl.textContent = e.message || 'Failed to submit dispute. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Submit Dispute';
+    }
   }
 
   // ── Mobile panel switching ────────────────────────────────────
