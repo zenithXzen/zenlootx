@@ -91,6 +91,8 @@
     .msg-row.other .msg-bubble{background:var(--bg-elevated);color:var(--text);border-bottom-left-radius:4px}
     .msg-time{font-size:11px;color:var(--text-faint);margin-top:3px;text-align:right}
     .msg-row.other .msg-time{text-align:left}
+    .msg-system{display:flex;justify-content:center;margin:8px 0}
+    .msg-system-bubble{background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text-dim);line-height:1.6;max-width:80%;text-align:center}
 
     .chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-faint);text-align:center;padding:24px}
     .chat-empty-icon{font-size:40px;margin-bottom:4px}
@@ -200,33 +202,49 @@
   // ── Conversations ─────────────────────────────────────────────
   async function loadConversations() {
     // 1. Load existing conversations
-    const { data: convData } = await sb
+    const { data: convData, error: convErr } = await sb
       .from('conversations')
       .select('*, listing:listing_id(title,game)')
       .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
       .order('created_at', { ascending: false });
 
+    if (convErr) console.error('conversations error:', convErr);
+
     const existing = convData || [];
+    const coveredOrders   = new Set(existing.map(c => c.order_id).filter(Boolean));
     const coveredListings = new Set(existing.map(c => c.listing_id).filter(Boolean));
 
     // 2. Load orders — create missing conversations for any order that has none
-    const { data: orders } = await sb
+    const { data: orders, error: ordErr } = await sb
       .from('orders')
-      .select('id,buyer_id,seller_id,listing_id,listings:listing_id(title,game)')
+      .select('id,buyer_id,seller_id,listing_id')
       .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
       .order('created_at', { ascending: false });
 
+    if (ordErr) console.error('orders error:', ordErr);
+
     for (const o of (orders || [])) {
-      if (!o.listing_id || coveredListings.has(o.listing_id)) continue;
+      if (coveredOrders.has(o.id) || coveredListings.has(o.listing_id)) continue;
       // Auto-create missing conversation
-      const { data: nc } = await sb.from('conversations').insert({
+      const { data: nc, error: ncErr } = await sb.from('conversations').insert({
         buyer_id:   o.buyer_id,
         seller_id:  o.seller_id,
         order_id:   o.id,
         listing_id: o.listing_id,
       }).select('*, listing:listing_id(title,game)').single();
 
-      if (nc) { existing.push(nc); coveredListings.add(o.listing_id); }
+      if (ncErr) console.error('create conv error:', ncErr);
+      if (nc) {
+        // Send welcome message for this newly created conversation
+        await sb.from('messages').insert({
+          conversation_id: nc.id,
+          sender_id:       o.buyer_id,
+          content:         `__system__ 🎉 Congratulations on your purchase! Thank you for doing business on ZenLootX. The seller will deliver your account details shortly. Feel free to ask any questions here — we're happy to help make this a smooth experience for both of you.`,
+        });
+        existing.push(nc);
+        coveredOrders.add(o.id);
+        if (o.listing_id) coveredListings.add(o.listing_id);
+      }
     }
 
     if (!existing.length) {
@@ -362,6 +380,22 @@
     renderMessages(data || []);
   }
 
+  function isSystem(content) { return content?.startsWith('__system__'); }
+  function systemText(content) { return content?.replace('__system__', '').trim(); }
+
+  function msgHtml(m) {
+    if (isSystem(m.content)) {
+      return `<div class="msg-system"><div class="msg-system-bubble">${escHtml(systemText(m.content))}</div></div>`;
+    }
+    const mine = m.sender_id === currentUser.id;
+    const time = new Date(m.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="msg-row ${mine ? 'mine' : 'other'}">
+        <div class="msg-bubble">${escHtml(m.content)}</div>
+      </div>
+      <div class="msg-time" style="text-align:${mine ? 'right' : 'left'};padding:0 4px;">${time}</div>`;
+  }
+
   function renderMessages(msgs) {
     const el = document.getElementById('chatMessages');
     if (!el) return;
@@ -376,16 +410,7 @@
       return;
     }
 
-    el.innerHTML = msgs.map(m => {
-      const mine = m.sender_id === currentUser.id;
-      const time = new Date(m.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      return `
-        <div class="msg-row ${mine ? 'mine' : 'other'}">
-          <div class="msg-bubble">${escHtml(m.content)}</div>
-        </div>
-        <div class="msg-time" style="text-align:${mine ? 'right' : 'left'};padding:0 4px;">${time}</div>`;
-    }).join('');
-
+    el.innerHTML = msgs.map(msgHtml).join('');
     el.scrollTop = el.scrollHeight;
   }
 
@@ -407,11 +432,7 @@
         if (empty) el.innerHTML = '';
 
         const row = document.createElement('div');
-        row.innerHTML = `
-          <div class="msg-row ${mine ? 'mine' : 'other'}">
-            <div class="msg-bubble">${escHtml(m.content)}</div>
-          </div>
-          <div class="msg-time" style="text-align:${mine?'right':'left'};padding:0 4px;">${time}</div>`;
+        row.innerHTML = msgHtml(m);
         el.appendChild(row);
         el.scrollTop = el.scrollHeight;
       })

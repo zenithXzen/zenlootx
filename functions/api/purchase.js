@@ -111,6 +111,21 @@ export async function onRequestPost({ request, env }) {
       }
     } catch {}
 
+    // Send automated welcome message in the conversation
+    if (conversationId) {
+      try {
+        await fetch(`${env.SUPABASE_URL}/rest/v1/messages`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            conversation_id: conversationId,
+            sender_id:       user.id,
+            content:         `__system__ 🎉 Congratulations on your purchase! Thank you for doing business on ZenLootX. The seller will deliver your account details shortly. Feel free to ask any questions here — we're happy to help make this a smooth experience for both of you.`,
+          }),
+        });
+      } catch {}
+    }
+
     // Notify seller
     try {
       await fetch(`${env.SUPABASE_URL}/rest/v1/notifications`, {
