@@ -270,6 +270,42 @@
         </div>`;
     }
 
+    // ── Tier System ───────────────────────────────────────────────
+    const TIERS = [
+      {tier:1,name:'Stone',min:0,color:'#9CA3AF'},{tier:2,name:'Iron',min:500,color:'#D1D5DB'},
+      {tier:3,name:'Bronze',min:2000,color:'#F59E0B'},{tier:4,name:'Silver',min:5000,color:'#E5E7EB'},
+      {tier:5,name:'Gold',min:10000,color:'#FDE68A'},{tier:6,name:'Platinum',min:25000,color:'#BAE6FD'},
+      {tier:7,name:'Emerald',min:50000,color:'#6EE7B7'},{tier:8,name:'Sapphire',min:100000,color:'#93C5FD'},
+      {tier:9,name:'Ruby',min:250000,color:'#FDA4AF'},{tier:10,name:'Diamond',min:500000,color:'url(#dg)'},
+    ];
+    function getTierIcon(tier,color){const c=color.startsWith('url')?'url(#dg)':color;const grad=color.startsWith('url')?`<defs><linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="33%" stop-color="#38bdf8"/><stop offset="66%" stop-color="#34d399"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient></defs>`:'';const f=`fill="${c}"`;switch(tier){case 1:return`<svg viewBox="0 0 24 24" fill="none" width="20" height="20">${grad}<path ${f} d="M12 2L4 5.5V11c0 5.2 3.6 9.8 8 11 4.4-1.2 8-5.8 8-11V5.5L12 2z"/></svg>`;case 10:return`<svg viewBox="0 0 24 24" fill="none" width="20" height="20">${grad}<path ${f} d="M12 1.5l1.5 4H18l-4 3 1.5 4.5L12 10.5 8.5 13 10 8.5 6 5.5h4.5z"/><path ${f} d="M9.5 12h5v4a2.5 2.5 0 01-5 0V12z"/></svg>`;default:return`<svg viewBox="0 0 24 24" fill="none" width="20" height="20">${grad}<path ${f} d="M9 2h6v8a3 3 0 01-6 0V2z"/><rect ${f} x="11" y="13" width="2" height="3"/><rect ${f} x="7" y="16" width="10" height="2" rx="1"/></svg>`;}}
+
+    async function loadTierBadge(userId) {
+      try {
+        const [{ data: txData }, { data: wallet }] = await Promise.all([
+          sb.from('transactions').select('amount,type').eq('user_id', userId),
+          sb.from('wallets').select('total_earned').eq('user_id', userId).maybeSingle(),
+        ]);
+        const txTotal     = (txData || []).filter(r => ['escrow','credit','refund'].includes(r.type)).reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+        const sellerTotal = parseFloat(wallet?.total_earned || 0);
+        const total = Math.max(txTotal, sellerTotal);
+        const t = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
+
+        const wrap  = document.getElementById('tierStatWrap');
+        const label = document.getElementById('tierStatLabel');
+        if (!wrap || !label) return;
+        label.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;">${getTierIcon(t.tier, t.color)}<span style="color:${t.color.startsWith('url')?'#a78bfa':t.color};font-weight:700;">${t.name}</span></span>`;
+        wrap.style.display = '';
+
+        // Real-time: re-calc when wallet changes
+        sb.channel(`pub-tier-${userId}`)
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'wallets', filter: `user_id=eq.${userId}` }, () => {
+            loadTierBadge(userId);
+          })
+          .subscribe();
+      } catch {}
+    }
+
     async function loadReviews(userId) {
       const wrap = document.getElementById('reviewsWrap');
       if (!wrap) return;
@@ -412,6 +448,7 @@
             <div class="profile-stats">
               <div><div class="stat-num">${listings.length}</div><div class="stat-label">Listings</div></div>
               <div><div class="stat-num" id="reviewCount">0</div><div class="stat-label">Reviews</div></div>
+              <div id="tierStatWrap" style="display:none;"><div class="stat-num" id="tierStatLabel" style="font-size:14px;"></div><div class="stat-label">Tier</div></div>
             </div>
             ${profile.bio ? `<div class="bio-text">${profile.bio}</div>` : ''}
           </div>
@@ -448,8 +485,9 @@
       // Update page title
       document.title = `${profile.username} — ZenLootX`;
 
-      // Load reviews
+      // Load reviews and tier
       loadReviews(sellerId);
+      loadTierBadge(sellerId);
 
       // Load nav
       if (session) initNav(session.user);
