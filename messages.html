@@ -330,28 +330,32 @@
     const av      = other.avatar_url ? `<img src="${other.avatar_url}" alt="${name}">` : initial;
     const isBuyer = conv?.buyer_id === currentUser.id;
 
-    // Fetch order — use order_id if set, else find by buyer+seller
-    let escrowStatus = null, orderId = conv?.order_id || null;
-    if (!orderId && conv?.buyer_id && conv?.seller_id) {
-      const { data: found } = await sb.from('orders')
-        .select('id,escrow_status')
-        .eq('buyer_id',  conv.buyer_id)
-        .eq('seller_id', conv.seller_id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (found) { orderId = found.id; escrowStatus = found.escrow_status; }
-    }
-    if (orderId && !escrowStatus) {
-      const { data: ord } = await sb.from('orders').select('escrow_status').eq('id', orderId).maybeSingle();
-      escrowStatus = ord?.escrow_status || null;
-    }
+    // Use order data already enriched by the API
+    const orderData   = conv?.order || null;
+    let escrowStatus  = orderData?.escrow_status || null;
+    let orderId       = conv?.order_id || orderData?.id || null;
 
     const releaseBtn = isBuyer && orderId
       ? escrowStatus === 'released'
         ? `<span class="released-badge">✓ Payment released</span>`
         : `<button class="release-btn" id="releaseBtn" onclick="releasePayment('${orderId}')">🔓 Release Payment</button>`
       : '';
+
+    const listingTitle = conv?.listing?.title || null;
+    const orderAmount  = orderData?.amount ? '₱' + Number(orderData.amount).toLocaleString('en-PH', {minimumFractionDigits:2}) : null;
+    const orderDate    = orderData?.created_at ? new Date(orderData.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : null;
+    const statusLabel  = { holding:'In Escrow', released:'Completed', disputed:'Disputed', refunded:'Refunded' }[escrowStatus] || null;
+    const statusColor  = { holding:'var(--warning)', released:'var(--success)', disputed:'var(--danger)', refunded:'var(--text-faint)' }[escrowStatus] || 'var(--text-faint)';
+
+    const purchaseSummary = (listingTitle || orderAmount) ? `
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${listingTitle || 'Order'}</div>
+          ${orderDate ? `<div style="font-size:12px;color:var(--text-faint);margin-top:2px;">Purchased ${orderDate}</div>` : ''}
+        </div>
+        ${orderAmount ? `<div style="font-size:15px;font-weight:700;color:var(--text);flex-shrink:0;">${orderAmount}</div>` : ''}
+        ${statusLabel ? `<div style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid;color:${statusColor};border-color:${statusColor};opacity:0.85;flex-shrink:0;">${statusLabel}</div>` : ''}
+      </div>` : '';
 
     document.getElementById('chatPanel').innerHTML = `
       <div class="chat-header">
@@ -363,12 +367,13 @@
         <div style="flex:1;min-width:0;">
           <div class="chat-header-name">${name}</div>
           <div class="chat-header-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span>${conv?.listing?.title || 'Order conversation'}</span>
+            <span>${listingTitle || (isBuyer ? 'Seller' : 'Buyer')}</span>
             ${releaseBtn}
           </div>
         </div>
-        ${conv?.order_id ? `<a href="/orders" class="btn btn-secondary chat-order-link" style="font-size:12px;padding:6px 12px;">View Order</a>` : ''}
+        <a href="/orders" class="btn btn-secondary chat-order-link" style="font-size:12px;padding:6px 12px;">View Order</a>
       </div>
+      ${purchaseSummary ? `<div style="padding:12px 20px;border-bottom:1px solid var(--border);">${purchaseSummary}</div>` : ''}
       <div class="chat-messages" id="chatMessages">
         <div style="text-align:center;padding:24px;">
           <div class="skeleton" style="height:12px;width:60%;margin:0 auto 10px;"></div>

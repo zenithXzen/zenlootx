@@ -77,10 +77,19 @@ export async function onRequestGet({ request, env }) {
     const listingMap = Object.fromEntries((Array.isArray(listings) ? listings : []).map(l => [l.id, l]));
     const profileMap = Object.fromEntries((Array.isArray(profiles) ? profiles : []).map(p => [p.id, p]));
 
+    // Fetch order details for each conversation
+    const orderIds = [...new Set(convs.map(c => c.order_id).filter(Boolean))];
+    let orderMap = {};
+    if (orderIds.length) {
+      const orRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/orders?id=in.(${orderIds.join(',')})&select=id,amount,currency,escrow_status,created_at`, { headers: hdr });
+      const orData = await orRes.json();
+      orderMap = Object.fromEntries((Array.isArray(orData) ? orData : []).map(o => [o.id, o]));
+    }
+
     const enriched = convs.map(c => ({
       ...c,
       listing: listingMap[c.listing_id] || null,
-      _profiles: profileMap,
+      order:   c.order_id ? (orderMap[c.order_id] || null) : null,
     }));
 
     return Response.json({ conversations: enriched, profiles: profileMap });
