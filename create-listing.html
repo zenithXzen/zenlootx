@@ -544,6 +544,16 @@
         return;
       }
 
+      // Notify the seller their listing is live
+      await sb.from('notifications').insert({
+        user_id: currentUser.id,
+        title:   '🏷️ Listing published',
+        message: `Your listing "${title}" is now live and visible to buyers.`,
+        type:    'listing',
+        link:    `/listings/detail?id=${data.id}`,
+        read:    false,
+      });
+
       // Redirect to the new listing
       window.location.href = `/listings/detail?id=${data.id}`;
     }

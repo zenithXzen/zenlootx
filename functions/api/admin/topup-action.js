@@ -9,6 +9,19 @@ async function verifyAdmin(token, env) {
   } catch { return false; }
 }
 
+async function notify(env, userId, title, message, link = '/wallet') {
+  await fetch(`${env.SUPABASE_URL}/rest/v1/notifications`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      apikey: env.SUPABASE_SERVICE_KEY,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ user_id: userId, title, message, type: 'general', link, read: false }),
+  });
+}
+
 function sb(env, path, opts = {}) {
   return fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
@@ -110,6 +123,13 @@ export async function onRequestPost({ request, env }) {
           status:      action === 'approve' ? 'completed' : 'failed',
         }),
       });
+    }
+
+    const fmt = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+    if (action === 'approve') {
+      await notify(env, userId, '✅ Funds added', `${fmt(amount)} has been added to your ZenLootX wallet.`);
+    } else {
+      await notify(env, userId, 'Top-up rejected', `Your top-up request of ${fmt(amount)} was not approved.`);
     }
 
     return Response.json({ success: true, status: newStatus });
