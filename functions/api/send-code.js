@@ -8,13 +8,15 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Invalid email.' }, { status: 400 });
     }
 
+    const secret = env.HMAC_SECRET;
+    if (!secret) return Response.json({ error: 'Server config error.' }, { status: 500 });
+
     // 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Sign: email + code + 5-min window (stateless, no DB needed)
+    // Sign: email + code + 10-min window (stateless, no DB needed)
     const window = Math.floor(Date.now() / 600000);
     const message = `${email}:${code}:${window}`;
-    const secret = env.HMAC_SECRET || 'zenlootx-default-secret';
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),

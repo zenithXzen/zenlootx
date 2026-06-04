@@ -318,18 +318,20 @@
       btn.textContent = 'Reset email sent';
     }
 
-    async function getEmailByUsername(username) {
+    async function loginByUsername(username, password) {
       try {
-        const res  = await fetch('/api/get-email-by-username', {
+        const res = await fetch('/api/get-email-by-username', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username }),
+          body: JSON.stringify({ username, password }),
         });
-        if (!res.ok) return { email: null, serviceError: true };
-        const { email } = await res.json();
-        return { email: email || null, serviceError: false };
+        const body = await res.json();
+        if (res.status === 404) return { error: 'not_found' };
+        if (res.status === 401) return { error: 'invalid_credentials' };
+        if (!res.ok)            return { error: 'server_error' };
+        return { access_token: body.access_token, refresh_token: body.refresh_token };
       } catch {
-        return { email: null, serviceError: true };
+        return { error: 'server_error' };
       }
     }
 
@@ -360,17 +362,17 @@
       btn.textContent = 'Signing in…';
 
       try {
-        // Resolve email from username if needed
-        let email = identifier;
+        // Username login — done entirely server-side; email never sent to browser
+        let data, error;
         if (!identifier.includes('@')) {
-          const result = await getEmailByUsername(identifier);
-          if (result.serviceError) {
+          const result = await loginByUsername(identifier, password);
+          if (result.error === 'server_error') {
             showError('Unable to reach the server. Please try again or use your email to sign in.');
             btn.disabled    = false;
             btn.textContent = 'Sign in';
             return;
           }
-          if (!result.email) {
+          if (result.error === 'not_found') {
             failedAttempts++;
             updateAttemptBadge();
             document.getElementById('identifier').classList.add('error');
@@ -379,10 +381,18 @@
             btn.textContent = 'Sign in';
             return;
           }
-          email = result.email;
+          if (result.error === 'invalid_credentials') {
+            // Let the error block below handle it
+            ({ data, error } = { data: null, error: { message: 'Invalid login credentials' } });
+          } else {
+            ({ data, error } = await sb.auth.setSession({
+              access_token:  result.access_token,
+              refresh_token: result.refresh_token,
+            }));
+          }
+        } else {
+          ({ data, error } = await sb.auth.signInWithPassword({ email: identifier, password }));
         }
-
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
         if (error) {
           failedAttempts++;

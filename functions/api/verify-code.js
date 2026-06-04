@@ -8,7 +8,9 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Missing fields.' }, { status: 400 });
     }
 
-    const secret = env.HMAC_SECRET || 'zenlootx-default-secret';
+    const secret = env.HMAC_SECRET;
+    if (!secret) return Response.json({ error: 'Server config error.' }, { status: 500 });
+
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),

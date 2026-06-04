@@ -12,9 +12,10 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
     }
 
-    // Verify the HMAC token (15-min window)
-    const secret = env.HMAC_SECRET || 'zenlootx-default-secret';
-    const key    = await crypto.subtle.importKey(
+    const secret = env.HMAC_SECRET;
+    if (!secret) return Response.json({ error: 'Server config error.' }, { status: 500 });
+
+    const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),
       { name: 'HMAC', hash: 'SHA-256' },
