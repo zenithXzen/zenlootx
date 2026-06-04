@@ -116,6 +116,7 @@
     /* SKELETON */
     .skeleton{background:var(--bg-elevated);border-radius:6px;animation:shimmer 1.4s infinite}
     @keyframes shimmer{0%,100%{opacity:0.5}50%{opacity:1}}
+    @keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
     /* MOBILE */
     .mobile-back{display:none;align-items:center;gap:8px;background:none;border:none;color:var(--text-dim);font-family:'Geist',sans-serif;font-size:14px;font-weight:500;cursor:pointer;padding:0;flex-shrink:0}
@@ -219,6 +220,23 @@
       <div style="display:flex;gap:10px;">
         <button onclick="closeReleaseConfirm()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text);border:1px solid var(--border-hi);">Cancel</button>
         <button id="releaseConfirmBtn" onclick="doRelease()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:var(--success);color:#fff;border:none;">Yes, release payment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order / Listing Detail Modal -->
+  <div id="orderModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:center;justify-content:center;padding:20px;">
+    <div id="orderModalCard" style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;">
+      <!-- Image -->
+      <div id="orderModalImg" style="width:100%;height:220px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+        <div id="orderModalImgInner" style="width:100%;height:100%;"></div>
+      </div>
+      <!-- Body -->
+      <div style="padding:22px 24px 24px;">
+        <div id="orderModalGame" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:6px;"></div>
+        <div id="orderModalTitle" style="font-size:19px;font-weight:700;letter-spacing:-0.01em;margin-bottom:10px;color:var(--text);"></div>
+        <div id="orderModalDesc" style="font-size:14px;color:var(--text-dim);line-height:1.65;max-height:120px;overflow-y:auto;"></div>
+        <button onclick="closeOrderModal()" style="margin-top:20px;width:100%;padding:11px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-hi);transition:background 0.16s;" onmouseover="this.style.background='var(--bg-base)'" onmouseout="this.style.background='var(--bg-elevated)'">Close</button>
       </div>
     </div>
   </div>
@@ -462,7 +480,7 @@
             ${releaseBtn}
           </div>
         </div>
-        <a href="/orders" class="btn btn-secondary chat-order-link" style="font-size:12px;padding:6px 12px;">View Order</a>
+        <button onclick="openOrderModal('${conv?.listing_id || ''}')" class="btn btn-secondary chat-order-link" style="font-size:12px;padding:6px 12px;">View Order</button>
       </div>
       ${purchaseSummary ? `<div style="padding:12px 20px;border-bottom:1px solid var(--border);">${purchaseSummary}</div>` : ''}
       <div class="chat-messages" id="chatMessages">
@@ -839,6 +857,58 @@
       await sb.auth.signOut();
       window.location.href = '/login';
     });
+  }
+
+  // ── Order / Listing Modal ─────────────────────────────────────
+  async function openOrderModal(listingId) {
+    const overlay = document.getElementById('orderModalOverlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    overlay.onclick = e => { if (e.target === overlay) closeOrderModal(); };
+
+    // Reset
+    document.getElementById('orderModalGame').textContent  = '';
+    document.getElementById('orderModalTitle').textContent = 'Loading…';
+    document.getElementById('orderModalDesc').textContent  = '';
+    document.getElementById('orderModalImgInner').innerHTML = '';
+
+    if (!listingId) {
+      document.getElementById('orderModalTitle').textContent = 'Listing details unavailable.';
+      return;
+    }
+
+    const { data, error } = await sb
+      .from('listings')
+      .select('title, description, images, game')
+      .eq('id', listingId)
+      .maybeSingle();
+
+    if (error || !data) {
+      document.getElementById('orderModalTitle').textContent = 'Could not load listing.';
+      return;
+    }
+
+    const GAME_LABELS = { genshin:'Genshin Impact', mlbb:'MLBB', valorant:'Valorant' };
+    document.getElementById('orderModalGame').textContent  = GAME_LABELS[data.game] || data.game || '';
+    document.getElementById('orderModalTitle').textContent = data.title || 'Untitled';
+    document.getElementById('orderModalDesc').textContent  = data.description || 'No description provided.';
+
+    // Images: jsonb array — could be strings or objects with a url field
+    const imgs   = Array.isArray(data.images) ? data.images : [];
+    const first  = imgs[0];
+    const imgUrl = typeof first === 'string' ? first : (first?.url || first?.src || null);
+
+    const imgEl = document.getElementById('orderModalImgInner');
+    if (imgUrl) {
+      imgEl.innerHTML = `<img src="${imgUrl}" alt="${data.title}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      imgEl.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--text-faint);"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="40" height="40"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg><span style="font-size:12px;">No image</span></div>`;
+    }
+  }
+
+  function closeOrderModal() {
+    document.getElementById('orderModalOverlay').style.display = 'none';
+    document.body.style.overflow = '';
   }
 
   init();

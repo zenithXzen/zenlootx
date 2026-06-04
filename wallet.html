@@ -745,22 +745,27 @@
       btn.textContent = 'Submitting…';
 
       const { data: { session } } = await sb.auth.getSession();
-      const { error } = await sb.from('withdrawal_requests').insert({
-        user_id: session.user.id,
-        amount,
-        method: selectedMethod,
-        details,
-        status: 'pending',
+      const res = await fetch('/api/request-withdrawal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ amount, method: selectedMethod, details }),
       });
+      const result = await res.json();
 
       btn.disabled = false;
       btn.textContent = 'Request withdrawal';
 
-      if (error) {
-        showErr('Something went wrong. Please try again later.');
-        console.error(error);
+      if (!res.ok || !result.success) {
+        showErr(result.error || 'Something went wrong. Please try again later.');
         return;
       }
+
+      // Update displayed balance immediately so the frozen amount reflects
+      currentBalance -= amount;
+      document.getElementById('balanceAmount').textContent = formatAmount(currentBalance);
 
       document.getElementById('withdrawForm').style.display = 'none';
       document.getElementById('withdrawFooter').style.display = 'none';

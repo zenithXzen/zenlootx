@@ -52,18 +52,16 @@ export async function onRequestPost({ request, env }) {
 
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
-    if (action === 'approve') {
-      // Check user has enough balance
+    // Balance was already frozen (deducted) when the request was submitted.
+    // On approve: nothing to do to balance (it's already deducted).
+    // On reject: refund the frozen amount back to the user.
+    if (action === 'reject') {
       const walletRes  = await sb(env, `wallets?user_id=eq.${userId}&select=balance`, { method: 'GET', headers: { Prefer: '' } });
       const walletData = await walletRes.json();
       const balance    = Number(walletData?.[0]?.balance || 0);
-      if (balance < Number(amount)) {
-        return Response.json({ error: `Insufficient balance. User has ₱${balance.toFixed(2)}, requested ₱${Number(amount).toFixed(2)}.` }, { status: 422 });
-      }
-      // Deduct balance
       await sb(env, `wallets?user_id=eq.${userId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ balance: balance - Number(amount) }),
+        body: JSON.stringify({ balance: balance + Number(amount) }),
       });
     }
 
