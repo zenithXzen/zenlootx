@@ -12,6 +12,11 @@ export async function onRequestPost({ request, env }) {
     const { listingId } = await request.json();
     if (!listingId) return Response.json({ error: 'Missing listingId' }, { status: 400 });
 
+    // Check if buyer's account is frozen
+    if (user.app_metadata?.is_frozen) {
+      return Response.json({ error: 'Your account is currently restricted. You cannot make purchases.' }, { status: 403 });
+    }
+
     const hdr = {
       Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
       apikey: env.SUPABASE_SERVICE_KEY,

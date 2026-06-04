@@ -444,6 +444,12 @@
 
       currentUser = session.user;
 
+      if (currentUser.app_metadata?.is_frozen) {
+        showError('Your account is currently restricted. You cannot create listings.');
+        document.getElementById('submitBtn').disabled = true;
+        return;
+      }
+
       const isSeller = currentUser.app_metadata?.is_seller === true || currentUser.app_metadata?.is_admin === true;
 
       if (!isSeller) { window.location.href = '/sell'; return; }

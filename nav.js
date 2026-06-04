@@ -108,6 +108,16 @@ async function initNav(user) {
     window.location.href = '/login';
   });
 
+  // Show frozen banner if account is restricted
+  if (user.app_metadata?.is_frozen) {
+    const banner = document.createElement('div');
+    banner.id = 'frozenBanner';
+    banner.style.cssText = 'background:rgba(245,185,71,0.08);border-bottom:1px solid rgba(245,185,71,0.25);padding:10px 24px;font-size:13px;color:var(--warning);text-align:center;';
+    banner.innerHTML = '🔒 Your account is currently restricted. You can browse but cannot list, buy, withdraw, or send messages. Contact support for help.';
+    const nav = document.querySelector('nav');
+    if (nav) nav.insertAdjacentElement('afterend', banner);
+  }
+
   // Message badge — skip on the messages page (it manages its own badge)
   if (!window.location.pathname.startsWith('/messages')) {
     initMsgBadge(user.id);

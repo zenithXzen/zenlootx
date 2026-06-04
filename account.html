@@ -752,6 +752,13 @@
 
         statusEl.style.display = 'none';
 
+        if (user.app_metadata?.is_frozen) {
+          statusEl.textContent = 'Your account is restricted. Username changes are disabled.';
+          statusEl.style.color = 'var(--danger)';
+          statusEl.style.display = '';
+          return;
+        }
+
         if (!newUsername) {
           statusEl.textContent  = 'Enter a username.';
           statusEl.style.color  = 'var(--danger)';
@@ -839,6 +846,13 @@
         const saveBtn   = document.getElementById('saveEmailBtn');
 
         statusEl.style.display = 'none';
+
+        if (user.app_metadata?.is_frozen) {
+          statusEl.textContent  = 'Your account is restricted. Email changes are disabled.';
+          statusEl.style.color  = 'var(--danger)';
+          statusEl.style.display = 'block';
+          return;
+        }
 
         if (!newEmail || !newEmail.includes('@')) {
           statusEl.textContent  = 'Enter a valid email address.';
@@ -1247,9 +1261,8 @@
     });
 
     async function isBanned(userId) {
-      const { data } = await sb.from('profiles').select('is_banned,is_frozen').eq('id', userId).single();
-      if (data?.is_banned)  { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
-      if (data?.is_frozen)  { await sb.auth.signOut(); window.location.href = '/banned?frozen=1'; return true; }
+      const { data } = await sb.from('profiles').select('is_banned').eq('id', userId).single();
+      if (data?.is_banned) { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
       return false;
     }
 

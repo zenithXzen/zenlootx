@@ -35,6 +35,10 @@ export async function onRequestPost({ request, env }) {
     const balance    = Number(walletData?.[0]?.balance || 0);
     const frozen     = walletData?.[0]?.frozen === true;
 
+    if (user.app_metadata?.is_frozen) {
+      return Response.json({ error: 'Your account is currently restricted. Withdrawals are disabled.' }, { status: 403 });
+    }
+
     if (frozen) {
       return Response.json({ error: 'Your wallet is frozen due to an open dispute. Withdrawals are disabled until the dispute is resolved.' }, { status: 403 });
     }

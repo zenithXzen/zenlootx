@@ -734,6 +734,7 @@
   }
 
   async function sendMessage() {
+    if (currentUser?.app_metadata?.is_frozen) return;
     const input = document.getElementById('msgInput');
     const btn   = document.getElementById('sendBtn');
     const text  = input?.value.trim();
