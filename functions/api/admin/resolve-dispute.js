@@ -70,23 +70,34 @@ export async function onRequestPost({ request, env }) {
         method: 'PATCH',
         body: JSON.stringify({ balance: bal + amount }),
       });
-      // Clear seller escrow
-      const swRes  = await sb(env, `wallets?user_id=eq.${sellerId}&select=escrow`, { method: 'GET', headers: { Prefer: '' } });
+      // Deduct from seller balance (covers both escrow and already-released orders)
+      const swRes  = await sb(env, `wallets?user_id=eq.${sellerId}&select=balance,escrow`, { method: 'GET', headers: { Prefer: '' } });
       const swData = await swRes.json();
+      const sellerBalance = Number(swData[0]?.balance || 0);
+      const sellerEscrow  = Number(swData[0]?.escrow  || 0);
       await sb(env, `wallets?user_id=eq.${sellerId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ escrow: Math.max(0, Number(swData[0]?.escrow || 0) - amount) }),
+        body: JSON.stringify({
+          balance: Math.max(0, sellerBalance - amount),
+          escrow:  Math.max(0, sellerEscrow  - amount),
+        }),
       });
       // Mark order refunded
       await sb(env, `orders?id=eq.${orderId}`, { method: 'PATCH', body: JSON.stringify({ escrow_status: 'refunded' }) });
-      // Log refund transaction for buyer
+      // Log refund credit for buyer
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({ user_id: buyerId, type: 'refund', amount, description: 'Dispute resolved — refunded', reference: orderId, status: 'completed' }),
       });
+      // Log deduction debit for seller
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ user_id: sellerId, type: 'debit', amount, description: 'Dispute penalty — refund deducted from balance', reference: orderId, status: 'completed' }),
+      });
       await notify(env, buyerId, '✅ Dispute resolved — refund issued', `Your dispute was reviewed. ₱${amount.toLocaleString()} has been refunded to your wallet.`, '/wallet');
-      await notify(env, sellerId, 'Dispute resolved', `A dispute was resolved in the buyer's favour. The escrowed amount has been returned to the buyer.`, '/orders');
+      await notify(env, sellerId, 'Dispute resolved', `A dispute was resolved in the buyer's favour. ₱${amount.toLocaleString()} has been deducted from your balance.`, '/wallet');
 
     } else {
       // Release to seller (same as normal release)
