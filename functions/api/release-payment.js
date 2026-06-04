@@ -65,29 +65,17 @@ export async function onRequestPost({ request, env }) {
       const listData = await listRes.json();
       const title    = listData[0]?.title || 'Listing';
 
-      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
-        method: 'POST',
-        headers: { ...hdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          user_id:     order.seller_id,
-          type:        'credit',
-          amount:      amount,
-          description: `Sale completed: ${title}`,
-          reference:   orderId,
-          status:      'completed',
-        }),
-      });
       // Update buyer's escrow transaction to completed
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions?reference=eq.${orderId}&user_id=eq.${order.buyer_id}`, {
         method: 'PATCH',
         headers: { ...hdr, Prefer: 'return=minimal' },
         body: JSON.stringify({ status: 'completed', description: `Purchase completed: ${title}` }),
       });
-      // Update seller's escrow transaction to completed (funds moved to balance)
+      // Upgrade seller's escrow transaction to credit (turns green with + instead of creating a duplicate)
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions?reference=eq.${orderId}&user_id=eq.${order.seller_id}&type=eq.escrow`, {
         method: 'PATCH',
         headers: { ...hdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({ status: 'completed', description: `Sale completed: ${title}` }),
+        body: JSON.stringify({ type: 'credit', status: 'completed', description: `Sale completed: ${title}` }),
       });
     } catch {}
 
