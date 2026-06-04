@@ -256,7 +256,7 @@
     return `<span class="badge ${s.cls}"><span class="badge-dot"></span>${s.label}</span>`;
   }
   function canDispute(order) {
-    return ONGOING.includes(order.escrow_status) && order.escrow_status !== 'disputed';
+    return ['holding', 'released'].includes(order.escrow_status);
   }
   function isOngoing(order) { return ONGOING.includes(order.escrow_status); }
 
