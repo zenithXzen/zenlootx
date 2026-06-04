@@ -137,8 +137,19 @@
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <div class="dropdown-menu" id="userDropdown">
+            <a href="/profile" class="dropdown-item">View Profile</a>
             <a href="/account" class="dropdown-item">My Account</a>
+            <div class="dropdown-sep"></div>
             <a href="/orders" class="dropdown-item active">My Orders</a>
+            <a href="/messages" class="dropdown-item">Messages</a>
+            <a href="/notifications" class="dropdown-item">Notifications</a>
+            <a href="/wallet" class="dropdown-item">Wallet</a>
+            <div class="dropdown-sep"></div>
+            <a href="/listings" class="dropdown-item">View listings</a>
+            <a href="/create-listing" class="dropdown-item" id="listItemLink" style="display:none">List an item</a>
+            <a href="/sell" class="dropdown-item" id="becomeSellerLink">Become a seller</a>
+            <div class="dropdown-sep" id="adminSep" style="display:none"></div>
+            <a href="/admin" class="dropdown-item" id="adminLink" style="display:none;color:#F87171;">Admin Dashboard</a>
             <div class="dropdown-sep"></div>
             <div class="dropdown-item" id="dropdownLogout">Sign out</div>
           </div>
@@ -380,6 +391,18 @@
       await sb.auth.signOut();
       window.location.href = '/login';
     });
+
+    // Show/hide conditional items
+    const { data: sellerApp } = await sb.from('seller_applications').select('status').eq('user_id', user.id).eq('status','approved').maybeSingle();
+    const isSeller = !!sellerApp || user.app_metadata?.is_admin;
+    if (isSeller) {
+      document.getElementById('listItemLink').style.display = '';
+      document.getElementById('becomeSellerLink').style.display = 'none';
+    }
+    if (user.app_metadata?.is_admin) {
+      document.getElementById('adminLink').style.display = '';
+      document.getElementById('adminSep').style.display = '';
+    }
   }
 
   async function init() {
