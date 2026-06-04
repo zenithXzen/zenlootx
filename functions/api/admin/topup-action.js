@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
     const isAdmin = await verifyAdmin(token, env);
     if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { id, userId, amount, action } = await request.json();
+    const { id, userId, amount, action, method: bodyMethod } = await request.json();
     if (!id || !userId || !['approve', 'reject'].includes(action)) {
       return Response.json({ error: 'Missing or invalid fields' }, { status: 400 });
     }
@@ -84,6 +84,30 @@ export async function onRequestPost({ request, env }) {
           body: JSON.stringify({ balance: Number(amount) }),
         });
       }
+    }
+
+    // Log transaction on approve
+    if (action === 'approve') {
+      // Get method from DB if not passed
+      let method = bodyMethod;
+      if (!method) {
+        const tRes  = await sb(env, `topup_requests?id=eq.${id}&select=method`, { method: 'GET', headers: { Prefer: '' } });
+        const tData = await tRes.json();
+        method = tData[0]?.method;
+      }
+      const METHOD_LABEL = { gcash:'GCash', maya:'Maya', maribank:'Maribank', wise:'Wise', binance:'Binance' };
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          user_id:     userId,
+          type:        'credit',
+          amount:      Number(amount),
+          description: `Top-up via ${METHOD_LABEL[method] || method || 'payment'}`,
+          reference:   id,
+          status:      'completed',
+        }),
+      });
     }
 
     return Response.json({ success: true, status: newStatus });

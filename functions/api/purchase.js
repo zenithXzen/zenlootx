@@ -69,6 +69,22 @@ export async function onRequestPost({ request, env }) {
       body: JSON.stringify({ status: 'sold' }),
     });
 
+    // Log escrow transaction for buyer
+    try {
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          user_id:     user.id,
+          type:        'escrow',
+          amount:      price,
+          description: `Purchase held in escrow: ${listing.title}`,
+          reference:   order?.id || null,
+          status:      'pending',
+        }),
+      });
+    } catch {}
+
     // Create conversation (if one doesn't already exist for this order pair)
     let conversationId = null;
     try {

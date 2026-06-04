@@ -74,6 +74,31 @@ export async function onRequestPost({ request, env }) {
     });
     if (!patchRes.ok) return Response.json({ error: await patchRes.text() }, { status: patchRes.status });
 
+    // Log transaction on approve
+    if (action === 'approve') {
+      let method = null;
+      try {
+        const wReqRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/withdrawal_requests?id=eq.${id}&select=method`, {
+          headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
+        });
+        const wReqData = await wReqRes.json();
+        method = wReqData[0]?.method;
+      } catch {}
+      const METHOD_LABEL = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer', wise:'Wise', binance:'Binance' };
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          user_id:     userId,
+          type:        'debit',
+          amount:      Number(amount),
+          description: `Withdrawal via ${METHOD_LABEL[method] || method || 'payout'}`,
+          reference:   id,
+          status:      'completed',
+        }),
+      });
+    }
+
     return Response.json({ success: true, status: newStatus });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

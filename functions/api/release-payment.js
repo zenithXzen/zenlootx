@@ -58,6 +58,32 @@ export async function onRequestPost({ request, env }) {
       body: JSON.stringify({ escrow_status: 'released', status: 'completed' }),
     });
 
+    // Log transactions
+    try {
+      const listRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${order.listing_id}&select=title`, { headers: hdr });
+      const listData = await listRes.json();
+      const title    = listData[0]?.title || 'Listing';
+
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: { ...hdr, Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          user_id:     order.seller_id,
+          type:        'credit',
+          amount:      amount,
+          description: `Sale completed: ${title}`,
+          reference:   orderId,
+          status:      'completed',
+        }),
+      });
+      // Update buyer's escrow transaction to completed
+      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions?reference=eq.${orderId}&user_id=eq.${order.buyer_id}`, {
+        method: 'PATCH',
+        headers: { ...hdr, Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: 'completed', description: `Purchase completed: ${title}` }),
+      });
+    } catch {}
+
     // Notify seller
     try {
       const listRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${order.listing_id}&select=title`, { headers: hdr });
