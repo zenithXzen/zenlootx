@@ -708,6 +708,9 @@
       document.querySelectorAll('.ban-user-btn').forEach(btn => {
         btn.addEventListener('click', () => adminBanUser(btn.dataset.uid, btn.dataset.name, btn));
       });
+      document.querySelectorAll('.freeze-user-btn').forEach(btn => {
+        btn.addEventListener('click', () => adminFreezeUser(btn.dataset.uid, btn.dataset.name, btn.dataset.action, btn));
+      });
     }
 
     function adminBanUser(userId, username, triggerBtn) {
@@ -791,9 +794,31 @@
           <div class="report-right">
             ${isPending ? `<button class="btn btn-secondary btn-sm dismiss-report-btn" data-id="${r.id}">Mark reviewed</button>` : `<span style="font-size:12px;color:var(--text-faint);">Reviewed</span>`}
             <a href="/public-profile?id=${r.reported_user_id}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:11px;">View profile</a>
-            <button class="btn btn-danger btn-sm ban-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" style="font-size:11px;">Ban user</button>
+            ${r._reported?.is_frozen
+              ? `<button class="btn btn-sm freeze-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" data-action="unfreeze" style="font-size:11px;border-color:rgba(25,195,125,0.3);color:var(--accent);">✅ Unfreeze</button>`
+              : `<button class="btn btn-sm freeze-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" data-action="freeze" style="font-size:11px;border-color:rgba(245,185,71,0.35);color:var(--warning);">🔒 Freeze</button>`}
+            ${r._reported?.is_banned
+              ? `<span style="font-size:11px;font-weight:600;color:var(--danger);padding:4px 8px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.2);">Banned</span>`
+              : `<button class="btn btn-danger btn-sm ban-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" style="font-size:11px;">Ban user</button>`}
           </div>
         </div>`;
+    }
+
+    async function adminFreezeUser(userId, username, action, btn) {
+      btn.disabled = true;
+      btn.textContent = '…';
+      const res = await fetch('/api/admin/freeze-user', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action }),
+      });
+      if (res.ok) {
+        await loadReports();
+        renderShell();
+      } else {
+        btn.disabled = false;
+        btn.textContent = action === 'freeze' ? '🔒 Freeze' : '✅ Unfreeze';
+      }
     }
 
     async function dismissReport(reportId, btn) {

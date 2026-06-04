@@ -27,8 +27,14 @@
   <div class="icon">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#EF4444" stroke-width="2" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
   </div>
-  <h1>Your account has been banned</h1>
-  <p>Your account has been suspended from ZenLootX due to a violation of our terms of service.</p>
+  <h1 id="bannedTitle">Your account has been banned</h1>
+  <p id="bannedMsg">Your account has been suspended from ZenLootX due to a violation of our terms of service.</p>
+  <script>
+    if (new URLSearchParams(location.search).get('frozen') === '1') {
+      document.getElementById('bannedTitle').textContent = '🔒 Account temporarily frozen';
+      document.getElementById('bannedMsg').textContent   = 'Your account has been temporarily frozen by an admin while a report against you is being reviewed. Please contact support if you believe this is an error.';
+    }
+  </script>
   <div class="reason-box" id="reasonBox" style="display:none;">
     <strong>Reason</strong>
     <span id="reasonText"></span>

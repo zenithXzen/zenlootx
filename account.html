@@ -1247,8 +1247,9 @@
     });
 
     async function isBanned(userId) {
-      const { data } = await sb.from('profiles').select('is_banned').eq('id', userId).single();
-      if (data?.is_banned) { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
+      const { data } = await sb.from('profiles').select('is_banned,is_frozen').eq('id', userId).single();
+      if (data?.is_banned)  { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
+      if (data?.is_frozen)  { await sb.auth.signOut(); window.location.href = '/banned?frozen=1'; return true; }
       return false;
     }
 
