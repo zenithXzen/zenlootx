@@ -60,8 +60,24 @@ export async function onRequestPost({ request, env }) {
         status:        'active',
       }),
     });
+    if (!oRes.ok) {
+      // Order creation failed — refund the buyer's balance
+      await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}`, {
+        method: 'PATCH', headers: hdr,
+        body: JSON.stringify({ balance: balance }),
+      });
+      const oErr = await oRes.json();
+      return Response.json({ error: `Order creation failed: ${oErr?.message || oErr?.details || oRes.status}. Your balance has been refunded.` }, { status: 500 });
+    }
     const oData = await oRes.json();
     const order = Array.isArray(oData) ? oData[0] : oData;
+    if (!order?.id) {
+      await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}`, {
+        method: 'PATCH', headers: hdr,
+        body: JSON.stringify({ balance: balance }),
+      });
+      return Response.json({ error: 'Order could not be saved. Please contact support.' }, { status: 500 });
+    }
 
     // Mark listing as sold
     await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}`, {

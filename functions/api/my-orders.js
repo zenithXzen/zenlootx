@@ -23,6 +23,11 @@ export async function onRequestGet({ request, env }) {
     const purchases = await buyRes.json();
     const sales     = await sellRes.json();
 
+    // Surface table-not-found errors
+    if (purchases?.code === '42P01' || sales?.code === '42P01') {
+      return Response.json({ error: 'Orders table does not exist. Please run the setup SQL in Supabase.' }, { status: 500 });
+    }
+
     // Collect listing IDs and user IDs for enrichment
     const allOrders  = [...(Array.isArray(purchases) ? purchases : []), ...(Array.isArray(sales) ? sales : [])];
     const listingIds = [...new Set(allOrders.map(o => o.listing_id).filter(Boolean))];
