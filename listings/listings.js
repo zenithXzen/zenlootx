@@ -27,12 +27,7 @@ document.body.innerHTML = `
   <nav>
     <div class="container">
       <div class="nav-inner">
-        <a href="/" class="logo">Zen<span class="green">Loot</span>X</a>
-        <ul class="nav-links">
-          <li><a href="/">Home</a></li>
-          <li><a href="/#how">How it works</a></li>
-          <li><a href="/#sell">Sell</a></li>
-        </ul>
+        <a href="/" class="logo" style="display:flex;align-items:center;gap:8px;"><img src="/wallpaper/zx.png" alt="ZenLootX" style="height:32px;width:auto;"><span>Zen<span class="green">Loot</span>X</span></a>
         <div class="nav-actions" id="navActions">
           <a href="/login"    class="btn btn-secondary">Sign in</a>
           <a href="/register" class="btn btn-primary">Get started</a>
