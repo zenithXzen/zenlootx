@@ -218,11 +218,7 @@
 
       <div id="panelListings"></div>
       <div id="panelReviews" hidden>
-        <div class="empty-state">
-          <div class="empty-icon">★</div>
-          <h3>No reviews yet</h3>
-          <p>Reviews from completed trades will appear here once that feature is live.</p>
-        </div>
+        <div id="reviewsWrap"></div>
       </div>
 
     </div>
@@ -272,6 +268,82 @@
             </div>
           </a>
         </div>`;
+    }
+
+    async function loadReviews(userId) {
+      const wrap = document.getElementById('reviewsWrap');
+      if (!wrap) return;
+
+      const { data: reviews } = await sb
+        .from('reviews')
+        .select('rating,comment,created_at,reviewer_id')
+        .eq('reviewee_id', userId)
+        .order('created_at', { ascending: false });
+
+      const countEl = document.getElementById('reviewCount');
+      if (!reviews?.length) {
+        if (countEl) countEl.textContent = '0';
+        wrap.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">★</div>
+            <h3>No reviews yet</h3>
+            <p>Reviews from completed trades will appear here.</p>
+          </div>`;
+        updateReviewTab(0, 0);
+        return;
+      }
+
+      const rIds = [...new Set(reviews.map(r => r.reviewer_id))];
+      const { data: profiles } = await sb.from('profiles').select('id,username,avatar_url').in('id', rIds);
+      const pMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+
+      const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+      if (countEl) countEl.textContent = reviews.length;
+      updateReviewTab(reviews.length, avg);
+
+      wrap.innerHTML = `
+        <div style="display:flex;align-items:center;gap:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:20px;">
+          <div style="font-size:48px;font-weight:700;letter-spacing:-0.03em;color:var(--warning);">${avg}</div>
+          <div>
+            <div style="font-size:18px;color:var(--warning);">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5-Math.round(avg))}</div>
+            <div style="font-size:13px;color:var(--text-faint);margin-top:4px;">${reviews.length} review${reviews.length!==1?'s':''}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          ${reviews.map(r => {
+            const p    = pMap[r.reviewer_id] || {};
+            const name = p.username || 'Anonymous';
+            const init = name.charAt(0).toUpperCase();
+            const av   = p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : init;
+            const date = new Date(r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+            const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+            return `
+              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden;">${av}</div>
+                  <div style="flex:1;">
+                    <div style="font-size:14px;font-weight:600;">${name}</div>
+                    <div style="font-size:12px;color:var(--text-faint);">${date}</div>
+                  </div>
+                  <div style="font-size:16px;color:var(--warning);">${stars}</div>
+                </div>
+                ${r.comment ? `<p style="font-size:14px;color:var(--text-dim);line-height:1.65;">${r.comment}</p>` : ''}
+              </div>`;
+          }).join('')}
+        </div>`;
+
+      // Real-time subscription
+      sb.channel(`pub-reviews-${userId}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reviews', filter: `reviewee_id=eq.${userId}` }, () => {
+          loadReviews(userId);
+        })
+        .subscribe();
+    }
+
+    function updateReviewTab(count, avg) {
+      const tab = document.querySelector('[data-tab="reviews"]');
+      if (!tab) return;
+      tab.textContent = count ? `Reviews (${count} · ★${avg})` : 'Reviews';
     }
 
     async function init() {
@@ -335,7 +407,7 @@
             ${isBanned && profile.ban_reason ? `<div style="font-size:12px;color:#F87171;margin-bottom:8px;">Ban reason: ${profile.ban_reason}</div>` : ''}
             <div class="profile-stats">
               <div><div class="stat-num">${listings.length}</div><div class="stat-label">Listings</div></div>
-              <div><div class="stat-num">0</div><div class="stat-label">Reviews</div></div>
+              <div><div class="stat-num" id="reviewCount">0</div><div class="stat-label">Reviews</div></div>
             </div>
             ${profile.bio ? `<div class="bio-text">${profile.bio}</div>` : ''}
           </div>
@@ -371,6 +443,9 @@
 
       // Update page title
       document.title = `${profile.username} — ZenLootX`;
+
+      // Load reviews
+      loadReviews(sellerId);
 
       // Load nav
       if (session) initNav(session.user);
