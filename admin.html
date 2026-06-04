@@ -268,6 +268,7 @@
     let activeSection = 'applications';
     let allApps = [], allReports = [], allDisputes = [], allListings = [];
     let allTopups = [], allWithdrawals = [];
+    let topupFilter = 'pending', withdrawalFilter = 'pending';
     let appFilter = 'pending', reportFilter = 'pending';
     let rejectOpen = false;
     let appError = null, reportsError = null, disputesError = null, listingsError = null;
@@ -960,6 +961,8 @@
       const rejected = allTopups.filter(t => t.status === 'rejected').length;
       const pending$ = allTopups.filter(t => t.status === 'pending').reduce((s,t) => s + Number(t.amount), 0);
 
+      const filtered = topupFilter === 'all' ? allTopups : allTopups.filter(t => t.status === topupFilter);
+
       document.getElementById('sectionContent').innerHTML = `
         <div class="stats-row">
           <div class="stat-card s-pending"><div class="stat-card-num">${pending}</div><div class="stat-card-label">Pending requests</div></div>
@@ -967,10 +970,22 @@
           <div class="stat-card s-approved"><div class="stat-card-num">${approved}</div><div class="stat-card-label">Approved</div></div>
           <div class="stat-card s-rejected"><div class="stat-card-num">${rejected}</div><div class="stat-card-label">Rejected</div></div>
         </div>
+        <div class="filter-row">
+          <div class="filter-tabs">
+            ${['pending','approved','rejected','all'].map(f => `
+              <button class="filter-tab ${topupFilter===f?'active':''}" data-topupfilter="${f}">
+                ${f.charAt(0).toUpperCase()+f.slice(1)}
+              </button>`).join('')}
+          </div>
+          <span class="result-label">${filtered.length} result${filtered.length!==1?'s':''}</span>
+        </div>
         <div class="card-list" id="topupList">
-          ${allTopups.length ? allTopups.map(topupCard).join('') : emptyState('💳','No top-up requests yet','Users who submit a top-up will appear here.')}
+          ${filtered.length ? filtered.map(topupCard).join('') : emptyState('💳','No ${topupFilter} top-up requests','${topupFilter==="pending"?"All caught up — no pending requests.":"No requests with this status."}')}
         </div>`;
 
+      document.querySelectorAll('[data-topupfilter]').forEach(btn => {
+        btn.addEventListener('click', () => { topupFilter = btn.dataset.topupfilter; renderTopups(); });
+      });
       document.querySelectorAll('.topup-approve').forEach(btn => {
         btn.addEventListener('click', () => doTopupAction(btn.dataset.id, btn.dataset.uid, Number(btn.dataset.amt), 'approve', btn));
       });
@@ -1025,6 +1040,8 @@
       const rejected = allWithdrawals.filter(w => w.status === 'rejected').length;
       const pending$ = allWithdrawals.filter(w => w.status === 'pending').reduce((s,w) => s + Number(w.amount), 0);
 
+      const filteredWd = withdrawalFilter === 'all' ? allWithdrawals : allWithdrawals.filter(w => w.status === withdrawalFilter);
+
       document.getElementById('sectionContent').innerHTML = `
         <div class="stats-row">
           <div class="stat-card s-pending"><div class="stat-card-num">${pending}</div><div class="stat-card-label">Pending requests</div></div>
@@ -1032,10 +1049,22 @@
           <div class="stat-card s-approved"><div class="stat-card-num">${approved}</div><div class="stat-card-label">Approved</div></div>
           <div class="stat-card s-rejected"><div class="stat-card-num">${rejected}</div><div class="stat-card-label">Rejected</div></div>
         </div>
+        <div class="filter-row">
+          <div class="filter-tabs">
+            ${['pending','approved','rejected','all'].map(f => `
+              <button class="filter-tab ${withdrawalFilter===f?'active':''}" data-wdfilter="${f}">
+                ${f.charAt(0).toUpperCase()+f.slice(1)}
+              </button>`).join('')}
+          </div>
+          <span class="result-label">${filteredWd.length} result${filteredWd.length!==1?'s':''}</span>
+        </div>
         <div class="card-list" id="withdrawalList">
-          ${allWithdrawals.length ? allWithdrawals.map(withdrawalCard).join('') : emptyState('💸','No withdrawal requests yet','Withdrawal requests from sellers will appear here.')}
+          ${filteredWd.length ? filteredWd.map(withdrawalCard).join('') : emptyState('💸','No ${withdrawalFilter} withdrawal requests','${withdrawalFilter==="pending"?"All caught up — no pending requests.":"No requests with this status."}')}
         </div>`;
 
+      document.querySelectorAll('[data-wdfilter]').forEach(btn => {
+        btn.addEventListener('click', () => { withdrawalFilter = btn.dataset.wdfilter; renderWithdrawals(); });
+      });
       document.querySelectorAll('.wd-approve').forEach(btn => {
         btn.addEventListener('click', () => doWithdrawalAction(btn.dataset.id, btn.dataset.uid, Number(btn.dataset.amt), 'approve', btn));
       });
