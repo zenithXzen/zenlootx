@@ -556,6 +556,8 @@
     subscribeMessages(convId);
     subscribeConversations();
     showChat();
+    // Broadcast that we've read this conversation immediately on open
+    setTimeout(() => broadcastRead(convId), 300);
   }
 
   // ── Messages ──────────────────────────────────────────────────
@@ -633,32 +635,46 @@
 
   function subscribeMessages(convId) {
     if (msgSubscription) { sb.removeChannel(msgSubscription); msgSubscription = null; }
-    msgSubscription = sb.channel(`messages:${convId}`)
+    msgSubscription = sb.channel(`messages:${convId}`, { config: { broadcast: { self: false } } })
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages',
         filter: `conversation_id=eq.${convId}`,
       }, payload => {
-        const m    = payload.new;
-        const mine = m.sender_id === currentUser.id;
-        const time = new Date(m.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        const el   = document.getElementById('chatMessages');
+        const m  = payload.new;
+        const el = document.getElementById('chatMessages');
         if (!el) return;
-
-        // Remove empty state if present
         const empty = el.querySelector('.chat-empty');
         if (empty) el.innerHTML = '';
-
         const row = document.createElement('div');
         activeMessages.push(m);
         row.innerHTML = msgHtml(m);
         el.appendChild(row);
         el.scrollTop = el.scrollHeight;
         if (m.sender_id !== currentUser.id) {
-          // User is actively viewing — advance their last_read_at so sender sees updated receipt
+          // Broadcast read receipt instantly to the sender
+          broadcastRead(convId);
           markReadNow(convId);
         }
       })
+      // Listen for read receipts broadcast by the other person
+      .on('broadcast', { event: 'read' }, ({ payload }) => {
+        if (!payload || payload.userId === currentUser.id) return;
+        const conv = conversations.find(c => c.id === convId);
+        if (!conv) return;
+        if (conv.buyer_id === payload.userId) conv.buyer_last_read_at = payload.at;
+        else if (conv.seller_id === payload.userId) conv.seller_last_read_at = payload.at;
+        updateReadReceipt();
+      })
       .subscribe();
+  }
+
+  function broadcastRead(convId) {
+    if (!currentUser) return;
+    sb.channel(`messages:${convId}`).send({
+      type: 'broadcast',
+      event: 'read',
+      payload: { userId: currentUser.id, at: new Date().toISOString() },
+    });
   }
 
   async function sendMessage() {
