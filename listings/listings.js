@@ -388,6 +388,38 @@ function clearPriceFilter() {
   render();
 }
 
+// ── Realtime: remove sold/deleted listings instantly ──
+function subscribeToListings() {
+  sb.channel(`listings-game-${GAME}`)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'listings',
+      filter: `game=eq.${GAME}`,
+    }, payload => {
+      if (allListings === null) return; // still initial loading
+      const { eventType, new: updated, old: removed } = payload;
+
+      if (eventType === 'INSERT' && updated?.status === 'active') {
+        allListings = [updated, ...allListings];
+        render();
+      } else if (eventType === 'UPDATE') {
+        if (updated?.status !== 'active') {
+          // Sold or removed — drop from grid
+          allListings = allListings.filter(l => l.id !== updated.id);
+          render();
+        } else {
+          allListings = allListings.map(l => l.id === updated.id ? { ...l, ...updated } : l);
+          render();
+        }
+      } else if (eventType === 'DELETE') {
+        allListings = allListings.filter(l => l.id !== removed?.id);
+        render();
+      }
+    })
+    .subscribe();
+}
+
 // ── Init ──
 initNav();
-fetchExchangeRates().then(() => render()); // fetch rates then render so prices convert immediately
+fetchExchangeRates().then(() => { render(); subscribeToListings(); });

@@ -239,6 +239,7 @@
 
       document.title = `${listing.title} — ZenLootX`;
       renderListing(listing);
+      subscribeToListingUpdates(listingId);
     }
 
     function renderNotFound() {
@@ -475,6 +476,37 @@
       // Mark buy button as sold
       const buyBtn = document.getElementById('buyBtn');
       if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = 'Sold'; }
+    }
+
+    function markAsSold() {
+      const buyBtn = document.getElementById('buyBtn');
+      if (buyBtn) {
+        buyBtn.disabled = true;
+        buyBtn.textContent = 'Sold';
+        buyBtn.style.cssText = 'background:var(--bg-elevated);color:var(--text-faint);cursor:not-allowed;opacity:0.6;';
+        const panel = buyBtn.closest('.buy-panel');
+        if (panel && !panel.querySelector('.sold-notice')) {
+          const n = document.createElement('div');
+          n.className = 'sold-notice';
+          n.style.cssText = 'background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px 14px;font-size:13px;color:#EF4444;text-align:center;margin-top:8px;';
+          n.textContent = 'This listing was just purchased by another buyer.';
+          buyBtn.insertAdjacentElement('afterend', n);
+        }
+      }
+      closeBuyModal();
+    }
+
+    function subscribeToListingUpdates(id) {
+      sb.channel(`listing-detail-${id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'listings',
+          filter: `id=eq.${id}`,
+        }, payload => {
+          if (payload.new?.status !== 'active') markAsSold();
+        })
+        .subscribe();
     }
 
     (async () => { const { data: { session } } = await sb.auth.getSession(); if (session) await initNav(session.user); })();
