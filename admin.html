@@ -1395,6 +1395,14 @@
                 </div>
                 <div class="app-right">
                   <span class="status-badge ${badgeCls}">${l.status}</span>
+                  <a href="/messages?with=${l.seller_id}" target="_blank" title="Message seller"
+                     style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:var(--accent-glow);border:1px solid rgba(25,195,125,0.3);color:var(--accent);flex-shrink:0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"/></svg>
+                  </a>
+                  <button class="btn btn-sm notify-seller-btn" data-seller="${l.seller_id}" data-title="${l.title.replace(/"/g,'')}"
+                     style="border-color:rgba(245,185,71,0.3);color:var(--warning);" title="Notify seller">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+                  </button>
                   <button class="btn btn-danger btn-sm delete-listing-btn" data-id="${l.id}">Delete</button>
                 </div>
               </div>`;
@@ -1404,6 +1412,22 @@
       document.querySelectorAll('.delete-listing-btn').forEach(btn => {
         btn.addEventListener('click', () => deleteListing(btn.dataset.id, btn));
       });
+      document.querySelectorAll('.notify-seller-btn').forEach(btn => {
+        btn.addEventListener('click', () => notifySeller(btn.dataset.seller, btn.dataset.title, btn));
+      });
+    }
+
+    async function notifySeller(sellerId, listingTitle, btn) {
+      const msg = prompt(`Notification message to seller of "${listingTitle}":`);
+      if (!msg?.trim()) return;
+      btn.disabled = true;
+      const res = await fetch('/api/admin/send-notification', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Message from Admin', message: msg.trim(), userId: sellerId, type: 'general', link: '/orders' }),
+      });
+      btn.disabled = false;
+      if (res.ok) { btn.style.color = 'var(--success)'; setTimeout(() => { btn.style.color = ''; }, 2000); }
     }
 
     async function deleteListing(id, btn) {
@@ -1422,8 +1446,6 @@
       } else {
         btn.disabled    = false;
         btn.textContent = 'Delete';
-        const err = await res.json().catch(() => ({}));
-        alert(err.error || 'Failed to delete. Try again.');
       }
     }
 
