@@ -63,7 +63,7 @@
     .conv-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .conv-preview{font-size:12px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
     .conv-time{font-size:11px;color:var(--text-faint);flex-shrink:0;align-self:flex-start;margin-top:2px}
-    .conv-unread{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+    .conv-unread{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:999px;background:var(--accent);color:var(--bg-base);font-size:11px;font-weight:700;padding:0 5px;flex-shrink:0}
     .sidebar-empty{padding:48px 24px;text-align:center;color:var(--text-faint)}
     .sidebar-empty p{font-size:13px;line-height:1.6;margin-top:8px}
 
@@ -237,11 +237,42 @@
     conversations = existing;
 
     renderConvList();
+    subscribeConversations();
 
     // Auto-open first conversation if none selected
     if (!activeConvId && !openConvId && !openWith && existing.length) {
       openConversation(existing[0].id);
     }
+  }
+
+  function getLastRead(convId) {
+    return parseInt(localStorage.getItem(`zlx_lr_${convId}`) || '0', 10);
+  }
+  function markRead(convId) {
+    localStorage.setItem(`zlx_lr_${convId}`, Date.now());
+    updateNavBadge();
+  }
+  function isUnread(c) {
+    if (!c.last_message_at) return false;
+    const msgTime  = new Date(c.last_message_at).getTime();
+    const lastRead = getLastRead(c.id);
+    return msgTime > lastRead;
+  }
+  function totalUnread() {
+    return conversations.filter(c => isUnread(c)).length;
+  }
+  function updateNavBadge() {
+    const count = totalUnread();
+    document.querySelectorAll('.msg-nav-badge').forEach(el => el.remove());
+    document.querySelectorAll('a[href="/messages"], .dd-item[href="/messages"]').forEach(link => {
+      if (count > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'msg-nav-badge';
+        badge.textContent = count;
+        badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:999px;background:var(--accent);color:var(--bg-base);font-size:10px;font-weight:700;padding:0 4px;margin-left:5px;';
+        link.appendChild(badge);
+      }
+    });
   }
 
   function renderConvList() {
@@ -254,20 +285,28 @@
       const listing  = c.listing?.title || 'Order conversation';
       const role     = c.buyer_id === currentUser.id ? 'Buying' : 'Selling';
       const isActive = c.id === activeConvId;
+      const unread   = !isActive && isUnread(c);
+
+      let preview = c.last_message_preview || `${role}: ${listing}`;
+      if (preview.startsWith('__system__')) preview = preview.replace('__system__', '').trim();
+      if (preview.length > 40) preview = preview.slice(0, 40) + '…';
 
       return `
-        <div class="conv-item${isActive ? ' active' : ''}" data-conv="${c.id}">
+        <div class="conv-item${isActive ? ' active' : ''}" data-conv="${c.id}" style="${unread ? 'background:var(--bg-elevated);' : ''}">
           <div class="conv-av">${av}</div>
           <div class="conv-info">
-            <div class="conv-name">${name}</div>
-            <div class="conv-preview">${role}: ${listing}</div>
+            <div class="conv-name" style="${unread ? 'color:var(--text);font-weight:700;' : ''}">${name}</div>
+            <div class="conv-preview" style="${unread ? 'color:var(--text-dim);' : ''}">${preview}</div>
           </div>
+          ${unread ? `<span class="conv-unread">●</span>` : ''}
         </div>`;
     }).join('');
 
     document.querySelectorAll('.conv-item[data-conv]').forEach(el => {
       el.addEventListener('click', () => openConversation(el.dataset.conv));
     });
+
+    updateNavBadge();
   }
 
   async function findOrOpenConvWith(sellerId) {
@@ -342,8 +381,10 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
 
+    markRead(convId);
     await loadMessages(convId);
     subscribeMessages(convId);
+    subscribeConversations();
     showChat();
   }
 
@@ -413,6 +454,7 @@
         row.innerHTML = msgHtml(m);
         el.appendChild(row);
         el.scrollTop = el.scrollHeight;
+        if (m.sender_id !== currentUser.id) markRead(convId);
       })
       .subscribe();
   }
@@ -444,6 +486,22 @@
     return String(str)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+  }
+
+  // ── Real-time conversation updates (sidebar badge) ────────────
+  let convSubscription = null;
+  function subscribeConversations() {
+    if (convSubscription) return;
+    convSubscription = sb.channel('conv-updates')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations' }, payload => {
+        const updated = payload.new;
+        const idx = conversations.findIndex(c => c.id === updated.id);
+        if (idx !== -1) {
+          conversations[idx] = { ...conversations[idx], ...updated };
+          renderConvList();
+        }
+      })
+      .subscribe();
   }
 
   // ── Mobile panel switching ────────────────────────────────────
