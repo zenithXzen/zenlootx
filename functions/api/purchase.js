@@ -45,11 +45,15 @@ export async function onRequestPost({ request, env }) {
       }, { status: 422 });
     }
 
-    // Deduct balance from buyer
-    await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}`, {
-      method: 'PATCH', headers: hdr,
-      body: JSON.stringify({ balance: balance - price }),
-    });
+    // Atomic balance deduction — filter ensures balance is still sufficient at update time
+    const deductRes  = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}&balance=gte.${price}`,
+      { method: 'PATCH', headers: { ...hdr, Prefer: 'return=representation' }, body: JSON.stringify({ balance: balance - price }) }
+    );
+    const deductData = await deductRes.json();
+    if (!Array.isArray(deductData) || deductData.length === 0) {
+      return Response.json({ error: 'Insufficient balance. Please refresh and try again.' }, { status: 422 });
+    }
 
     // Create order
     const oRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/orders`, {

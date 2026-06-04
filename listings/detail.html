@@ -254,6 +254,10 @@
       `;
     }
 
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
     function renderListing(l) {
       const game   = GAME_CONFIG[l.game] || {};
       const images = Array.isArray(l.images) ? l.images : [];
@@ -263,7 +267,7 @@
 
       // Images
       const mainImg = images[0]
-        ? `<img src="${images[0]}" alt="${l.title}">`
+        ? `<img src="${images[0]}" alt="${esc(l.title)}">`
         : `<span style="font-size:80px;">${game.icon || '?'}</span>`;
 
       const thumbs = images.length > 1
@@ -284,8 +288,8 @@
       };
       const attrRows = Object.entries(attrs).map(([k, v]) => `
         <div class="info-row">
-          <span class="info-label">${ATTR_LABELS[k] || k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>
-          <span class="info-value">${v}</span>
+          <span class="info-label">${ATTR_LABELS[k] || esc(k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))}</span>
+          <span class="info-value">${esc(String(v))}</span>
         </div>
       `).join('');
 
@@ -303,7 +307,7 @@
             ${l.description ? `
               <div class="description-card">
                 <h3>Description</h3>
-                <p>${l.description}</p>
+                <p style="white-space:pre-wrap">${esc(l.description)}</p>
               </div>
             ` : ''}
 
