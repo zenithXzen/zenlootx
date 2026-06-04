@@ -650,37 +650,30 @@
 
       btn.textContent = 'Publishing…';
 
-      const { data, error } = await sb.from('listings').insert({
-        seller_id:   currentUser.id,
-        game:        selectedGame,
-        title,
-        type:        selectedType,
-        price,
-        currency,
-        description: desc || null,
-        images:      imageUrls,
-        status:      'active',
-        attributes:  collectAttributes(),
-      }).select('id').single();
+      const publishRes = await fetch('/api/create-listing', {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          game:        selectedGame,
+          title,
+          type:        selectedType,
+          price,
+          currency,
+          description: desc || null,
+          images:      imageUrls,
+          attributes:  collectAttributes(),
+        }),
+      });
+      const publishData = await publishRes.json();
 
-      if (error) {
-        showError(`Failed to publish: ${error.message}`);
+      if (!publishRes.ok) {
+        showError(publishData.error || 'Failed to publish listing.');
         btn.disabled = false; btn.textContent = 'Publish listing';
         return;
       }
 
-      // Notify the seller their listing is live
-      await sb.from('notifications').insert({
-        user_id: currentUser.id,
-        title:   '🏷️ Listing published',
-        message: `Your listing "${title}" is now live and visible to buyers.`,
-        type:    'listing',
-        link:    `/listings/detail?id=${data.id}`,
-        read:    false,
-      });
-
       // Redirect to the new listing
-      window.location.href = `/listings/detail?id=${data.id}`;
+      window.location.href = `/listings/detail?id=${publishData.id}`;
     }
 
     init();
