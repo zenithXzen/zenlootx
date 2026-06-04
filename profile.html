@@ -452,11 +452,7 @@
 
       <!-- Reviews panel -->
       <div id="panelReviews" hidden>
-        <div class="empty-state">
-          <div class="empty-icon">★</div>
-          <h3>No reviews yet</h3>
-          <p>Reviews from completed trades will appear here once that feature is live.</p>
-        </div>
+        <div id="reviewsWrap"></div>
       </div>
 
     </div>
@@ -559,6 +555,8 @@
       await initNav(user);
       loadListings(user.id);
       loadTierTrophy(user.id);
+      loadReviews(user.id);
+      subscribeReviews(user.id);
     }
 
     // ── Report modal ──
@@ -632,6 +630,82 @@
           </div>`;
         setTimeout(closeModal, 2800);
       });
+    }
+
+    // ── Reviews ──
+    async function loadReviews(userId) {
+      const wrap = document.getElementById('reviewsWrap');
+      if (!wrap) return;
+
+      const { data: reviews } = await sb
+        .from('reviews')
+        .select('rating,comment,created_at,reviewer_id')
+        .eq('reviewee_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!reviews?.length) {
+        wrap.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">★</div>
+            <h3>No reviews yet</h3>
+            <p>Reviews from completed trades will appear here.</p>
+          </div>`;
+        updateReviewTab(0, 0);
+        return;
+      }
+
+      // Load reviewer profiles
+      const rIds = [...new Set(reviews.map(r => r.reviewer_id))];
+      const { data: profiles } = await sb.from('profiles').select('id,username,avatar_url').in('id', rIds);
+      const pMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+
+      const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+      updateReviewTab(reviews.length, avg);
+
+      wrap.innerHTML = `
+        <div style="display:flex;align-items:center;gap:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:20px;">
+          <div style="font-size:48px;font-weight:700;letter-spacing:-0.03em;color:var(--warning);">${avg}</div>
+          <div>
+            <div style="font-size:18px;color:var(--warning);">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5-Math.round(avg))}</div>
+            <div style="font-size:13px;color:var(--text-faint);margin-top:4px;">${reviews.length} review${reviews.length!==1?'s':''}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          ${reviews.map(r => {
+            const p     = pMap[r.reviewer_id] || {};
+            const name  = p.username || 'Anonymous';
+            const init  = name.charAt(0).toUpperCase();
+            const av    = p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : init;
+            const date  = new Date(r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+            const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+            return `
+              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-glow);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden;">${av}</div>
+                  <div style="flex:1;">
+                    <div style="font-size:14px;font-weight:600;">${name}</div>
+                    <div style="font-size:12px;color:var(--text-faint);">${date}</div>
+                  </div>
+                  <div style="font-size:16px;color:var(--warning);">${stars}</div>
+                </div>
+                ${r.comment ? `<p style="font-size:14px;color:var(--text-dim);line-height:1.65;">${r.comment}</p>` : ''}
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function updateReviewTab(count, avg) {
+      const tab = document.querySelector('[data-tab="reviews"]');
+      if (!tab) return;
+      tab.textContent = count ? `Reviews (${count} · ★${avg})` : 'Reviews';
+    }
+
+    function subscribeReviews(userId) {
+      sb.channel('profile-reviews')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reviews', filter: `reviewee_id=eq.${userId}` }, () => {
+          loadReviews(userId);
+        })
+        .subscribe();
     }
 
     // ── Tabs ──
