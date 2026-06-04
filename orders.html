@@ -483,12 +483,24 @@
     await initNav(session.user);
 
     // Fetch purchases (as buyer)
-    const { data: rawPurchases } = await sb
+    const { data: rawPurchases, error: buyErr } = await sb
       .from('orders').select('*').eq('buyer_id', userId).order('created_at', { ascending: false });
 
     // Fetch sales (as seller)
-    const { data: rawSales } = await sb
+    const { data: rawSales, error: sellErr } = await sb
       .from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false });
+
+    if (buyErr || sellErr) {
+      console.error('Orders load error:', buyErr || sellErr);
+      const errMsg = (buyErr || sellErr).message || 'Unknown error';
+      document.getElementById('purchaseList').innerHTML = `
+        <div class="empty" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px;padding:28px;">
+          <div style="font-size:13px;color:var(--danger);font-weight:600;margin-bottom:6px;">Could not load orders</div>
+          <div style="font-size:12px;color:var(--text-faint);">${errMsg}</div>
+        </div>`;
+      document.getElementById('saleList').innerHTML = '';
+      return;
+    }
 
     // Enrich with listing + profile data
     async function enrich(orders, role) {
