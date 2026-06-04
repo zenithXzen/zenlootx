@@ -17,9 +17,27 @@ let activeFilter    = 'all';
 let activeSort      = 'newest';
 let minPrice        = '';
 let maxPrice        = '';
+let searchQuery     = '';
+let attrFilters     = {};
 let allListings     = null;
 let displayCurrency = 'PHP';
 let exchangeRates   = null; // keyed by currency code, base USD
+
+// Game-specific attribute filter definitions
+const ATTR_FILTER_DEFS = {
+  genshin: [
+    { key:'server',         label:'Server',  options:['Asia','America','Europe','TW/HK/MO'] },
+  ],
+  mlbb: [
+    { key:'season_rank',    label:'Rank',    options:['Warrior','Elite','Master','Grandmaster','Epic','Legend','Mythic','Mythical Glory','Mythical Immortal'] },
+    { key:'server',         label:'Server',  options:['Southeast Asia','North America','Europe','Middle East','South Asia'] },
+    { key:'collection_level', label:'Collection', options:['Renowned Collector I','Renowned Collector II','Renowned Collector III','Renowned Collector IV','Renowned Collector V','Exalted Collector I','Exalted Collector II','Exalted Collector III','Exalted Collector IV','Exalted Collector V','Mega Collector','World Collector'] },
+  ],
+  valorant: [
+    { key:'rank',    label:'Rank',   options:['Unranked','Iron','Bronze','Silver','Gold','Platinum','Diamond','Ascendant','Immortal','Radiant'] },
+    { key:'region',  label:'Region', options:['NA','EU','APAC','KR','BR','LATAM','TR'] },
+  ],
+};
 
 // ── Build page shell ──
 document.title = `${LABEL} Listings — ZenLootX`;
@@ -66,13 +84,34 @@ document.body.innerHTML = `
 
   <div class="toolbar">
     <div class="container">
-      <div class="toolbar-inner">
-        <div class="filters">
-          <span class="filter-label">Type:</span>
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="account">Account</button>
-          ${GAME !== 'genshin' ? '<button class="filter-btn" data-filter="items">Items</button>' : ''}
-          <button class="filter-btn" data-filter="topup">Top-up</button>
+      <!-- Search bar -->
+      <div style="padding:12px 0 0;display:flex;align-items:center;gap:8px;">
+        <div style="position:relative;flex:1;max-width:480px;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="15" height="15" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6B776F;pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+          <input type="text" id="searchInput" placeholder="Search listings by title…" style="width:100%;background:#1A211C;border:1px solid #232B26;border-radius:8px;padding:9px 36px 9px 36px;font-family:'Geist',sans-serif;font-size:14px;color:#E8EDE9;outline:none;transition:border-color 0.18s;" onfocus="this.style.borderColor='#19C37D'" onblur="this.style.borderColor='#232B26'">
+          <button id="clearSearch" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6B776F;font-size:16px;line-height:1;padding:2px 4px;">✕</button>
+        </div>
+        <span id="searchCount" style="font-size:13px;color:#6B776F;white-space:nowrap;"></span>
+      </div>
+
+      <div class="toolbar-inner" style="padding-top:10px;">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+          <div class="filters">
+            <span class="filter-label">Type:</span>
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="account">Account</button>
+            ${GAME !== 'genshin' ? '<button class="filter-btn" data-filter="items">Items</button>' : ''}
+            <button class="filter-btn" data-filter="topup">Top-up</button>
+          </div>
+          <!-- Game-specific attribute filters -->
+          ${(ATTR_FILTER_DEFS[GAME] || []).map(f => `
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="filter-label">${f.label}:</span>
+              <select class="sort-select attr-filter-select" data-attr="${f.key}" style="min-width:110px;">
+                <option value="">Any</option>
+                ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+              </select>
+            </div>`).join('')}
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">
           <div class="price-range">
@@ -249,7 +288,7 @@ function formatPrice(amount, fromCurrency) {
 async function fetchAllListings() {
   const { data, error } = await sb
     .from('listings')
-    .select('id, title, price, currency, type, images, created_at, seller_id')
+    .select('id, title, price, currency, type, images, created_at, seller_id, attributes')
     .eq('game', GAME)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
@@ -261,12 +300,25 @@ function applyFilters(listings) {
 
   if (activeFilter !== 'all') result = result.filter(l => l.type === activeFilter);
 
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    result = result.filter(l => l.title.toLowerCase().includes(q));
+  }
+
+  // Attribute filters
+  Object.entries(attrFilters).forEach(([key, val]) => {
+    if (!val) return;
+    result = result.filter(l => {
+      const attr = l.attributes?.[key];
+      return attr && String(attr).toLowerCase() === val.toLowerCase();
+    });
+  });
+
   if (minPrice !== '') result = result.filter(l => Number(l.price) >= parseFloat(minPrice));
   if (maxPrice !== '') result = result.filter(l => Number(l.price) <= parseFloat(maxPrice));
 
   if (activeSort === 'price_asc')  result.sort((a, b) => a.price - b.price);
   if (activeSort === 'price_desc') result.sort((a, b) => b.price - a.price);
-  // 'newest' is already default order from DB
 
   return result;
 }
@@ -325,15 +377,24 @@ async function render() {
   if (clearBtn) clearBtn.style.display = (minPrice !== '' || maxPrice !== '') ? 'inline' : 'none';
 
 
+  // Update search result count
+  const countEl = document.getElementById('searchCount');
+  if (countEl) {
+    const total = (allListings || []).length;
+    countEl.textContent = searchQuery || Object.values(attrFilters).some(v => v)
+      ? `${listings.length} of ${total} listing${total !== 1 ? 's' : ''}`
+      : '';
+  }
+
   if (listings.length === 0) {
-    const hasPriceFilter = minPrice !== '' || maxPrice !== '';
+    const hasAnyFilter = minPrice !== '' || maxPrice !== '' || searchQuery || Object.values(attrFilters).some(v => v);
     grid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1;">
         <div class="empty-icon">${ICON}</div>
-        <h2>${hasPriceFilter ? 'No listings in this price range' : 'No listings yet'}</h2>
-        <p>${hasPriceFilter ? 'Try adjusting or clearing the price filter.' : `Be the first to list a ${LABEL} account or item. Sellers get paid once the buyer confirms.`}</p>
+        <h2>${searchQuery ? `No results for "${searchQuery}"` : hasAnyFilter ? 'No listings match your filters' : 'No listings yet'}</h2>
+        <p>${hasAnyFilter ? 'Try adjusting your search or filters.' : `Be the first to list a ${LABEL} account or item. Sellers get paid once the buyer confirms.`}</p>
         <div class="empty-actions">
-          ${hasPriceFilter ? `<button class="btn btn-secondary" onclick="clearPriceFilter()">Clear price filter</button>` : `<a href="/register" class="btn btn-primary">Start selling</a>`}
+          ${hasAnyFilter ? `<button class="btn btn-secondary" onclick="clearAllFilters()">Clear all filters</button>` : `<a href="/register" class="btn btn-primary">Start selling</a>`}
           <a href="/" class="btn btn-secondary">Back to home</a>
         </div>
       </div>
@@ -356,8 +417,32 @@ document.addEventListener('click', e => {
 
 document.addEventListener('change', e => {
   if (e.target.id === 'sortSelect')    { activeSort = e.target.value; render(); }
-  if (e.target.id === 'currencySelect') {
-    displayCurrency = e.target.value;
+  if (e.target.id === 'currencySelect') { displayCurrency = e.target.value; render(); }
+  if (e.target.classList.contains('attr-filter-select')) {
+    attrFilters[e.target.dataset.attr] = e.target.value;
+    render();
+  }
+});
+
+let searchTimer = null;
+document.addEventListener('input', e => {
+  if (e.target.id === 'searchInput') {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      searchQuery = e.target.value.trim();
+      const clearBtn = document.getElementById('clearSearch');
+      if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+      render();
+    }, 250);
+  }
+});
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'clearSearch') {
+    searchQuery = '';
+    const inp = document.getElementById('searchInput');
+    if (inp) inp.value = '';
+    e.target.style.display = 'none';
     render();
   }
 });
@@ -384,6 +469,20 @@ function clearPriceFilter() {
   const mx = document.getElementById('maxPrice');
   if (mn) mn.value = '';
   if (mx) mx.value = '';
+  render();
+}
+
+function clearAllFilters() {
+  searchQuery = ''; attrFilters = {}; minPrice = ''; maxPrice = '';
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.value = '';
+  const clr = document.getElementById('clearSearch');
+  if (clr) clr.style.display = 'none';
+  document.querySelectorAll('.attr-filter-select').forEach(s => s.value = '');
+  const mn = document.getElementById('minPrice'); if (mn) mn.value = '';
+  const mx = document.getElementById('maxPrice'); if (mx) mx.value = '';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+  activeFilter = 'all';
   render();
 }
 
