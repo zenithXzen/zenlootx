@@ -258,9 +258,10 @@
   }
   function canDispute(order, role) {
     if (!['holding', 'released'].includes(order.escrow_status)) return false;
-    // Block disputes against admin accounts
-    const otherProfile = role === 'buyer' ? order.seller_profile : order.buyer_profile;
-    if (otherProfile?.is_admin) return false;
+    // Buyers can always dispute their own purchases
+    if (role === 'buyer') return true;
+    // Sellers: block disputes against admin buyers
+    if (order.buyer_profile?.is_admin) return false;
     return true;
   }
   function isOngoing(order) { return ONGOING.includes(order.escrow_status); }
