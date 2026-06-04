@@ -623,25 +623,29 @@
       btn.disabled = true;
       btn.textContent = 'Uploading images…';
 
-      // Upload — featured image first, then the rest
+      // Upload via server function — featured image first, then the rest
+      const { data: { session } } = await sb.auth.getSession();
       const uploadOrder = [featuredIndex, ...imgFiles.map((_, i) => i).filter(i => i !== featuredIndex)];
       const imageUrls = [];
       for (const i of uploadOrder) {
         const img  = imgFiles[i];
-        const ext  = img.name.split('.').pop();
+        const ext  = img.file.name.split('.').pop();
         const path = `${currentUser.id}/${Date.now()}-${i}.${ext}`;
-        const { error: upErr } = await sb.storage
-          .from('listing-images')
-          .upload(path, img.file, { upsert: false, contentType: img.file.type });
-
-        if (upErr) {
-          showError(`Failed to upload image. Check your storage bucket setup.`);
+        const fd   = new FormData();
+        fd.append('file', img.file);
+        fd.append('path', path);
+        const upRes = await fetch('/api/upload-listing-image', {
+          method:  'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body:    fd,
+        });
+        const upData = await upRes.json();
+        if (!upRes.ok) {
+          showError(upData.error || 'Failed to upload image. Please try again.');
           btn.disabled = false; btn.textContent = 'Publish listing';
           return;
         }
-
-        const { data: { publicUrl } } = sb.storage.from('listing-images').getPublicUrl(path);
-        imageUrls.push(publicUrl);
+        imageUrls.push(upData.url);
       }
 
       btn.textContent = 'Publishing…';

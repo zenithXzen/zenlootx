@@ -718,49 +718,46 @@
       submitBtn.disabled    = true;
       submitBtn.textContent = 'Uploading ID…';
 
+      const { data: { session: appSession } } = await sb.auth.getSession();
+
+      async function uploadDoc(file, docType, label) {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('type', docType);
+        const res  = await fetch('/api/upload-id-doc', {
+          method:  'POST',
+          headers: { Authorization: `Bearer ${appSession.access_token}` },
+          body:    fd,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showStepError(data.error || `Failed to upload ${label}. Please try again.`);
+          submitBtn.disabled    = false;
+          submitBtn.textContent = 'Submit application';
+          return null;
+        }
+        return data.path;
+      }
+
       // Upload front ID
       let idFrontPath = null;
       let idBackPath  = null;
 
       if (formData.idFrontFile) {
-        const ext  = formData.idFrontFile.name.split('.').pop();
-        const path = `${currentUser.id}/front.${ext}`;
-        const { error } = await sb.storage.from('id_documents').upload(path, formData.idFrontFile, { upsert: true, contentType: formData.idFrontFile.type });
-        if (error) {
-          showStepError('Failed to upload front ID. Please try again.');
-          submitBtn.disabled    = false;
-          submitBtn.textContent = 'Submit application';
-          return;
-        }
-        idFrontPath = path;
+        idFrontPath = await uploadDoc(formData.idFrontFile, 'front', 'front ID');
+        if (idFrontPath === null) return;
       }
 
       if (formData.idBackFile) {
-        const ext  = formData.idBackFile.name.split('.').pop();
-        const path = `${currentUser.id}/back.${ext}`;
-        const { error } = await sb.storage.from('id_documents').upload(path, formData.idBackFile, { upsert: true, contentType: formData.idBackFile.type });
-        if (error) {
-          showStepError('Failed to upload back ID. Please try again.');
-          submitBtn.disabled    = false;
-          submitBtn.textContent = 'Submit application';
-          return;
-        }
-        idBackPath = path;
+        idBackPath = await uploadDoc(formData.idBackFile, 'back', 'back ID');
+        if (idBackPath === null) return;
       }
 
       let idVerificationPath = null;
       submitBtn.textContent = 'Uploading verification photo…';
       if (formData.idVerificationFile) {
-        const ext  = formData.idVerificationFile.name.split('.').pop();
-        const path = `${currentUser.id}/verification.${ext}`;
-        const { error } = await sb.storage.from('id_documents').upload(path, formData.idVerificationFile, { upsert: true, contentType: formData.idVerificationFile.type });
-        if (error) {
-          showStepError('Failed to upload verification photo. Please try again.');
-          submitBtn.disabled    = false;
-          submitBtn.textContent = 'Submit application';
-          return;
-        }
-        idVerificationPath = path;
+        idVerificationPath = await uploadDoc(formData.idVerificationFile, 'verification', 'verification photo');
+        if (idVerificationPath === null) return;
       }
 
       submitBtn.textContent = 'Submitting…';

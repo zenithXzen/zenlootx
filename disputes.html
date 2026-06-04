@@ -64,6 +64,26 @@
     .rule-list li { display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-dim);line-height:1.7; }
     .rule-list li::before { content:'→';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px; }
 
+    /* My Disputes */
+    .my-disputes-wrap { margin-bottom:56px; }
+    .my-disputes-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+    .my-disputes-header h2 { font-size:18px;font-weight:700;letter-spacing:-0.01em; }
+    .dispute-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start; }
+    .dispute-card:last-child { margin-bottom:0; }
+    .dispute-reason { font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;line-height:1.5; }
+    .dispute-meta { font-size:12px;color:var(--text-faint);display:flex;flex-wrap:wrap;gap:8px;align-items:center; }
+    .dispute-order { color:var(--text-dim); }
+    .badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:3px 10px;border-radius:999px; }
+    .badge-open { background:rgba(245,185,71,0.12);color:var(--warning);border:1px solid rgba(245,185,71,0.25); }
+    .badge-refunded { background:rgba(25,195,125,0.12);color:var(--accent);border:1px solid rgba(25,195,125,0.25); }
+    .badge-released { background:rgba(245,185,71,0.08);color:var(--warning);border:1px solid rgba(245,185,71,0.2); }
+    .badge-resolved { background:rgba(107,119,111,0.15);color:var(--text-faint);border:1px solid var(--border); }
+    .dispute-resolution { font-size:12px;color:var(--text-dim);margin-top:6px; }
+    .dispute-resolution span { color:var(--text); }
+    .disputes-empty { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:40px;text-align:center; }
+    .disputes-empty p { font-size:14px;color:var(--text-dim);margin-top:8px; }
+    .disputes-loading { color:var(--text-faint);font-size:14px;padding:20px 0; }
+
     footer { border-top:1px solid var(--border);padding:24px 0; }
     .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:800px;margin:0 auto;padding:0 24px; }
     .footer-inner p { font-size:13px;color:var(--text-faint); }
@@ -95,9 +115,17 @@
     <div class="container">
 
       <div class="page-header">
-        <div class="page-label">Dispute Process</div>
+        <div class="page-label">Disputes</div>
         <h1 class="page-title">Something went wrong? We've got you.</h1>
-        <p class="page-sub">If an order doesn't go as expected, open a dispute. Our team reviews both sides and makes a fair decision.</p>
+        <p class="page-sub">Track your open disputes below, or read how the dispute process works.</p>
+      </div>
+
+      <!-- My Disputes — only shown when logged in -->
+      <div id="myDisputesWrap" class="my-disputes-wrap" style="display:none;">
+        <div class="my-disputes-header">
+          <h2>My Disputes</h2>
+        </div>
+        <div id="myDisputesList"><p class="disputes-loading">Loading…</p></div>
       </div>
 
       <div class="warning-box">
@@ -189,9 +217,71 @@
   <script src="/nav.js"></script>
   <script>
     const sb = supabase.createClient('https://msumlsqfergennhzxqon.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q');
+
+    function timeAgo(dateStr) {
+      const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+      if (diff < 60)     return 'Just now';
+      if (diff < 3600)   return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400)  return `${Math.floor(diff / 3600)}h ago`;
+      if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+      return new Date(dateStr).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+
+    function statusBadge(status, resolution) {
+      if (status === 'open') return '<span class="badge badge-open">Under Review</span>';
+      if (resolution === 'refund_buyer')  return '<span class="badge badge-refunded">Refunded</span>';
+      if (resolution === 'release_seller') return '<span class="badge badge-released">Released to Seller</span>';
+      return '<span class="badge badge-resolved">Resolved</span>';
+    }
+
+    function resolutionNote(status, resolution) {
+      if (status !== 'resolved') return '';
+      if (resolution === 'refund_buyer')   return '<div class="dispute-resolution">Outcome: <span>Funds refunded to your wallet</span></div>';
+      if (resolution === 'release_seller') return '<div class="dispute-resolution">Outcome: <span>Payment released to the seller</span></div>';
+      return '';
+    }
+
+    async function loadDisputes(userId) {
+      const wrap = document.getElementById('myDisputesWrap');
+      const list = document.getElementById('myDisputesList');
+      wrap.style.display = '';
+
+      const { data, error } = await sb
+        .from('disputes')
+        .select('id, order_id, reason, status, resolution, created_at')
+        .eq('filed_by', userId)
+        .order('created_at', { ascending: false });
+
+      if (error || !data?.length) {
+        list.innerHTML = `
+          <div class="disputes-empty">
+            <p style="font-size:15px;font-weight:600;color:var(--text);">No disputes filed yet</p>
+            <p>If you have an issue with an order, open a dispute from your <a href="/orders" style="color:var(--accent);">Orders page</a>.</p>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = data.map(d => `
+        <div class="dispute-card">
+          <div>
+            <div class="dispute-reason">${d.reason.length > 160 ? d.reason.slice(0, 160) + '…' : d.reason}</div>
+            <div class="dispute-meta">
+              <span class="dispute-order">Order <a href="/orders" style="color:var(--accent);">#${d.order_id.slice(0,8).toUpperCase()}</a></span>
+              <span>·</span>
+              <span>${timeAgo(d.created_at)}</span>
+            </div>
+            ${resolutionNote(d.status, d.resolution)}
+          </div>
+          <div>${statusBadge(d.status, d.resolution)}</div>
+        </div>`).join('');
+    }
+
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
-      if (session) await initNav(session.user);
+      if (session) {
+        await initNav(session.user);
+        await loadDisputes(session.user.id);
+      }
     })();
   </script>
 

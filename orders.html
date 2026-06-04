@@ -392,17 +392,13 @@
 
     try {
       const { data: { session } } = await sb.auth.getSession();
-      const { error } = await sb.from('disputes').insert({
-        order_id:    activeOrderId,
-        filed_by:    session.user.id,
-        reason,
-        status:      'open',
+      const res  = await fetch('/api/file-dispute', {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ orderId: activeOrderId, reason }),
       });
-
-      if (error) throw error;
-
-      // Mark order as disputed
-      await sb.from('orders').update({ escrow_status: 'disputed' }).eq('id', activeOrderId);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit dispute');
 
       okEl.textContent = 'Dispute submitted. Our team will review it shortly.';
       okEl.style.display = 'block';

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/wallpaper/zx.png" type="image/png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — ZenLootX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base:#0A0E0C;--bg-surface:#121814;--bg-elevated:#1A211C;
+      --border:#232B26;--border-hi:#33403A;--accent:#19C37D;
+      --accent-hover:#2FD98F;--accent-glow:rgba(25,195,125,0.15);
+      --text:#E8EDE9;--text-dim:#9BA8A0;--text-faint:#6B776F;
+      --warning:#F5B947;
+    }
+    *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+    body { background:var(--bg-base);color:var(--text);font-family:'Geist',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column; }
+    a { text-decoration:none;color:inherit; }
+    .container { max-width:800px;margin:0 auto;padding:0 24px; }
+
+    nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);background:rgba(10,14,12,0.88);backdrop-filter:blur(14px); }
+    .nav-inner { display:flex;align-items:center;justify-content:space-between;padding:16px 0; }
+    .logo { font-size:20px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px; }
+    .logo .green { color:var(--accent); }
+    .btn { display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.18s; }
+    .btn-primary { background:var(--accent);color:var(--bg-base); }
+    .btn-primary:hover { background:var(--accent-hover); }
+    .btn-secondary { background:transparent;color:var(--text);border-color:var(--border-hi); }
+    .btn-secondary:hover { background:var(--bg-elevated); }
+
+    main { flex:1;padding:64px 0 80px; }
+
+    .page-header { text-align:center;margin-bottom:56px; }
+    .page-label { display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);padding:4px 14px;border-radius:999px;margin-bottom:20px; }
+    .page-title { font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:14px; }
+    .page-sub { font-size:16px;color:var(--text-dim);max-width:480px;margin:0 auto; }
+
+    .contact-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:48px; }
+    .contact-card { background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:24px; }
+    .contact-card-icon { width:40px;height:40px;border-radius:10px;background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px; }
+    .contact-card h3 { font-size:15px;font-weight:600;margin-bottom:6px; }
+    .contact-card p { font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px; }
+    .contact-card a.link { color:var(--accent);font-size:13px;font-weight:500;transition:color 0.16s; }
+    .contact-card a.link:hover { color:var(--accent-hover); }
+
+    .section-block { margin-bottom:48px; }
+    .section-block h2 { font-size:18px;font-weight:700;margin-bottom:14px;letter-spacing:-0.01em;padding-bottom:12px;border-bottom:1px solid var(--border); }
+
+    .faq-item { border-top:1px solid var(--border);padding:18px 0; }
+    .faq-item:last-child { border-bottom:1px solid var(--border); }
+    .faq-q { font-size:15px;font-weight:600;margin-bottom:6px; }
+    .faq-a { font-size:14px;color:var(--text-dim);line-height:1.7; }
+    .faq-a a { color:var(--accent); }
+
+    .response-box { background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:14px;margin-bottom:48px; }
+    .response-dot { width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0; }
+    .response-box p { font-size:13px;color:var(--text-dim);margin:0; }
+    .response-box strong { color:var(--text); }
+
+    footer { border-top:1px solid var(--border);padding:24px 0; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:800px;margin:0 auto;padding:0 24px; }
+    .footer-inner p { font-size:13px;color:var(--text-faint); }
+    .footer-inner a { font-size:13px;color:var(--text-faint);transition:color 0.16s; }
+    .footer-inner a:hover { color:var(--text-dim); }
+
+    @media (max-width:600px) {
+      .page-title { font-size:26px; }
+      .contact-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container" style="max-width:1200px;">
+      <div class="nav-inner">
+        <a href="/" class="logo"><img src="/wallpaper/zx.png" alt="ZenLootX" style="height:32px;width:auto;"><span>Zen<span class="green">Loot</span>X</span></a>
+        <div id="navActions" style="display:flex;gap:10px;">
+          <a href="/login" class="btn btn-secondary">Sign in</a>
+          <a href="/register" class="btn btn-primary">Get started</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <div class="page-header">
+        <div class="page-label">Contact</div>
+        <h1 class="page-title">We're here to help.</h1>
+        <p class="page-sub">Have a question, issue, or feedback? Reach out and we'll get back to you.</p>
+      </div>
+
+      <div class="response-box">
+        <div class="response-dot"></div>
+        <p><strong>Response time:</strong> We typically reply within 1–2 business days. For urgent order issues, open a dispute from your Orders page instead — disputes are reviewed faster.</p>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-card-icon">✉️</div>
+          <h3>General support</h3>
+          <p>Account questions, payment issues, or anything that doesn't involve an active order.</p>
+          <a href="mailto:support@zenlootexchange.com" class="link">support@zenlootexchange.com</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-card-icon">⚖️</div>
+          <h3>Order disputes</h3>
+          <p>If something went wrong with a purchase, open a dispute directly from your Orders page for the fastest response.</p>
+          <a href="/orders" class="link">Go to my orders →</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-card-icon">🏷️</div>
+          <h3>Seller applications</h3>
+          <p>Questions about your seller application status or the verification process.</p>
+          <a href="mailto:sellers@zenlootexchange.com" class="link">sellers@zenlootexchange.com</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-card-icon">🚨</div>
+          <h3>Report abuse</h3>
+          <p>Scam attempts, fake listings, or platform abuse. Use the Report button on any user's profile, or email us.</p>
+          <a href="mailto:trust@zenlootexchange.com" class="link">trust@zenlootexchange.com</a>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h2>Common questions</h2>
+        <div class="faq-item">
+          <div class="faq-q">My order went wrong — what do I do?</div>
+          <div class="faq-a">Go to <a href="/orders">My Orders</a>, find the order, and click "Open dispute." Do not confirm delivery if the account doesn't match the listing. See the <a href="/disputes">dispute process</a> for details.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How long does seller verification take?</div>
+          <div class="faq-a">Usually 1–2 business days after you submit your application. You'll receive a notification once it's reviewed.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">I forgot my password.</div>
+          <div class="faq-a">Go to <a href="/forgot-password">Forgot password</a> and enter your email. We'll send you a reset link.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How do I withdraw my earnings?</div>
+          <div class="faq-a">Go to your <a href="/wallet">Wallet</a> and submit a withdrawal request. Requests are reviewed and processed within 1–3 business days.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>© 2026 ZenLootX. All rights reserved.</p>
+      <div style="display:flex;gap:20px;">
+        <a href="/about">About</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="/nav.js"></script>
+  <script>
+    const sb = supabase.createClient('https://msumlsqfergennhzxqon.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdW1sc3FmZXJnZW5uaHp4cW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMwMzQsImV4cCI6MjA5NjAyOTAzNH0.Zz-YIzgk_QN0p0F9Sjbi8kPHUuuGylP6K7LIDbhhe-Q');
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) await initNav(session.user);
+    })();
+  </script>
+
+</body>
+</html>
