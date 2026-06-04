@@ -151,6 +151,19 @@ async function initMsgBadge(userId) {
 
   setBadge(totalUnread(convs));
 
+  // Clear badge immediately when user clicks the Messages link
+  document.querySelectorAll('a[href="/messages"]').forEach(link => {
+    link.addEventListener('click', () => {
+      convs.forEach(c => { c.buyer_unread_count = 0; c.seller_unread_count = 0; });
+      setBadge(0);
+      fetch('/api/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({}),
+      }).catch(() => {});
+    });
+  });
+
   // Real-time: watch conversations for unread count updates
   function onConvUpdate(payload) {
     const updated = payload.new;

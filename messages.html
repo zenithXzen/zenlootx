@@ -525,7 +525,6 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
 
-    markRead(convId);
     await loadMessages(convId);
     subscribeMessages(convId);
     subscribeConversations();
@@ -598,7 +597,14 @@
         row.innerHTML = msgHtml(m);
         el.appendChild(row);
         el.scrollTop = el.scrollHeight;
-        if (m.sender_id !== currentUser.id) markRead(convId);
+        if (m.sender_id !== currentUser.id) {
+          // Update local unread count for sidebar dot only (don't reset server count)
+          const c = conversations.find(x => x.id === convId);
+          if (c) {
+            if (c.buyer_id === currentUser.id) c.buyer_unread_count = Math.max(0, (c.buyer_unread_count || 0) - 1);
+            else c.seller_unread_count = Math.max(0, (c.seller_unread_count || 0) - 1);
+          }
+        }
       })
       .subscribe();
   }
