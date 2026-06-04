@@ -135,19 +135,22 @@ async function initMsgBadge(userId) {
     });
   }
 
-  // Load conversations and calculate initial unread count
+  // Use the same API as messages.html — bypasses RLS correctly
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session?.access_token) return;
+
   let convs = [];
   try {
-    const { data } = await sb
-      .from('conversations')
-      .select('id, last_message_at, buyer_id, seller_id')
-      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
-    convs = data || [];
+    const res  = await fetch('/api/my-conversations', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const data = await res.json();
+    convs = data.conversations || [];
   } catch {}
 
   setBadge(convs.filter(isUnread).length);
 
-  // Real-time: watch for new messages (last_message_at update on any conversation)
+  // Real-time: watch conversations for last_message_at updates
   function onConvUpdate(payload) {
     const updated = payload.new;
     const idx = convs.findIndex(c => c.id === updated.id);
