@@ -180,10 +180,11 @@
 
       <!-- Stars -->
       <div id="starRow" style="display:flex;justify-content:center;gap:8px;margin-bottom:20px;">
-        ${[1,2,3,4,5].map(n => `
-          <button data-star="${n}" onclick="selectStar(${n})"
-            style="font-size:32px;background:none;border:none;cursor:pointer;opacity:0.3;transition:opacity 0.15s,transform 0.15s;line-height:1;"
-            onmouseover="hoverStar(${n})" onmouseout="unhoverStar()">★</button>`).join('')}
+        <button data-star="1" onclick="selectStar(1)" onmouseover="hoverStar(1)" onmouseout="unhoverStar()" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.25;color:var(--text-faint);transition:opacity 0.15s,transform 0.15s;line-height:1;">★</button>
+        <button data-star="2" onclick="selectStar(2)" onmouseover="hoverStar(2)" onmouseout="unhoverStar()" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.25;color:var(--text-faint);transition:opacity 0.15s,transform 0.15s;line-height:1;">★</button>
+        <button data-star="3" onclick="selectStar(3)" onmouseover="hoverStar(3)" onmouseout="unhoverStar()" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.25;color:var(--text-faint);transition:opacity 0.15s,transform 0.15s;line-height:1;">★</button>
+        <button data-star="4" onclick="selectStar(4)" onmouseover="hoverStar(4)" onmouseout="unhoverStar()" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.25;color:var(--text-faint);transition:opacity 0.15s,transform 0.15s;line-height:1;">★</button>
+        <button data-star="5" onclick="selectStar(5)" onmouseover="hoverStar(5)" onmouseout="unhoverStar()" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.25;color:var(--text-faint);transition:opacity 0.15s,transform 0.15s;line-height:1;">★</button>
       </div>
       <div id="starLabel" style="text-align:center;font-size:13px;font-weight:600;color:var(--warning);margin-bottom:16px;height:18px;"></div>
 
