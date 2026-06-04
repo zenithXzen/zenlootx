@@ -463,7 +463,9 @@
         return;
       }
 
-      // Success
+      // Success — flag so real-time doesn't show "purchased by another buyer"
+      _iDidBuy = true;
+
       if (data.conversationId) {
         document.getElementById('msgSellerBtn').href = `/messages?conv=${data.conversationId}`;
       } else if (data.sellerId) {
@@ -479,7 +481,12 @@
       if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = 'Sold'; }
     }
 
+    let _iDidBuy = false;
+
     function markAsSold() {
+      // Don't interrupt the buyer's own success screen
+      if (_iDidBuy) return;
+
       const buyBtn = document.getElementById('buyBtn');
       if (buyBtn) {
         buyBtn.disabled = true;
