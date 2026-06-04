@@ -44,8 +44,8 @@ export async function onRequestPost({ request, env }) {
     if (order.escrow_status === 'disputed') {
       return Response.json({ error: 'A dispute is already open for this order' }, { status: 409 });
     }
-    if (order.escrow_status === 'released' || order.escrow_status === 'refunded') {
-      return Response.json({ error: 'This order is already completed and cannot be disputed' }, { status: 409 });
+    if (order.escrow_status === 'refunded' || order.escrow_status === 'cancelled') {
+      return Response.json({ error: 'This order has already been refunded and cannot be disputed' }, { status: 409 });
     }
 
     // Insert the dispute
