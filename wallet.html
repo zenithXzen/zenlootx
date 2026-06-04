@@ -101,7 +101,7 @@
     .tx-amount.credit  { color:var(--success); }
     .tx-amount.debit   { color:var(--danger); }
     .tx-amount.pending { color:var(--warning); }
-    .tx-status { font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.04em; }
+    .tx-status { font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;justify-content:center; }
     .status-completed { background:rgba(34,197,94,0.1);color:var(--success); }
     .status-pending   { background:rgba(245,185,71,0.1);color:var(--warning); }
     .status-failed    { background:rgba(239,68,68,0.1);color:var(--danger); }
@@ -553,7 +553,9 @@
       const t    = TX_ICONS[tx.type] || { cls: 'pending', icon: '•' };
       const sign = tx.status === 'failed' ? '' : ['credit','refund'].includes(tx.type) ? '+' : '-';
       const date = new Date(tx.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-      const statusCls = { completed:'status-completed', pending:'status-pending', failed:'status-failed', rejected:'status-rejected' }[tx.status] || 'status-pending';
+      const STATUS_LABEL = { completed:'Done', pending:'Pending', failed:'Failed', rejected:'Rejected' };
+      const statusCls   = { completed:'status-completed', pending:'status-pending', failed:'status-failed', rejected:'status-rejected' }[tx.status] || 'status-pending';
+      const statusLabel = STATUS_LABEL[tx.status] || tx.status || 'Done';
 
       return `
         <div class="tx-row">
@@ -562,7 +564,7 @@
             <div class="tx-desc">${tx.description || tx.type}</div>
             <div class="tx-meta">${date}${tx.reference ? ` · Ref: ${tx.reference}` : ''}</div>
           </div>
-          <span class="tx-status ${statusCls}">${tx.status || 'completed'}</span>
+          <span class="tx-status ${statusCls}">${statusLabel}</span>
           <div class="tx-amount ${t.cls}">${sign}₱${formatAmount(tx.amount)}</div>
         </div>`;
     }
