@@ -130,6 +130,16 @@
       .chat-panel{position:absolute;inset:0;width:100%;z-index:1;transform:translateX(100%);transition:transform 0.25s ease}
       .chat-panel.slide-in{transform:translateX(0)}
       .mobile-back{display:flex}
+
+      /* Full-screen chat on mobile: hide nav, fill entire screen */
+      body.in-chat nav { display:none; }
+      body.in-chat .messages-layout { height:100dvh; height:100vh; }
+
+      /* Prevent iOS auto-zoom on input focus */
+      .chat-input { font-size:16px !important; }
+
+      /* Keep input pinned above keyboard */
+      .chat-input-row { position:sticky; bottom:0; }
     }
   </style>
 </head>
@@ -828,11 +838,25 @@
   function showChat() {
     document.getElementById('convSidebar').classList.add('slide-out');
     document.getElementById('chatPanel').classList.add('slide-in');
+    if (window.innerWidth <= 680) document.body.classList.add('in-chat');
   }
   function showSidebar() {
     document.getElementById('convSidebar').classList.remove('slide-out');
     document.getElementById('chatPanel').classList.remove('slide-in');
+    document.body.classList.remove('in-chat');
   }
+
+  // ── Keep layout above keyboard on mobile ─────────────────────
+  (function() {
+    if (!window.visualViewport) return;
+    const layout = document.querySelector('.messages-layout');
+    function adjust() {
+      if (window.innerWidth > 680 || !layout) return;
+      layout.style.height = window.visualViewport.height + 'px';
+    }
+    window.visualViewport.addEventListener('resize', adjust);
+    window.visualViewport.addEventListener('scroll', adjust);
+  })();
 
   // ── Release Payment ───────────────────────────────────────────
   // ── Rating Modal ──────────────────────────────────────────────
