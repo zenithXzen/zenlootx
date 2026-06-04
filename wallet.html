@@ -510,12 +510,15 @@
 
     let allTx = [];
 
-    function renderTransactions() {
-      const filtered = activeFilter === 'all' ? allTx : allTx.filter(t => t.type === activeFilter);
+    const CREDIT_TYPES = ['credit', 'refund'];
+    const DEBIT_TYPES  = ['debit', 'fee', 'withdrawal', 'escrow', 'pending'];
 
-      // Filter buttons
-      const types = ['all', ...new Set(allTx.map(t => t.type))];
-      document.getElementById('txFilter').innerHTML = types.map(f => `
+    function renderTransactions() {
+      const filtered = activeFilter === 'all'    ? allTx
+                     : activeFilter === 'credit' ? allTx.filter(t => CREDIT_TYPES.includes(t.type))
+                     :                             allTx.filter(t => DEBIT_TYPES.includes(t.type) || (!CREDIT_TYPES.includes(t.type) && t.type !== 'all'));
+
+      document.getElementById('txFilter').innerHTML = ['all','credit','debit'].map(f => `
         <button onclick="setFilter('${f}')" style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid ${activeFilter===f?'var(--border-hi)':'transparent'};background:${activeFilter===f?'var(--bg-elevated)':'none'};color:${activeFilter===f?'var(--text)':'var(--text-faint)'};font-family:Geist,sans-serif;transition:all 0.14s;">
           ${f.charAt(0).toUpperCase() + f.slice(1)}
         </button>`).join('');
