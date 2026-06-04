@@ -77,20 +77,44 @@ export async function onRequestGet({ request, env }) {
     const listingMap = Object.fromEntries((Array.isArray(listings) ? listings : []).map(l => [l.id, l]));
     const profileMap = Object.fromEntries((Array.isArray(profiles) ? profiles : []).map(p => [p.id, p]));
 
-    // Fetch order details for each conversation
+    // Build a buyer+seller → order map for conversations missing order_id
+    const allOrders = Array.isArray(orders) ? orders : [];
+    const pairToOrder = {};
+    for (const o of allOrders) {
+      const key = `${o.buyer_id}:${o.seller_id}:${o.listing_id || ''}`;
+      if (!pairToOrder[key]) pairToOrder[key] = o;
+    }
+
+    // Backfill order_id on conversations that are missing it & patch in DB
+    for (const c of convs) {
+      if (c.order_id) continue;
+      const key   = `${c.buyer_id}:${c.seller_id}:${c.listing_id || ''}`;
+      const match = pairToOrder[key];
+      if (match) {
+        c.order_id = match.id;
+        // Patch DB so future loads have it set
+        fetch(`${env.SUPABASE_URL}/rest/v1/conversations?id=eq.${c.id}`, {
+          method: 'PATCH', headers: { ...hdr, Prefer: 'return=minimal' },
+          body: JSON.stringify({ order_id: match.id }),
+        }).catch(() => {});
+      }
+    }
+
+    // Fetch order details for all known order IDs
     const orderIds = [...new Set(convs.map(c => c.order_id).filter(Boolean))];
     let orderMap = {};
     if (orderIds.length) {
-      const orRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/orders?id=in.(${orderIds.join(',')})&select=id,amount,currency,escrow_status,created_at`, { headers: hdr });
+      const orRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/orders?id=in.(${orderIds.join(',')})&select=id,amount,currency,escrow_status,listing_id,created_at`, { headers: hdr });
       const orData = await orRes.json();
       orderMap = Object.fromEntries((Array.isArray(orData) ? orData : []).map(o => [o.id, o]));
     }
 
-    const enriched = convs.map(c => ({
-      ...c,
-      listing: listingMap[c.listing_id] || null,
-      order:   c.order_id ? (orderMap[c.order_id] || null) : null,
-    }));
+    const enriched = convs.map(c => {
+      const order = c.order_id ? (orderMap[c.order_id] || null) : null;
+      // Also backfill listing from order if conversation has no listing_id
+      const listing = listingMap[c.listing_id] || (order?.listing_id ? listingMap[order.listing_id] : null) || null;
+      return { ...c, listing, order };
+    });
 
     return Response.json({ conversations: enriched, profiles: profileMap });
   } catch (e) {
