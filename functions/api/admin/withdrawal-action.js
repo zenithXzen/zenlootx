@@ -85,8 +85,8 @@ export async function onRequestPost({ request, env }) {
     });
     if (!patchRes.ok) return Response.json({ error: await patchRes.text() }, { status: patchRes.status });
 
-    // Log transaction on approve
-    if (action === 'approve') {
+    // Update the pending transaction that was logged when the request was submitted
+    {
       let method = null;
       try {
         const wReqRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/withdrawal_requests?id=eq.${id}&select=method`, {
@@ -96,16 +96,14 @@ export async function onRequestPost({ request, env }) {
         method = wReqData[0]?.method;
       } catch {}
       const METHOD_LABEL = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer', wise:'Wise', binance:'Binance' };
-      await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      const methodLabel  = METHOD_LABEL[method] || method || 'payout';
+      await sb(env, `transactions?reference=eq.${id}&user_id=eq.${userId}&status=eq.pending`, {
+        method: 'PATCH',
         body: JSON.stringify({
-          user_id:     userId,
-          type:        'debit',
-          amount:      Number(amount),
-          description: `Withdrawal via ${METHOD_LABEL[method] || method || 'payout'}`,
-          reference:   id,
-          status:      'completed',
+          status:      action === 'approve' ? 'completed' : 'failed',
+          description: action === 'approve'
+            ? `Withdrawal via ${methodLabel} — approved`
+            : `Withdrawal via ${methodLabel} — rejected`,
         }),
       });
     }

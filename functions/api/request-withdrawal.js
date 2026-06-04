@@ -56,9 +56,10 @@ export async function onRequestPost({ request, env }) {
       return Response.json({ error: 'Failed to freeze balance. Please try again.' }, { status: 500 });
     }
 
-    // Insert the withdrawal request
+    // Insert the withdrawal request — use return=representation to get back the ID
     const insertRes = await sb(env, 'withdrawal_requests', {
       method: 'POST',
+      headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
         user_id: user.id,
         amount,
@@ -75,6 +76,23 @@ export async function onRequestPost({ request, env }) {
       });
       return Response.json({ error: 'Failed to submit request. Please try again.' }, { status: 500 });
     }
+
+    const insertData   = await insertRes.json();
+    const withdrawalId = Array.isArray(insertData) ? insertData[0]?.id : insertData?.id;
+
+    // Log a pending transaction so it appears in wallet history immediately
+    const METHOD_LABEL = { gcash:'GCash', maya:'Maya', bank:'Bank Transfer', wise:'Wise', binance:'Binance' };
+    await sb(env, 'transactions', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id:     user.id,
+        type:        'debit',
+        amount,
+        description: `Withdrawal via ${METHOD_LABEL[method] || method} — awaiting approval`,
+        reference:   withdrawalId,
+        status:      'pending',
+      }),
+    });
 
     return Response.json({ success: true });
   } catch (e) {

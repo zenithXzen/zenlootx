@@ -545,11 +545,12 @@
       escrow:   { cls: 'escrow',  icon: '🔒' },
       refund:   { cls: 'credit',  icon: '↩' },
       fee:      { cls: 'debit',   icon: '📋' },
+      withdrawal: { cls: 'debit', icon: '↓' },
     };
 
     function txRow(tx) {
       const t    = TX_ICONS[tx.type] || { cls: 'pending', icon: '•' };
-      const sign = tx.status === 'failed' ? '' : ['credit','refund'].includes(tx.type) ? '+' : ['escrow','pending'].includes(tx.type) ? '' : '-';
+      const sign = tx.status === 'failed' ? '' : ['credit','refund'].includes(tx.type) ? '+' : '-';
       const date = new Date(tx.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
       const statusCls = { completed:'status-completed', pending:'status-pending', failed:'status-failed' }[tx.status] || 'status-pending';
 
