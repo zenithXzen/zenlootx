@@ -861,7 +861,7 @@
       btn.textContent = 'Submit request';
 
       if (error) {
-        showAddErr('Something went wrong. Please try again later.');
+        showAddErr(error.message || error.details || 'Something went wrong. Please try again later.');
         console.error(error);
         return;
       }
