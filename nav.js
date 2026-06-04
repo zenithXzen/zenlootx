@@ -113,6 +113,11 @@ async function initNav(user) {
   if (!window.location.pathname.startsWith('/messages')) {
     initMsgBadge(user.id);
   }
+
+  // Notification badge — skip on the notifications page (it manages its own)
+  if (!window.location.pathname.startsWith('/notifications')) {
+    initNotifBadge(user.id);
+  }
 }
 
 async function initMsgBadge(userId) {
@@ -179,5 +184,49 @@ async function initMsgBadge(userId) {
 
   sb.channel(`nav-msg-seller-${userId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations', filter: `seller_id=eq.${userId}` }, onConvUpdate)
+    .subscribe();
+}
+
+async function initNotifBadge(userId) {
+  function setBadge(count) {
+    document.querySelectorAll('.nav-notif-badge').forEach(el => el.remove());
+    if (count <= 0) return;
+    document.querySelectorAll('a[href="/notifications"]').forEach(link => {
+      const badge = document.createElement('span');
+      badge.className = 'nav-notif-badge';
+      badge.textContent = count;
+      badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:999px;background:var(--accent);color:var(--bg-base);font-size:10px;font-weight:700;padding:0 4px;margin-left:5px;line-height:1;';
+      link.appendChild(badge);
+    });
+  }
+
+  async function fetchCount() {
+    const { count } = await sb
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('read', false);
+    return count || 0;
+  }
+
+  setBadge(await fetchCount());
+
+  // Clear badge when user clicks Notifications link
+  document.querySelectorAll('a[href="/notifications"]').forEach(link => {
+    link.addEventListener('click', () => {
+      setBadge(0);
+      sb.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false).then(() => {});
+    });
+  });
+
+  // Real-time: new notification inserted for this user
+  sb.channel(`nav-notif-${userId}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: `user_id=eq.${userId}`,
+    }, async () => {
+      setBadge(await fetchCount());
+    })
     .subscribe();
 }
