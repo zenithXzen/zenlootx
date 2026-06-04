@@ -330,34 +330,11 @@
     const av      = other.avatar_url ? `<img src="${other.avatar_url}" alt="${name}">` : initial;
     const isBuyer = conv?.buyer_id === currentUser.id;
 
-    // Use order data enriched by API, or fall back to my-orders lookup
-    let orderData    = conv?.order || null;
-    let orderId      = conv?.order_id || orderData?.id || null;
-    let escrowStatus = orderData?.escrow_status || null;
+    const orderData    = conv?.order || null;
+    const orderId      = conv?.order_id || orderData?.id || null;
+    const escrowStatus = orderData?.escrow_status || null;
 
-    if (!orderData && isBuyer) {
-      try {
-        const { data: { session } } = await sb.auth.getSession();
-        const r = await fetch('/api/my-orders', { headers: { Authorization: `Bearer ${session.access_token}` } });
-        if (r.ok) {
-          const d = await r.json();
-          const otherId = conv?.seller_id;
-          // Try listing match first, then any escrow order with that seller
-          const byListing = conv?.listing_id
-            ? (d.purchases || []).find(o => o.listing_id === conv.listing_id && o.escrow_status === 'holding')
-            : null;
-          const bySeller  = (d.purchases || []).find(o => o.seller_id === otherId && o.escrow_status === 'holding');
-          const match = byListing || bySeller;
-          if (match) { orderData = match; orderId = match.id; escrowStatus = match.escrow_status; }
-        }
-      } catch {}
-    }
-
-    const releaseBtn = isBuyer && orderId
-      ? escrowStatus === 'released'
-        ? `<span class="released-badge">✓ Payment released</span>`
-        : `<button class="release-btn" id="releaseBtn" onclick="releasePayment('${orderId}')">🔓 Release Payment</button>`
-      : '';
+    const releaseBtn = ''; // moved into purchase summary card
 
     const listingTitle = conv?.listing?.title || null;
     const orderAmount  = orderData?.amount ? '₱' + Number(orderData.amount).toLocaleString('en-PH', {minimumFractionDigits:2}) : null;
@@ -365,15 +342,28 @@
     const statusLabel  = { holding:'In Escrow', released:'Completed', disputed:'Disputed', refunded:'Refunded' }[escrowStatus] || null;
     const statusColor  = { holding:'var(--warning)', released:'var(--success)', disputed:'var(--danger)', refunded:'var(--text-faint)' }[escrowStatus] || 'var(--text-faint)';
 
-    const purchaseSummary = (listingTitle || orderAmount) ? `
-      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    // Release button — show for buyers when status is not released/refunded/cancelled
+    const DONE_STATUSES = ['released','refunded','cancelled'];
+    const showRelease = isBuyer && !DONE_STATUSES.includes(escrowStatus);
+    const releaseArea = showRelease
+      ? `<button onclick="releaseFromConv('${conv.id}','${conv.seller_id}','${conv.listing_id || ''}')" id="releaseBtn"
+           style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(34,197,94,0.4);background:rgba(34,197,94,0.08);color:var(--success);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">
+           🔓 Release Payment
+         </button>`
+      : escrowStatus === 'released'
+        ? `<span style="font-size:12px;font-weight:600;color:var(--success);padding:6px 12px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2);">✓ Payment released</span>`
+        : '';
+
+    const purchaseSummary = `
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${listingTitle || 'Order'}</div>
           ${orderDate ? `<div style="font-size:12px;color:var(--text-faint);margin-top:2px;">Purchased ${orderDate}</div>` : ''}
         </div>
         ${orderAmount ? `<div style="font-size:15px;font-weight:700;color:var(--text);flex-shrink:0;">${orderAmount}</div>` : ''}
         ${statusLabel ? `<div style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid;color:${statusColor};border-color:${statusColor};opacity:0.85;flex-shrink:0;">${statusLabel}</div>` : ''}
-      </div>` : '';
+        ${releaseArea}
+      </div>`;
 
     document.getElementById('chatPanel').innerHTML = `
       <div class="chat-header">
@@ -548,6 +538,34 @@
   }
 
   // ── Release Payment ───────────────────────────────────────────
+  async function releaseFromConv(convId, sellerId, listingId) {
+    if (!confirm('Release payment to the seller? This confirms you received the account and cannot be undone.')) return;
+    const btn = document.getElementById('releaseBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Looking up order…'; }
+
+    // Find the order for this conversation via API
+    const { data: { session } } = await sb.auth.getSession();
+    const r = await fetch('/api/my-orders', { headers: { Authorization: `Bearer ${session.access_token}` } });
+    if (!r.ok) { alert('Could not load orders. Please try again.'); if (btn) { btn.disabled = false; btn.textContent = '🔓 Release Payment'; } return; }
+
+    const d = await r.json();
+    const byListing = listingId ? (d.purchases || []).find(o => o.listing_id === listingId) : null;
+    const bySeller  = (d.purchases || []).find(o => o.seller_id === sellerId && ['holding','active'].includes(o.escrow_status));
+    const order     = byListing || bySeller;
+
+    if (!order) { alert('No active order found for this conversation. It may have already been released.'); if (btn) { btn.disabled = false; btn.textContent = '🔓 Release Payment'; } return; }
+
+    if (btn) btn.textContent = 'Releasing…';
+    const res  = await fetch('/api/release-payment', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: order.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Failed. Please try again.'); if (btn) { btn.disabled = false; btn.textContent = '🔓 Release Payment'; } return; }
+    if (btn) btn.outerHTML = `<span style="font-size:12px;font-weight:600;color:var(--success);padding:6px 12px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2);">✓ Payment released</span>`;
+  }
+
   async function releasePayment(orderId) {
     if (!confirm('Release payment to the seller? This confirms you received the account and cannot be undone.')) return;
 
