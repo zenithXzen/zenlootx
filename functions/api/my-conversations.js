@@ -51,7 +51,7 @@ export async function onRequestGet({ request, env }) {
           body: JSON.stringify({
             conversation_id: nc.id,
             sender_id:       o.buyer_id,
-            content:         `__system__ 🎉 Congratulations on your purchase! Thank you for doing business on ZenLootX. The seller will deliver your account details shortly. Feel free to ask any questions here — we're happy to help make this a smooth experience for both of you.`,
+            content:         `__system__ 🎉 Thank you for doing business on ZenLootX. The seller will deliver your account details shortly. Feel free to ask any questions here — we're happy to help make this a smooth experience for both of you.`,
           }),
         });
         convs.push(nc);

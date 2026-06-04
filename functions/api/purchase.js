@@ -120,7 +120,7 @@ export async function onRequestPost({ request, env }) {
           body: JSON.stringify({
             conversation_id: conversationId,
             sender_id:       user.id,
-            content:         `__system__ 🎉 Congratulations on your purchase! Thank you for doing business on ZenLootX. The seller will deliver your account details shortly. Feel free to ask any questions here — we're happy to help make this a smooth experience for both of you.`,
+            content:         `__system__ 🎉 Thank you for doing business on ZenLootX. The seller will deliver your account details shortly. Feel free to ask any questions here — we're happy to help make this a smooth experience for both of you.`,
           }),
         });
       } catch {}
