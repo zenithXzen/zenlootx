@@ -195,13 +195,37 @@
 
   // ── Conversations ─────────────────────────────────────────────
   async function loadConversations() {
-    const { data, error } = await sb
+    // 1. Load existing conversations
+    const { data: convData } = await sb
       .from('conversations')
       .select('*, listing:listing_id(title,game)')
       .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
       .order('created_at', { ascending: false });
 
-    if (error || !data?.length) {
+    const existing = convData || [];
+    const coveredListings = new Set(existing.map(c => c.listing_id).filter(Boolean));
+
+    // 2. Load orders — create missing conversations for any order that has none
+    const { data: orders } = await sb
+      .from('orders')
+      .select('id,buyer_id,seller_id,listing_id,listings:listing_id(title,game)')
+      .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
+      .order('created_at', { ascending: false });
+
+    for (const o of (orders || [])) {
+      if (!o.listing_id || coveredListings.has(o.listing_id)) continue;
+      // Auto-create missing conversation
+      const { data: nc } = await sb.from('conversations').insert({
+        buyer_id:   o.buyer_id,
+        seller_id:  o.seller_id,
+        order_id:   o.id,
+        listing_id: o.listing_id,
+      }).select('*, listing:listing_id(title,game)').single();
+
+      if (nc) { existing.push(nc); coveredListings.add(o.listing_id); }
+    }
+
+    if (!existing.length) {
       document.getElementById('convList').innerHTML = `
         <div class="sidebar-empty">
           <div style="font-size:32px;">💬</div>
@@ -210,14 +234,19 @@
       return;
     }
 
-    conversations = data;
+    conversations = existing;
 
-    // Load all other-party profiles
-    const otherIds = [...new Set(data.map(c => c.buyer_id === currentUser.id ? c.seller_id : c.buyer_id))];
+    // Load other-party profiles
+    const otherIds = [...new Set(existing.map(c => c.buyer_id === currentUser.id ? c.seller_id : c.buyer_id))];
     const { data: profiles } = await sb.from('profiles').select('id,username,avatar_url').in('id', otherIds);
     (profiles || []).forEach(p => { profileCache[p.id] = p; });
 
     renderConvList();
+
+    // Auto-open first conversation if none selected
+    if (!activeConvId && !openConvId && !openWith && existing.length) {
+      openConversation(existing[0].id);
+    }
   }
 
   function renderConvList() {
