@@ -127,6 +127,47 @@
       .balance-row { grid-template-columns:1fr; }
       .actions-row { flex-direction:column; }
     }
+
+    /* MODAL */
+    .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:16px; }
+    .modal-overlay.open { display:flex; }
+    .modal-card { background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .modal-header { padding:22px 24px 0;display:flex;align-items:center;justify-content:space-between; }
+    .modal-header h2 { font-size:18px;font-weight:700;letter-spacing:-0.01em; }
+    .modal-close { background:none;border:none;cursor:pointer;color:var(--text-faint);padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:color 0.15s,background 0.15s; }
+    .modal-close:hover { color:var(--text);background:var(--bg-elevated); }
+    .modal-body { padding:20px 24px 24px;display:flex;flex-direction:column;gap:20px; }
+    .bal-hint { background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between; }
+    .bal-hint-label { font-size:12px;color:var(--text-faint); }
+    .bal-hint-val { font-size:18px;font-weight:700;color:var(--accent); }
+    .method-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:10px; }
+    .method-btn { background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'Geist',sans-serif;transition:border-color 0.16s,background 0.16s; }
+    .method-btn:hover { border-color:var(--border-hi);background:var(--bg-base); }
+    .method-btn.selected { border-color:var(--accent);background:var(--accent-glow); }
+    .method-icon { width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px; }
+    .method-label { font-size:12px;font-weight:600;color:var(--text); }
+    .form-group { display:flex;flex-direction:column;gap:6px; }
+    .form-label { font-size:13px;font-weight:600;color:var(--text-dim); }
+    .form-input { background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:8px;padding:11px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.16s;width:100%; }
+    .form-input:focus { border-color:var(--accent); }
+    .form-input::placeholder { color:var(--text-faint); }
+    .form-select { appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%239BA8A0' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px; }
+    .amount-wrap { position:relative; }
+    .amount-prefix { position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:600;color:var(--text-dim);pointer-events:none; }
+    .amount-wrap .form-input { padding-left:30px; }
+    .form-hint { font-size:12px;color:var(--text-faint); }
+    .modal-error { background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--danger);display:none; }
+    .modal-error.show { display:block; }
+    .modal-success { background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:28px 24px;text-align:center;display:none; }
+    .modal-success.show { display:flex;flex-direction:column;align-items:center;gap:10px; }
+    .modal-success-icon { font-size:36px; }
+    .modal-success h3 { font-size:17px;font-weight:700; }
+    .modal-success p { font-size:14px;color:var(--text-dim); }
+    .modal-footer { padding:0 24px 24px;display:flex;gap:10px; }
+    .modal-footer .btn { flex:1;justify-content:center; }
+    .btn-ghost { background:none;border:1px solid var(--border);color:var(--text-dim); }
+    .btn-ghost:hover { background:var(--bg-elevated);color:var(--text); }
   </style>
 </head>
 <body>
@@ -190,13 +231,13 @@
 
       <!-- Actions -->
       <div class="actions-row">
-        <div class="action-card disabled" id="withdrawCard">
-          <div class="action-icon gray">
+        <div class="action-card" id="withdrawCard" onclick="openWithdrawModal()">
+          <div class="action-icon green">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg>
           </div>
           <div>
-            <div class="action-title" style="display:flex;align-items:center;gap:8px;">Withdraw <span class="soon-badge">Coming soon</span></div>
-            <div class="action-sub">Cash out to GCash, bank, or e-wallet</div>
+            <div class="action-title">Withdraw</div>
+            <div class="action-sub">Cash out to GCash, Maya, bank, or crypto</div>
           </div>
         </div>
         <div class="action-card disabled" id="addFundsCard">
@@ -247,6 +288,82 @@
     </div>
   </footer>
 
+  <!-- WITHDRAW MODAL -->
+  <div class="modal-overlay" id="withdrawModal" onclick="handleOverlayClick(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Withdraw Funds</h2>
+        <button class="modal-close" onclick="closeWithdrawModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Success state -->
+      <div class="modal-body">
+        <div class="modal-success" id="withdrawSuccess">
+          <div class="modal-success-icon">✅</div>
+          <h3>Request submitted!</h3>
+          <p>Your withdrawal request is under review. We'll process it within 1–3 business days and notify you once it's done.</p>
+          <button class="btn btn-primary" style="margin-top:8px;min-width:160px;" onclick="closeWithdrawModal()">Done</button>
+        </div>
+
+        <!-- Form state -->
+        <div id="withdrawForm">
+          <div class="bal-hint">
+            <span class="bal-hint-label">Available balance</span>
+            <span class="bal-hint-val">₱<span id="modalBalance">0.00</span></span>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Payout method</div>
+            <div class="method-grid">
+              <button class="method-btn" id="m-gcash"    onclick="selectMethod('gcash')">
+                <div class="method-icon" style="background:#0070E0;color:#fff;font-size:14px;font-weight:700;">G</div>
+                <span class="method-label">GCash</span>
+              </button>
+              <button class="method-btn" id="m-maya"     onclick="selectMethod('maya')">
+                <div class="method-icon" style="background:#00C389;color:#fff;font-size:14px;font-weight:700;">M</div>
+                <span class="method-label">Maya</span>
+              </button>
+              <button class="method-btn" id="m-bank"     onclick="selectMethod('bank')">
+                <div class="method-icon" style="background:#1A211C;border:1px solid #33403A;font-size:18px;">🏦</div>
+                <span class="method-label">Bank</span>
+              </button>
+              <button class="method-btn" id="m-wise"     onclick="selectMethod('wise')">
+                <div class="method-icon" style="background:#9FE870;color:#163300;font-size:14px;font-weight:800;">W</div>
+                <span class="method-label">Wise</span>
+              </button>
+              <button class="method-btn" id="m-binance"  onclick="selectMethod('binance')">
+                <div class="method-icon" style="background:#F3BA2F;color:#1B1B1B;font-size:14px;font-weight:700;">B</div>
+                <span class="method-label">Binance</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group" id="methodFields" style="display:none;">
+            <div id="dynamicFields"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="withdrawAmount">Amount (PHP)</label>
+            <div class="amount-wrap">
+              <span class="amount-prefix">₱</span>
+              <input class="form-input" id="withdrawAmount" type="number" min="100" step="0.01" placeholder="0.00">
+            </div>
+            <span class="form-hint">Minimum withdrawal: ₱100.00</span>
+          </div>
+
+          <div class="modal-error" id="withdrawError"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer" id="withdrawFooter">
+        <button class="btn btn-ghost" onclick="closeWithdrawModal()">Cancel</button>
+        <button class="btn btn-primary" id="withdrawSubmitBtn" onclick="submitWithdrawal()">Request withdrawal</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
     const SUPABASE_URL = 'https://msumlsqfergennhzxqon.supabase.co';
@@ -255,6 +372,7 @@
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let activeFilter = 'all';
+    let currentBalance = 0;
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
@@ -287,7 +405,8 @@
         .eq('user_id', userId)
         .maybeSingle();
 
-      document.getElementById('balanceAmount').textContent = formatAmount(wallet?.balance || 0);
+      currentBalance = parseFloat(wallet?.balance || 0);
+      document.getElementById('balanceAmount').textContent = formatAmount(currentBalance);
       document.getElementById('escrowAmount').textContent  = formatAmount(wallet?.escrow || 0);
       document.getElementById('totalEarned').textContent   = formatAmount(wallet?.total_earned || 0);
 
@@ -450,6 +569,136 @@
     }
 
     init();
+
+    // ── Withdraw Modal ──────────────────────────────────────────
+    let selectedMethod = null;
+
+    const METHOD_FIELDS = {
+      gcash: [
+        { id: 'gcashName',   label: 'Account name',   type: 'text',   placeholder: 'Full name on GCash' },
+        { id: 'gcashNumber', label: 'GCash number',   type: 'tel',    placeholder: '09XXXXXXXXX' },
+      ],
+      maya: [
+        { id: 'mayaName',   label: 'Account name',   type: 'text',  placeholder: 'Full name on Maya' },
+        { id: 'mayaNumber', label: 'Maya number',     type: 'tel',   placeholder: '09XXXXXXXXX' },
+      ],
+      bank: [
+        { id: 'bankName',   label: 'Bank',            type: 'select', options: ['BDO','BPI','Metrobank','UnionBank','Security Bank','RCBC','PNB','Landbank','DBP','EastWest','Chinabank','AllBank','Cimb','GoTyme','Maya Bank','Other'] },
+        { id: 'bankAccount',label: 'Account number',  type: 'text',   placeholder: 'Account number' },
+        { id: 'bankHolder', label: 'Account name',    type: 'text',   placeholder: 'Full name on account' },
+      ],
+      wise: [
+        { id: 'wiseName',  label: 'Full name',        type: 'text',  placeholder: 'Name on Wise account' },
+        { id: 'wiseEmail', label: 'Wise email',        type: 'email', placeholder: 'you@email.com' },
+      ],
+      binance: [
+        { id: 'binanceName', label: 'Full name',       type: 'text',  placeholder: 'Name on Binance' },
+        { id: 'binanceUid',  label: 'Binance UID or email', type: 'text', placeholder: 'UID or email' },
+      ],
+    };
+
+    function openWithdrawModal() {
+      selectedMethod = null;
+      document.getElementById('withdrawForm').style.display = '';
+      document.getElementById('withdrawSuccess').classList.remove('show');
+      document.getElementById('withdrawFooter').style.display = '';
+      document.getElementById('withdrawError').classList.remove('show');
+      document.getElementById('withdrawError').textContent = '';
+      document.getElementById('withdrawAmount').value = '';
+      document.getElementById('methodFields').style.display = 'none';
+      document.getElementById('dynamicFields').innerHTML = '';
+      document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('modalBalance').textContent = formatAmount(currentBalance);
+      document.getElementById('withdrawModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeWithdrawModal() {
+      document.getElementById('withdrawModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function handleOverlayClick(e) {
+      if (e.target === document.getElementById('withdrawModal')) closeWithdrawModal();
+    }
+
+    function selectMethod(m) {
+      selectedMethod = m;
+      document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('m-' + m).classList.add('selected');
+
+      const fields = METHOD_FIELDS[m];
+      const container = document.getElementById('dynamicFields');
+      container.innerHTML = fields.map(f => {
+        if (f.type === 'select') {
+          return `<div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" for="${f.id}">${f.label}</label>
+            <select class="form-input form-select" id="${f.id}">
+              <option value="">Select bank</option>
+              ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+            </select>
+          </div>`;
+        }
+        return `<div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label" for="${f.id}">${f.label}</label>
+          <input class="form-input" id="${f.id}" type="${f.type}" placeholder="${f.placeholder}">
+        </div>`;
+      }).join('');
+      document.getElementById('methodFields').style.display = '';
+    }
+
+    async function submitWithdrawal() {
+      const errEl  = document.getElementById('withdrawError');
+      const btn    = document.getElementById('withdrawSubmitBtn');
+      errEl.classList.remove('show');
+
+      if (!selectedMethod) { showErr('Please select a payout method.'); return; }
+
+      const amount = parseFloat(document.getElementById('withdrawAmount').value);
+      if (!amount || amount < 100) { showErr('Minimum withdrawal amount is ₱100.00.'); return; }
+      if (amount > currentBalance)  { showErr(`Amount exceeds your available balance of ₱${formatAmount(currentBalance)}.`); return; }
+
+      // Collect method-specific fields
+      const fields = METHOD_FIELDS[selectedMethod];
+      const details = {};
+      for (const f of fields) {
+        const val = document.getElementById(f.id)?.value?.trim();
+        if (!val) { showErr(`Please fill in all payout details.`); return; }
+        details[f.id] = val;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      const { data: { session } } = await sb.auth.getSession();
+      const { error } = await sb.from('withdrawal_requests').insert({
+        user_id: session.user.id,
+        amount,
+        method: selectedMethod,
+        details,
+        status: 'pending',
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Request withdrawal';
+
+      if (error) {
+        showErr('Something went wrong. Please try again later.');
+        console.error(error);
+        return;
+      }
+
+      document.getElementById('withdrawForm').style.display = 'none';
+      document.getElementById('withdrawFooter').style.display = 'none';
+      document.getElementById('withdrawSuccess').classList.add('show');
+    }
+
+    function showErr(msg) {
+      const el = document.getElementById('withdrawError');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
   </script>
 
 </body>
