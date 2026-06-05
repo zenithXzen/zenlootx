@@ -125,30 +125,33 @@
     .footer-inner p { font-size:13px;color:var(--text-faint); }
 
     /* BUY MODAL */
-    .buy-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;align-items:center;justify-content:center;padding:16px; }
+    .buy-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;padding:16px; }
     .buy-overlay.open { display:flex; }
-    .buy-modal { background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease; }
-    @keyframes modalIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-    .buy-modal-head { padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between; }
-    .buy-modal-head h3 { font-size:17px;font-weight:700; }
-    .buy-modal-close { background:none;border:none;cursor:pointer;color:var(--text-faint);padding:4px;border-radius:6px;display:flex;transition:color 0.15s; }
-    .buy-modal-close:hover { color:var(--text); }
-    .buy-modal-body { padding:24px;display:flex;flex-direction:column;gap:16px; }
-    .buy-row { display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:2px 0; }
-    .buy-row-label { color:var(--text-faint); }
-    .buy-row-val { font-weight:600; }
-    .buy-divider { height:1px;background:var(--border);margin:4px 0; }
-    .buy-total { font-size:18px;font-weight:700; }
+    .buy-modal { background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:18px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,0.6);animation:modalIn 0.2s ease;overflow:hidden; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    .buy-modal-head { padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border); }
+    .buy-modal-head h3 { font-size:16px;font-weight:700;letter-spacing:-0.01em; }
+    .buy-modal-close { background:none;border:none;cursor:pointer;color:var(--text-faint);padding:6px;border-radius:8px;display:flex;transition:color 0.15s,background 0.15s; }
+    .buy-modal-close:hover { color:var(--text);background:var(--bg-elevated); }
+    .buy-modal-body { padding:20px 24px;display:flex;flex-direction:column;gap:0; }
+    .buy-row { display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:11px 0;border-bottom:1px solid var(--border); }
+    .buy-row:last-of-type { border-bottom:none; }
+    .buy-row-label { color:var(--text-dim);font-size:13px; }
+    .buy-row-val { font-weight:600;font-size:14px; }
+    .buy-divider { display:none; }
+    .buy-total-row { display:flex;justify-content:space-between;align-items:center;padding:14px 0 4px;margin-top:4px;border-top:2px solid var(--border-hi); }
+    .buy-total { font-size:20px;font-weight:700;letter-spacing:-0.01em; }
     .buy-after { font-size:13px;color:var(--text-faint); }
-    .buy-modal-foot { padding:8px 24px 24px;display:flex;gap:10px; }
-    .buy-modal-foot .btn { flex:1;justify-content:center; }
-    .buy-err { font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;display:none; }
+    .buy-modal-foot { padding:16px 24px 22px;display:flex;flex-direction:column;gap:10px; }
+    .buy-modal-foot .btn-primary { width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:10px; }
+    .buy-modal-foot .btn-secondary { width:100%;justify-content:center;padding:11px;font-size:14px;border-radius:10px;color:var(--text-dim); }
+    .buy-err { font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;display:none;margin-top:8px; }
     .buy-err.show { display:block; }
-    .buy-success { display:none;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:8px 0 4px; }
+    .buy-success { display:none;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:8px 0 4px; }
     .buy-success.show { display:flex; }
-    .buy-success-icon { font-size:40px; }
-    .buy-success h3 { font-size:17px;font-weight:700; }
-    .buy-success p { font-size:13px;color:var(--text-dim);line-height:1.6; }
+    .buy-success-icon { font-size:44px; }
+    .buy-success h3 { font-size:18px;font-weight:700; }
+    .buy-success p { font-size:13px;color:var(--text-dim);line-height:1.65; }
     .buy-success-btns { display:flex;gap:10px;margin-top:4px;width:100%; }
     .buy-success-btns .btn { flex:1;justify-content:center;font-size:13px; }
 
@@ -334,7 +337,7 @@
               <div class="seller-av-lg" id="sellerAv">?</div>
               <div style="flex:1;min-width:0;">
                 <div class="seller-info-name" id="sellerName">Loading…</div>
-                <div class="seller-info-sub">Seller</div>
+                <div class="seller-info-sub" id="sellerInfoSub">Seller</div>
               </div>
             </a>
 
@@ -436,7 +439,7 @@
     }
 
     async function loadSeller(sellerId) {
-      const { data: seller } = await sb.from('profiles').select('username,avatar_url').eq('id', sellerId).single();
+      const { data: seller } = await sb.from('profiles').select('username,avatar_url,avg_rating,review_count').eq('id', sellerId).single();
       if (!seller) return;
 
       const av   = document.getElementById('sellerAv');
@@ -447,6 +450,14 @@
         : seller.username.charAt(0).toUpperCase();
 
       if (name) name.textContent = seller.username;
+
+      // Show seller rating in buy panel
+      const sellerSub = document.getElementById('sellerInfoSub');
+      if (sellerSub) {
+        sellerSub.innerHTML = seller.avg_rating > 0
+          ? `<span style="color:#F5B947;font-weight:600;font-size:13px;">★ ${seller.avg_rating}</span> <span style="color:var(--text-faint);font-size:12px;">(${seller.review_count} review${seller.review_count !== 1 ? 's' : ''})</span>`
+          : `<span style="color:var(--text-faint);font-size:12px;">New seller</span>`;
+      }
     }
 
 
@@ -601,34 +612,32 @@
             <a href="/orders" class="btn btn-secondary">View Order</a>
           </div>
         </div>
-        <div id="buyForm" style="display:flex;flex-direction:column;gap:10px;">
+        <div id="buyForm">
           <div class="buy-row">
             <span class="buy-row-label">Item</span>
-            <span class="buy-row-val" id="buyItemName" style="max-width:200px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <span class="buy-row-val" id="buyItemName" style="max-width:190px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;"></span>
           </div>
-          <div class="buy-divider"></div>
           <div class="buy-row">
-            <span class="buy-row-label">Your balance</span>
+            <span class="buy-row-label">Your wallet balance</span>
             <span class="buy-row-val" id="buyBalance"></span>
           </div>
           <div class="buy-row">
             <span class="buy-row-label">Listing price</span>
             <span class="buy-row-val" id="buyPrice" style="color:var(--danger);"></span>
           </div>
-          <div class="buy-divider"></div>
-          <div class="buy-row">
-            <span class="buy-row-label">Balance after</span>
-            <span class="buy-row-val buy-total" id="buyAfter"></span>
+          <div class="buy-total-row">
+            <span class="buy-row-label" style="font-size:14px;font-weight:600;color:var(--text);">Balance after purchase</span>
+            <span class="buy-total" id="buyAfter"></span>
           </div>
-          <div class="escrow-note" style="font-size:12px;">
-            🔒 <strong>Escrow protected.</strong> Funds are released to the seller only after you confirm delivery.
+          <div style="background:var(--accent-glow);border:1px solid rgba(25,195,125,0.2);border-radius:8px;padding:11px 14px;font-size:12px;color:var(--text-dim);line-height:1.55;margin-top:14px;">
+            🔒 <strong style="color:var(--accent);">Escrow protected.</strong> Funds are only released to the seller after you confirm delivery.
           </div>
           <div class="buy-err" id="buyErr"></div>
         </div>
       </div>
       <div class="buy-modal-foot" id="buyModalFoot">
-        <button class="btn btn-secondary" onclick="closeBuyModal()">Cancel</button>
         <button class="btn btn-primary" id="buyConfirmBtn" onclick="confirmPurchase()">Confirm & Pay</button>
+        <button class="btn btn-secondary" onclick="closeBuyModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -654,17 +663,11 @@
       <div id="reportListingBody" style="padding:24px;display:flex;flex-direction:column;gap:14px;">
         <p style="font-size:13px;color:var(--text-dim);">Help keep ZenLootX safe. Select the reason for your report.</p>
         <div style="display:flex;flex-direction:column;gap:8px;" id="reportListingReasons">
-          ${[
-            ['fake_listing', 'Fake or misleading listing'],
-            ['scam',         'Scam / fraud attempt'],
-            ['prohibited',   'Prohibited or illegal item'],
-            ['already_sold', 'Item already sold elsewhere'],
-            ['other',        'Other'],
-          ].map(([val, label]) => `
-            <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});">
-              <input type="radio" name="listingReason" value="${val}" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;">
-              <span style="font-size:14px;">${label}</span>
-            </label>`).join('')}
+          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="fake_listing" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Fake or misleading listing</span></label>
+          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="scam" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Scam / fraud attempt</span></label>
+          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="prohibited" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Prohibited or illegal item</span></label>
+          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="already_sold" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Item already sold elsewhere</span></label>
+          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="other" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Other</span></label>
         </div>
         <textarea id="reportListingDetails" placeholder="Additional details (optional)" maxlength="500" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:72px;width:100%;box-sizing:border-box;transition:border-color 0.18s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
         <div id="reportListingErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;"></div>

@@ -127,9 +127,14 @@
     @keyframes listingIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
     @media(max-width:600px){
-      .order-card{flex-direction:column;gap:14px}
-      .order-right{flex-direction:row;align-items:center;width:100%}
-      .order-amount{flex:1}
+      .order-card{flex-direction:column;gap:12px}
+      .order-right{flex-direction:column;align-items:flex-start;width:100%;gap:10px}
+      .order-amount{font-size:20px}
+      .order-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+      .order-actions .btn{flex:1;min-width:120px;justify-content:center;text-align:center}
+    }
+    @media(max-width:400px){
+      .order-actions .btn{width:100%;flex:none}
     }
   </style>
 </head>
@@ -186,8 +191,8 @@
 
 <!-- LISTING DETAIL MODAL -->
 <div id="listingModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)closeListingModal()">
-  <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:listingIn 0.2s ease;">
-    <div id="listingModalImg" style="width:100%;height:220px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;overflow:hidden;"></div>
+  <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:listingIn 0.2s ease;max-height:90dvh;overflow-y:auto;">
+    <div id="listingModalImg" style="width:100%;height:min(220px,40vw);background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;"></div>
     <div style="padding:22px 24px 24px;">
       <div id="listingModalGame" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:6px;"></div>
       <div id="listingModalTitle" style="font-size:19px;font-weight:700;letter-spacing:-0.01em;margin-bottom:10px;color:var(--text);"></div>
@@ -307,27 +312,42 @@
 
       const listingId = o.listing_id || o.listings?.id || '';
 
-      // Dispute timeline steps
-      const timelineSteps = [
-        { key: 'holding',  label: 'Payment held in escrow', done: true },
-        { key: 'disputed', label: 'Dispute filed — under review', done: ['disputed','refunded','released'].includes(o.escrow_status) },
-        { key: 'resolved', label: o.escrow_status === 'refunded' ? 'Refunded to buyer' : o.escrow_status === 'released' ? 'Released to seller' : 'Awaiting resolution', done: ['refunded','released'].includes(o.escrow_status) },
+      // Order timeline — shows for every order
+      const _s = o.escrow_status;
+      const _steps = _s === 'disputed' ? [
+        { l:'Order placed',            d:true  },
+        { l:'Payment in escrow',       d:true  },
+        { l:'⚠️ Dispute under review', d:true, warn:true },
+        { l:'Awaiting resolution',     d:false },
+      ] : _s === 'refunded' ? [
+        { l:'Order placed',       d:true },
+        { l:'Dispute filed',      d:true },
+        { l:'✅ Refunded to buyer', d:true },
+      ] : _s === 'released' ? [
+        { l:'Order placed',         d:true },
+        { l:'Payment in escrow',    d:true },
+        { l:'Delivery confirmed',   d:true },
+        { l:'✅ Payment released',  d:true },
+      ] : _s === 'cancelled' ? [
+        { l:'Order placed', d:true },
+        { l:'Cancelled',    d:true, warn:true },
+      ] : [
+        { l:'Order placed',                                                             d:true  },
+        { l:'Payment in escrow',                                                        d:true  },
+        { l: role === 'seller' ? 'Deliver to buyer' : 'Waiting for delivery',          d:false },
+        { l: role === 'seller' ? 'Buyer releases payment' : 'Confirm & release',       d:false },
       ];
-      const disputeTimeline = o.escrow_status === 'disputed' || (DONE.includes(o.escrow_status) && o.escrow_status !== 'cancelled')
-        ? `<div style="margin-top:12px;padding:12px 14px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);">
-            <div style="font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">Order Timeline</div>
-            <div style="display:flex;flex-direction:column;gap:0;">
-              ${timelineSteps.map((s, i) => `
-                <div style="display:flex;align-items:flex-start;gap:10px;">
-                  <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
-                    <div style="width:18px;height:18px;border-radius:50%;border:2px solid ${s.done ? 'var(--accent)' : 'var(--border-hi)'};background:${s.done ? 'var(--accent)' : 'var(--bg-base)'};display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--bg-base);">${s.done ? '✓' : ''}</div>
-                    ${i < timelineSteps.length - 1 ? `<div style="width:2px;height:18px;background:${s.done && timelineSteps[i+1].done ? 'var(--accent)' : 'var(--border-hi)'};"></div>` : ''}
-                  </div>
-                  <div style="font-size:12px;color:${s.done ? 'var(--text)' : 'var(--text-faint)'};padding-bottom:${i < timelineSteps.length - 1 ? '0' : '0'};line-height:1.8;">${s.label}</div>
-                </div>`).join('')}
-            </div>
-          </div>`
-        : '';
+      const disputeTimeline = `
+        <div style="margin-top:12px;padding:10px 12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);overflow-x:auto;">
+          <div style="display:flex;align-items:flex-start;gap:0;min-width:max-content;">
+            ${_steps.map((s, i) => `
+              <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:64px;position:relative;">
+                ${i < _steps.length - 1 ? `<div style="position:absolute;top:10px;left:50%;width:100%;height:2px;background:${s.d && _steps[i+1].d ? 'var(--accent)' : 'var(--border-hi)'};z-index:0;"></div>` : ''}
+                <div style="width:20px;height:20px;border-radius:50%;border:2px solid ${s.d ? (s.warn ? 'var(--warning)' : 'var(--accent)') : 'var(--border-hi)'};background:${s.d ? (s.warn ? 'rgba(245,185,71,0.12)' : 'var(--accent)') : 'var(--bg-base)'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${s.d && !s.warn ? 'var(--bg-base)' : (s.warn ? 'var(--warning)' : 'var(--text-faint)')};z-index:1;position:relative;">${s.d && !s.warn ? '✓' : ''}</div>
+                <div style="font-size:10px;color:${s.d ? (s.warn ? 'var(--warning)' : 'var(--text-dim)') : 'var(--text-faint)'};text-align:center;margin-top:5px;line-height:1.3;padding:0 4px;">${s.l}</div>
+              </div>`).join('')}
+          </div>
+        </div>`;
 
       return `
         <div class="order-card" id="ocard_${o.id}" style="${ongoing ? 'border-color:rgba(245,185,71,0.2);' : ''}">
