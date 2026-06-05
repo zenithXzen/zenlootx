@@ -386,8 +386,16 @@
     };
 
     const params = new URLSearchParams(window.location.search);
-    const key    = params.get('game') || 'genshin';
-    const game   = games[key] || games.genshin;
+    const key    = params.get('game');
+
+    // Redirect to the proper game-specific listings page (which has all features)
+    if (['genshin','mlbb','valorant'].includes(key)) {
+      window.location.replace('/listings/' + key);
+    } else {
+      window.location.replace('/listings/genshin');
+    }
+
+    const game = games[key] || games.genshin; // fallback for any code below
 
     // Banner
     document.getElementById('gameBanner').style.backgroundImage = `url('${game.bg}')`;

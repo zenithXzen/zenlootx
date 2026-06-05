@@ -32,22 +32,25 @@ export async function onRequestPost(context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'noreply@zenlootexchange.com',
+        from: 'ZenLootX <no-reply@zenlootexchange.com>',
         to: email,
         subject: 'Reset your ZenLootX password',
         html: `
-          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0A0E0C;padding:40px;border-radius:12px">
-            <h2 style="color:#E8EDE9;margin:0 0 16px">Reset your password</h2>
-            <p style="color:#9BA8A0;margin:0 0 24px">
-              We detected 6 failed sign-in attempts on your account. Click the button below to reset your password.
+          <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:480px;margin:0 auto;background:#0A0E0C;color:#E8EDE9;padding:40px 32px;border-radius:12px;">
+            <div style="font-size:22px;font-weight:700;margin-bottom:6px;">Zen<span style="color:#19C37D;">Loot</span>X</div>
+            <hr style="border:none;border-top:1px solid #232B26;margin:18px 0;">
+            <h2 style="font-size:20px;font-weight:700;margin:0 0 12px;">Reset your password</h2>
+            <p style="color:#9BA8A0;font-size:15px;line-height:1.7;margin:0 0 24px;">
+              We received a request to reset the password for your ZenLootX account (<strong style="color:#E8EDE9;">${email}</strong>). Click the button below to set a new password.
             </p>
-            <a href="${resetLink}"
-               style="display:inline-block;padding:14px 28px;background:#19C37D;color:#0A0E0C;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none">
-              Reset password
+            <a href="${resetLink}" style="display:inline-block;padding:14px 28px;background:#19C37D;color:#0A0E0C;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;">
+              Reset password →
             </a>
-            <p style="color:#6B776F;font-size:13px;margin-top:24px">
-              This link expires in 15 minutes. If you didn't try to sign in, you can ignore this email — your account is safe.
+            <p style="color:#6B776F;font-size:13px;margin-top:24px;line-height:1.6;">
+              This link expires in <strong style="color:#E8EDE9;">15 minutes</strong>. If you did not request a password reset, you can safely ignore this email — your account has not been changed.
             </p>
+            <hr style="border:none;border-top:1px solid #232B26;margin:24px 0 14px;">
+            <p style="font-size:12px;color:#6B776F;">© 2026 ZenLootX · zenlootexchange.com</p>
           </div>
         `,
       }),
