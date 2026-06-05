@@ -344,7 +344,6 @@
 
             <button class="btn btn-primary btn-buy" id="buyBtn">Buy now — ${price}</button>
             <div id="sellerControls" style="display:none;flex-direction:column;gap:10px;">
-              <button id="delistBtn" class="btn btn-secondary" style="width:100%;justify-content:center;">📦 Delist listing</button>
               <button id="deleteListingBtn" class="btn" style="width:100%;justify-content:center;background:transparent;border-color:rgba(239,68,68,0.35);color:var(--danger);">🗑 Delete listing</button>
             </div>
 
@@ -419,7 +418,6 @@
           } catch { btn.disabled = false; btn.textContent = label; }
         }
 
-        document.getElementById('delistBtn').addEventListener('click', () => callDelist('delist', '📦 Delist listing'));
         document.getElementById('deleteListingBtn').addEventListener('click', () => callDelist('delete', '🗑 Delete listing'));
       })();
 
