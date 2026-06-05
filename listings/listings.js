@@ -296,7 +296,20 @@ async function fetchAllListings() {
     .eq('game', GAME)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
-  return error ? [] : (data || []);
+
+  if (error || !data?.length) return error ? [] : [];
+
+  // Batch fetch all unique seller profiles in one query
+  const sellerIds = [...new Set(data.map(l => l.seller_id))];
+  const { data: profiles } = await sb
+    .from('profiles')
+    .select('id, username, avatar_url')
+    .in('id', sellerIds);
+
+  const profileMap = {};
+  (profiles || []).forEach(p => { profileMap[p.id] = p; });
+
+  return data.map(l => ({ ...l, seller: profileMap[l.seller_id] || null }));
 }
 
 function applyFilters(listings) {
@@ -356,8 +369,8 @@ function renderCard(listing) {
           <div class="card-footer">
             <div class="card-price">${price}</div>
             <div class="card-seller">
-              <div class="seller-av">?</div>
-              <div class="seller-name">Seller</div>
+              <div class="seller-av">${listing.seller?.avatar_url ? `<img src="${listing.seller.avatar_url}" alt="${listing.seller.username}">` : `<span>${(listing.seller?.username || 'S').charAt(0).toUpperCase()}</span>`}</div>
+              <div class="seller-name">${listing.seller?.username || 'Seller'}</div>
             </div>
           </div>
         </div>
@@ -498,12 +511,13 @@ function subscribeToListings() {
       schema: 'public',
       table: 'listings',
       filter: `game=eq.${GAME}`,
-    }, payload => {
+    }, async payload => {
       if (allListings === null) return; // still initial loading
       const { eventType, new: updated, old: removed } = payload;
 
       if (eventType === 'INSERT' && updated?.status === 'active') {
-        allListings = [updated, ...allListings];
+        const { data: profile } = await sb.from('profiles').select('id, username, avatar_url').eq('id', updated.seller_id).maybeSingle();
+        allListings = [{ ...updated, seller: profile || null }, ...allListings];
         render();
       } else if (eventType === 'UPDATE') {
         if (updated?.status !== 'active') {

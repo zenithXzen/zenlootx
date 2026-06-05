@@ -767,36 +767,48 @@
     function reportCard(r) {
       const reasons = {
         fraud:          { label:'Fraud / Scam',          cls:'reason-fraud' },
-        wrong_listing:  { label:'Wrong listing',          cls:'reason-wrong' },
-        communication:  { label:'Poor communication',    cls:'reason-communication' },
+        wrong_listing:  { label:'Wrong listing',         cls:'reason-wrong' },
+        communication:  { label:'Poor communication',   cls:'reason-communication' },
         harassment:     { label:'Harassment',            cls:'reason-harassment' },
+        fake_listing:   { label:'Fake listing',          cls:'reason-wrong' },
+        already_sold:   { label:'Already sold',          cls:'reason-other' },
+        prohibited:     { label:'Prohibited item',       cls:'reason-fraud' },
+        scam:           { label:'Scam attempt',          cls:'reason-fraud' },
         other:          { label:'Other',                 cls:'reason-other' },
       };
       const rInfo   = reasons[r.reason] || { label: r.reason, cls: 'reason-other' };
       const date    = new Date(r.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-      const icons   = { fraud:'🚨', wrong_listing:'⚠️', communication:'💬', harassment:'🚫', other:'🏳️' };
-      const isPending = r.status !== 'reviewed';
+      const icons   = { fraud:'🚨', wrong_listing:'⚠️', communication:'💬', harassment:'🚫', fake_listing:'⚠️', already_sold:'🔄', prohibited:'🚫', scam:'🚨', other:'🏳️' };
+      const isPending      = r.status !== 'reviewed';
+      const isListingReport = !!r.listing_id;
 
-      const reporterName  = r._reporter?.username || r._reporter?.email?.split('@')[0] || r.reporter_id?.slice(0,8)  || 'Unknown';
-      const reportedName  = r._reported?.username || r._reported?.email?.split('@')[0] || r.reported_user_id?.slice(0,8) || 'Unknown';
+      const reporterName = r._reporter?.username || r._reporter?.email?.split('@')[0] || r.reporter_id?.slice(0,8)       || 'Unknown';
+      const reportedName = r._reported?.username || r._reported?.email?.split('@')[0] || r.reported_user_id?.slice(0,8)  || 'Unknown';
+
+      const subject = isListingReport
+        ? `<a href="/listings/detail?id=${r.listing_id}" target="_blank" style="color:var(--accent);text-decoration:underline;">${r.listing_title || 'a listing'}</a>`
+        : `<strong>${reportedName}</strong>`;
 
       return `
         <div class="report-card ${!isPending ? 'reviewed' : ''}">
-          <div class="report-icon" style="background:var(--bg-elevated);">${icons[r.reason] || '🏳️'}</div>
+          <div class="report-icon" style="background:var(--bg-elevated);">${isListingReport ? '📋' : (icons[r.reason] || '🏳️')}</div>
           <div class="report-body">
             <div class="report-header">
               <span class="reason-pill ${rInfo.cls}">${rInfo.label}</span>
+              <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;background:${isListingReport ? 'rgba(96,165,250,0.1)' : 'rgba(155,168,160,0.1)'};color:${isListingReport ? '#60A5FA' : 'var(--text-faint)'};text-transform:uppercase;letter-spacing:0.04em;">${isListingReport ? 'Listing' : 'User'}</span>
               <span class="status-badge ${isPending ? 'badge-pending' : 'badge-reviewed'}">${r.status}</span>
             </div>
             <div class="report-users">
-              ${reporterName} <span>reported</span> ${reportedName}
+              ${reporterName} <span>reported</span> ${subject}
             </div>
             ${r.details ? `<div class="report-details">"${r.details}"</div>` : ''}
             <div class="report-date">${date}</div>
           </div>
           <div class="report-right">
             ${isPending ? `<button class="btn btn-secondary btn-sm dismiss-report-btn" data-id="${r.id}">Mark reviewed</button>` : `<span style="font-size:12px;color:var(--text-faint);">Reviewed</span>`}
-            <a href="/public-profile?id=${r.reported_user_id}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:11px;">View profile</a>
+            ${isListingReport
+              ? `<a href="/listings/detail?id=${r.listing_id}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:11px;">View listing</a>`
+              : `<a href="/public-profile?id=${r.reported_user_id}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:11px;">View profile</a>`}
             ${r._reported?.is_frozen
               ? `<button class="btn btn-sm freeze-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" data-action="unfreeze" style="font-size:11px;border-color:rgba(25,195,125,0.3);color:var(--accent);">✅ Unfreeze</button>`
               : `<span style="display:inline-flex;align-items:center;gap:4px;">
@@ -812,7 +824,7 @@
                 </span>`}
             ${r._reported?.is_banned
               ? `<span style="font-size:11px;font-weight:600;color:var(--danger);padding:4px 8px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.2);">Banned</span>`
-              : `<button class="btn btn-danger btn-sm ban-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" style="font-size:11px;">Ban user</button>`}
+              : `<button class="btn btn-danger btn-sm ban-user-btn" data-uid="${r.reported_user_id}" data-name="${reportedName}" style="font-size:11px;">${isListingReport ? 'Ban seller' : 'Ban user'}</button>`}
           </div>
         </div>`;
     }

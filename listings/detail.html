@@ -351,6 +351,10 @@
             <div style="text-align:center;font-size:12px;color:var(--text-faint);">
               Listed ${new Date(l.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
             </div>
+
+            <div id="reportArea" style="display:none;text-align:center;padding-top:4px;">
+              <button id="reportListingBtn" style="background:none;border:none;cursor:pointer;font-family:'Geist',sans-serif;font-size:12px;color:var(--text-faint);padding:4px 8px;border-radius:6px;transition:color 0.16s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-faint)'">⚑ Report listing</button>
+            </div>
           </div>
 
         </div>
@@ -417,6 +421,19 @@
 
         document.getElementById('delistBtn').addEventListener('click', () => callDelist('delist', '📦 Delist listing'));
         document.getElementById('deleteListingBtn').addEventListener('click', () => callDelist('delete', '🗑 Delete listing'));
+      })();
+
+      // Show report button for logged-in non-sellers
+      (async () => {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session || session.user.id === l.seller_id) return;
+        const area = document.getElementById('reportArea');
+        if (area) {
+          area.style.display = 'block';
+          document.getElementById('reportListingBtn').addEventListener('click', () => {
+            openReportListingModal(l.id, session.access_token);
+          });
+        }
       })();
     }
 
@@ -628,6 +645,107 @@
     <button class="lightbox-nav lightbox-next hidden" id="lbNext">›</button>
     <div class="lightbox-counter" id="lbCounter"></div>
   </div>
+
+  <!-- Report Listing Modal -->
+  <div id="reportListingOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:700;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+        <div style="font-size:16px;font-weight:700;">Report listing</div>
+        <button onclick="closeReportListingModal()" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:20px;line-height:1;padding:4px;">✕</button>
+      </div>
+      <div id="reportListingBody" style="padding:24px;display:flex;flex-direction:column;gap:14px;">
+        <p style="font-size:13px;color:var(--text-dim);">Help keep ZenLootX safe. Select the reason for your report.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="reportListingReasons">
+          ${[
+            ['fake_listing', 'Fake or misleading listing'],
+            ['scam',         'Scam / fraud attempt'],
+            ['prohibited',   'Prohibited or illegal item'],
+            ['already_sold', 'Item already sold elsewhere'],
+            ['other',        'Other'],
+          ].map(([val, label]) => `
+            <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});">
+              <input type="radio" name="listingReason" value="${val}" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;">
+              <span style="font-size:14px;">${label}</span>
+            </label>`).join('')}
+        </div>
+        <textarea id="reportListingDetails" placeholder="Additional details (optional)" maxlength="500" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:72px;width:100%;box-sizing:border-box;transition:border-color 0.18s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <div id="reportListingErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;"></div>
+      </div>
+      <div id="reportListingSuccess" style="display:none;padding:40px 24px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:16px;">✓</div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:8px;">Report submitted</div>
+        <p style="font-size:13px;color:var(--text-dim);">Thank you. We'll review this and take action if needed.</p>
+      </div>
+      <div id="reportListingFoot" style="display:flex;gap:10px;padding:0 24px 24px;">
+        <button onclick="closeReportListingModal()" style="flex:1;padding:11px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text);border:1px solid var(--border-hi);">Cancel</button>
+        <button id="reportListingSubmitBtn" onclick="submitListingReport()" style="flex:1;padding:11px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:var(--danger);color:#fff;border:none;">Submit report</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let _reportListingId = '', _reportToken = '';
+
+    function openReportListingModal(listingId, accessToken) {
+      _reportListingId = listingId;
+      _reportToken     = accessToken;
+      document.querySelectorAll('input[name="listingReason"]').forEach(r => r.checked = false);
+      document.querySelectorAll('.report-reason-opt').forEach(o => o.style.borderColor = 'var(--border)');
+      document.getElementById('reportListingDetails').value = '';
+      document.getElementById('reportListingErr').style.display  = 'none';
+      document.getElementById('reportListingBody').style.display = '';
+      document.getElementById('reportListingFoot').style.display = '';
+      document.getElementById('reportListingSuccess').style.display = 'none';
+      document.getElementById('reportListingSubmitBtn').disabled    = false;
+      document.getElementById('reportListingSubmitBtn').textContent = 'Submit report';
+      const overlay = document.getElementById('reportListingOverlay');
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      overlay.onclick = e => { if (e.target === overlay) closeReportListingModal(); };
+    }
+
+    function closeReportListingModal() {
+      document.getElementById('reportListingOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    async function submitListingReport() {
+      const reason  = document.querySelector('input[name="listingReason"]:checked')?.value;
+      const details = document.getElementById('reportListingDetails').value.trim();
+      const errEl   = document.getElementById('reportListingErr');
+      const btn     = document.getElementById('reportListingSubmitBtn');
+
+      errEl.style.display = 'none';
+      if (!reason) {
+        errEl.textContent   = 'Please select a reason.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled    = true;
+      btn.textContent = 'Submitting…';
+
+      const res  = await fetch('/api/report-listing', {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${_reportToken}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ listingId: _reportListingId, reason, details: details || null }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errEl.textContent   = data.error || 'Failed to submit. Please try again.';
+        errEl.style.display = 'block';
+        btn.disabled    = false;
+        btn.textContent = 'Submit report';
+        return;
+      }
+
+      document.getElementById('reportListingBody').style.display = 'none';
+      document.getElementById('reportListingFoot').style.display = 'none';
+      document.getElementById('reportListingSuccess').style.display = 'block';
+      setTimeout(closeReportListingModal, 2500);
+    }
+  </script>
 
   <script>
     let lbImages = [], lbIndex = 0;
