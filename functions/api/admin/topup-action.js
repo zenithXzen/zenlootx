@@ -91,10 +91,13 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({ p_user_id: userId, p_amount: Number(amount) }),
       });
       if (!rpcRes.ok) {
-        // Fallback: direct update
+        // Fallback: read current balance then add (never overwrite)
+        const curRes  = await sb(env, `wallets?user_id=eq.${userId}&select=balance`, { method: 'GET', headers: { Prefer: '' } });
+        const curData = await curRes.json();
+        const current = Number(curData?.[0]?.balance || 0);
         await sb(env, `wallets?user_id=eq.${userId}`, {
           method: 'PATCH',
-          body: JSON.stringify({ balance: Number(amount) }),
+          body: JSON.stringify({ balance: current + Number(amount) }),
         });
       }
     }

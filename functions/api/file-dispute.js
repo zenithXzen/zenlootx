@@ -48,16 +48,17 @@ export async function onRequestPost({ request, env }) {
       return Response.json({ error: 'This order has already been refunded and cannot be disputed' }, { status: 409 });
     }
 
-    // Insert the dispute
+    // Insert the dispute — include amount so resolve-dispute can refund correctly
     const dispRes  = await sb(env, 'disputes', {
       method: 'POST',
       body: JSON.stringify({
-        order_id: orderId,
-        filed_by: user.id,
-        buyer_id: order.buyer_id,
+        order_id:  orderId,
+        filed_by:  user.id,
+        buyer_id:  order.buyer_id,
         seller_id: order.seller_id,
-        reason:   reason.trim(),
-        status:   'open',
+        amount:    order.amount,
+        reason:    reason.trim(),
+        status:    'open',
       }),
     });
 
