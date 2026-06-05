@@ -394,21 +394,31 @@
       const password = document.getElementById('password').value;
 
       // Validate
-      let invalid = false;
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      let errMsg = '';
       [document.getElementById('email'), document.getElementById('username'), document.getElementById('password')]
         .forEach(el => el.classList.remove('error'));
 
-      if (!email || !email.includes('@')) {
-        document.getElementById('email').classList.add('error'); invalid = true;
+      const badEmail    = !email || !emailRe.test(email);
+      const badUsername = !username;
+      const badPassword = !password || password.length < 8;
+
+      if (badEmail)    document.getElementById('email').classList.add('error');
+      if (badUsername) document.getElementById('username').classList.add('error');
+      if (badPassword) document.getElementById('password').classList.add('error');
+
+      if (badEmail && !badUsername && !badPassword) {
+        errMsg = 'Please enter a valid email address.';
+      } else if (!badEmail && badUsername && !badPassword) {
+        errMsg = 'Please enter a username.';
+      } else if (!badEmail && !badUsername && badPassword) {
+        errMsg = 'Password must be at least 8 characters.';
+      } else if (badEmail || badUsername || badPassword) {
+        errMsg = 'Please fill in all fields correctly.';
       }
-      if (!username) {
-        document.getElementById('username').classList.add('error'); invalid = true;
-      }
-      if (!password || password.length < 8) {
-        document.getElementById('password').classList.add('error'); invalid = true;
-      }
-      if (invalid) {
-        err.textContent = 'Please fill in all fields. Password must be at least 8 characters.';
+
+      if (errMsg) {
+        err.textContent = errMsg;
         err.classList.add('visible');
         return;
       }
