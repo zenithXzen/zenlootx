@@ -6,48 +6,110 @@
 
 ---
 
-## 📍 Current State (snapshot — last updated 2026-06-03)
+## 📍 Current State (snapshot — last updated 2026-06-06)
 
 **Live stack**
 - Frontend: Static HTML/CSS/JS (Vite) — Geist font, dark theme (accent `#19C37D`)
 - Hosting: Cloudflare Pages (repo `zenithXzen/zenlootx`)
 - Domain: zenlootexchange.com (Namecheap registrar → Cloudflare DNS)
-- Auth + DB: Supabase
-- Email: Resend (custom 6-digit code flow)
+- Auth + DB: Supabase (PostgreSQL)
+- Email: Resend (custom HMAC-signed 6-digit code flow, stateless)
 - Backend: Cloudflare Pages Functions (`/functions/api/`)
 
-**Pages that exist**
-`/` (landing) · `/login` · `/register` · `/forgot-password` · `/reset-password` · `/account` · `/profile` · `/listings/genshin` · `/listings/mlbb` · `/listings/valorant`
+**Pages that exist (28 pages)**
+`/` · `/login` · `/register` · `/forgot-password` · `/reset-password` · `/account` · `/profile` · `/public-profile` · `/listings` · `/listings/genshin` · `/listings/mlbb` · `/listings/valorant` · `/listings/detail` · `/create-listing` · `/sell` · `/seller-dashboard` · `/orders` · `/wallet` · `/messages` · `/disputes` · `/notifications` · `/admin` · `/about` · `/contact` · `/how-it-works` · `/escrow` · `/terms` · `/privacy` · `/banned`
 
 **Working features**
-- Landing page (hero, escrow badges, game slideshow, how-it-works, footer)
-- Auth-aware nav dropdown
-- Register / Login (email or username) / Forgot + Reset password
-- Account page: avatar upload, username change (once), email change, password change, active sessions + remote sign-out
+- Landing page, auth-aware nav, register/login (email or username), forgot/reset password
+- Email verification via HMAC-signed 6-digit code (Resend)
+- Account page: avatar upload, bio, username change (once), email/password change, sessions + remote sign-out
+- Browse listings (Genshin, MLBB, Valorant) with real-time sold updates
+- Listing detail page with buy flow + real-time availability
+- Create listing (server-side, sellers only, input validation, up to 10 images)
+- Wallet: balance display, top-up requests, transaction history, withdrawals
+- Purchase flow: atomic buy via Postgres `purchase_listing` RPC (row-level locks, no double-spend)
+- Escrow system: holding → delivered → confirmed → released
+- Orders page: buyer + seller views, file dispute, release payment
+- Messaging: real-time conversations, read receipts, unread badge in nav
+- Notifications: in-app + email via Resend, real-time unread badge
+- Seller onboarding: application flow with ID upload
+- Disputes: file dispute, admin resolution
+- Admin panel: manage users, freeze/ban, review applications, resolve disputes, top-up actions, send notifications
+- Public profile: avatar, bio, tier badge, verified seller badge, active listings (limit 20), reviews, XSS-safe
+- Tier system: Iron → Bronze → Silver → Gold → Sapphire → Diamond (based on transaction volume + reviews)
+- Push notification subscriptions
+- Terms of Service + Privacy Policy (up to date as of 2026-06-06)
 
-**Supabase pieces**
-- `user_sessions` table (with RLS + realtime + revoke trigger)
-- SQL function `get_email_by_username`
-- Storage bucket `avatars` (public)
-- Email confirmation disabled (custom Resend flow used instead)
+**Supabase tables (confirmed)**
+- `user_sessions` (RLS ✅)
+- `profiles` (RLS ✅)
+- `listings` (RLS ✅, realtime enabled)
+- `orders` (RLS ✅)
+- `wallets` (RLS ✅)
+- `transactions` (RLS ✅)
+- `messages` (RLS ✅)
+- `conversations` (RLS ✅, realtime enabled)
+- `notifications` (RLS ✅, realtime enabled)
+- `seller_applications` (RLS ✅)
+- `disputes` (RLS ✅)
+- `reviews`
+- `email_rate_limits` (RLS ✅, auto-deletes after 10 min)
+- `withdrawal_requests`
 
-**Cloudflare env vars set:** `RESEND_API_KEY`, `HMAC_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`
+**Supabase SQL functions**
+- `get_email_by_username` — username → email lookup for login
+- `purchase_listing(p_buyer_id, p_listing_id)` — atomic purchase RPC with row locks
+
+**Storage buckets**
+- `avatars` (public) — user profile photos
+- `listing-images` (public) — listing screenshots
+- `id_documents` (private) — seller verification IDs
+
+**Cloudflare env vars set**
+`RESEND_API_KEY` · `HMAC_SECRET` · `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_KEY` · `ADMIN_BYPASS_SECRET`
+
+**Security status (full audit completed 2026-06-06)**
+- C1–C4 (Critical): ALL FIXED ✅
+- H1–H7 (High): ALL FIXED ✅ (H4 via Postgres RPC, H6 via email_rate_limits table)
+- M1 (Email regex): FIXED ✅
+- M2 (Silent catch blocks): Partially fixed (detail.html, public-profile.html)
+- M3 (Listings pagination): FIXED ✅ (limit 20)
 
 **⚠️ Known cleanups / risks**
-- `debug-user.js` is a temp endpoint → **remove before launch**.
-- RLS currently only on `user_sessions` → **enable on every future table** (listings, orders, wallet, messages).
-- Earlier GitHub Pages domain showed a 404 during the migration; site now hosted on Cloudflare Pages instead.
+- `debug-user.js` temp endpoint → **remove before launch**
+- M2 (silent catch blocks) not fully fixed across all pages — add error toasts on remaining pages before launch
+- Payments provider not yet integrated (wallet top-up is manual admin action for now)
 
 **Not built yet**
-- Real listings system (create/browse/buy)
-- Orders + escrow flow
-- Wallet / payouts
-- Payments integration (provider undecided)
-- Messaging, seller onboarding, disputes
+- Real payment processing integration (provider undecided — see D-016 in decision.md)
+- Referral system (₱50-per-referral) — intentionally deferred
+- Favorites / saved listings — intentionally deferred
+- Mobile PWA wrapping — intentionally deferred
 
 ---
 
 ## 🗓️ Change Log (newest first)
+
+### 2026-06-06 (security audit + polish session)
+- **Full codebase security audit** completed. Findings grouped as Critical (C1–C4), High (H1–H7), Medium (M1–M3).
+- **C1 + C4 fixed:** Admin bypass (`?admin=on`) now requires matching `ADMIN_BYPASS_SECRET` env var. Added to `_middleware.js`. Also added `ADMIN_BYPASS_SECRET` as a Cloudflare env var.
+- **C2 fixed:** JWT verification in `check-session.js`, `track-session.js`, `get-sessions.js`, `revoke-session.js` — all now verify the token via Supabase `/auth/v1/user` endpoint instead of `atob()` decode. Forged JWTs are rejected.
+- **C3 fixed:** `check-session.js` now matches sessions by `sessionRowId` (stored in localStorage and passed as a query param) instead of user-agent string, which was fakeable.
+- **H1 fixed:** XSS in `public-profile.html` — added `sanitize()` helper; applied to seller bio and all review comments.
+- **H2 fixed (non-issue):** `account.html` does not inject bio as innerHTML — original audit finding was a false positive.
+- **H3 fixed:** `create-listing.js` now validates `game`, `type`, `currency` against allowed-values lists; enforces title max 100 chars, description max 2000 chars, price max ₱500,000, max 10 images.
+- **H4 fixed:** Race condition in `purchase.js` — replaced vulnerable two-step balance-check+PATCH with a call to new Postgres RPC `purchase_listing(p_buyer_id, p_listing_id)`. The function uses `FOR UPDATE` row locks on both the listing and wallet rows, deducts balance using DB arithmetic, marks listing sold, and creates the order — all in one atomic transaction. SQL was run in Supabase. Two simultaneous buyers can no longer both succeed.
+- **H5 fixed:** `create-listing.js` now checks `is_frozen` flag and rejects listing creation for frozen sellers.
+- **H6 fixed:** Rate limiting added to `send-code.js` and `send-reset.js` — max 5 emails per address per 10 minutes tracked via `email_rate_limits` table. Table confirmed to already exist in Supabase.
+- **H7 confirmed fixed:** `public-profile.html` already queries `seller_applications` with `.eq('status','approved')` — verified badge is correctly gated on approved status.
+- **M1 fixed:** Email validation in `send-code.js`, `send-reset.js`, and `register.html` now uses proper regex `/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/` instead of just checking for `@`.
+- **Register page fix:** Validation now shows specific error per field — "Please enter a valid email address." / "Please enter a username." / "Password must be at least 8 characters." — instead of one generic message for all failures.
+- **Bio + avatar sync fixed:** `profile.html` now writes `bio` to both `user_metadata` and `profiles` table. `account.html` writes `avatar_url` to both `user_metadata` and `profiles` table. Both required because `public-profile.html` reads from `profiles`, not `user_metadata`.
+- **M2 partially fixed:** `detail.html` delist/delete catch block now shows a toast error. `public-profile.html` shows "Could not load listings" panel when listings fetch fails instead of blank.
+- **M3 fixed:** Listings query in `public-profile.html` now has `.limit(20)`.
+- **Terms of Service updated:** Added Section 7 (Wallet & Top-Up), Section 11 (Account Restrictions — frozen/suspended/banned). Updated escrow flow, added tier system mention, added ₱500,000 listing cap, updated all dates to June 6, 2026.
+- **Privacy Policy updated:** Added rows to data table for wallet/financial info, session & device info, notification data, tier & activity data, email rate data. Section 8 renamed to "Cookies & Local Storage" — accurately explains localStorage tokens, session row ID, HttpOnly cookies, and confirms no tracking/analytics scripts. Updated dates to June 6, 2026.
+- **Tests passed:** TEST 001–022 all approved. TEST 023 N/A (delist removed from site). TEST 024–026 approved.
 
 ### 2026-06-04 (session 4)
 - Created `about.html` — About page with mission statement, supported games, and values. Fixes 404 on `/about` footer link.

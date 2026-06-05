@@ -82,15 +82,49 @@
 - **Why:** Security and user control — important for accounts tied to money/wallets.
 - **Status:** ✅ Done.
 
+### D-015 · Atomic purchase via Postgres RPC ⭐
+- **Decision:** The entire purchase critical path (balance check + deduct + mark listing sold + create order) runs inside a single **Postgres stored procedure** (`purchase_listing`) using `FOR UPDATE` row locks.
+- **Why:** A two-step approach (read balance in JS → PATCH if sufficient) has a race condition: two simultaneous requests can both read the same balance, both pass the check, and both succeed — resulting in a double-spend. The stored procedure acquires row-level locks on the listing and wallet rows so only one request can proceed at a time.
+- **Alternatives considered:** Conditional PATCH with `balance=gte.${price}` filter (rejected — still vulnerable because the SET value uses the old JS variable, not the DB value). Client-side debounce (rejected — doesn't protect against concurrent requests from different devices).
+- **Status:** ✅ Done — `purchase_listing` function live in Supabase.
+
+### D-016 · Server-side JWT verification only
+- **Decision:** All Cloudflare Functions verify the user's JWT by calling Supabase's `/auth/v1/user` endpoint. Client-side `atob()` decoding of JWTs is never trusted for authorization.
+- **Why:** `atob()` only decodes the payload — it does not verify the signature. A forged JWT (with any user ID) would pass a client-side decode check. Server-side verification with Supabase confirms the token is genuine and unexpired.
+- **Status:** ✅ Done — applied to check-session, track-session, get-sessions, revoke-session.
+
+### D-017 · Admin bypass requires secret key
+- **Decision:** The `?admin=on` maintenance bypass in `_middleware.js` requires a matching `ADMIN_BYPASS_SECRET` query parameter. Without it, the bypass returns 401.
+- **Why:** The original implementation set the bypass cookie for anyone who added `?admin=on` to a URL — no authentication required. Any user who discovered this could bypass maintenance mode.
+- **Alternatives:** IP allowlist (rejected — dynamic IPs make this fragile); remove the bypass entirely (rejected — needed for testing in production).
+- **Status:** ✅ Done — `ADMIN_BYPASS_SECRET` set as Cloudflare env var.
+
+### D-018 · Session matching by row ID not user-agent
+- **Decision:** `check-session.js` verifies a session by matching the `sessionRowId` (stored in localStorage, passed as a query param) against the `user_sessions` table. Previously it matched by user-agent string.
+- **Why:** User-agent strings are easily faked — any attacker who knows someone's user-agent can pass the check. The row ID is a UUID generated at login time and is not guessable.
+- **Status:** ✅ Done.
+
+### D-019 · Email rate limiting via DB table
+- **Decision:** `send-code.js` and `send-reset.js` track email sends in an `email_rate_limits` table (email + timestamp). Max 5 emails per address per 10-minute window. Records are not cleaned up by the app — they expire naturally (old rows are ignored by the query window).
+- **Why:** Without rate limiting, an attacker could call the send endpoint in a loop and exhaust the Resend account quota or harass a user with thousands of verification emails.
+- **Alternatives:** IP-based rate limiting in Cloudflare Workers (viable but harder to implement without KV storage); Resend's own rate limits (exist but not granular enough per address).
+- **Status:** ✅ Done — `email_rate_limits` table confirmed created in Supabase.
+
+### D-020 · XSS protection via sanitize() helper
+- **Decision:** All user-generated content rendered into innerHTML (bios, review comments, usernames in dynamic contexts) is passed through a `sanitize()` function that escapes `& < > " '`.
+- **Why:** Without escaping, a user could set their bio to `<script>alert(1)</script>` and execute arbitrary JavaScript in the browser of anyone who views their public profile.
+- **Applied to:** `public-profile.html` (bio + review comments), `profile.html` (review comments), `admin.html` (seller bio display).
+- **Status:** ✅ Done.
+
 ---
 
 ## Open / Upcoming Decisions (not yet made)
 
-### D-015 · Mobile app approach (future)
+### D-021 · Mobile app approach (future)
 - **Leaning toward:** Wrap the web app into an installable app (**PWA** via PWABuilder/Bubblewrap) to reuse the web code and cover Android + iPhone + desktop at once.
 - **Status:** 🟡 Not decided / not started.
 
-### D-016 · Payments provider ⚠️
-- **Open question:** Which payment processor, and how to handle escrow + payouts to sellers across countries.
+### D-022 · Payments provider ⚠️
+- **Open question:** Which payment processor, and how to handle escrow + payouts to sellers across countries. Wallet top-ups are currently done manually via admin approval.
 - **⚠️ Must research first:** Selling game accounts may violate game ToS and some app-store / payment-processor policies. Research this before committing to a provider.
 - **Status:** 🔴 Open — needs research.
