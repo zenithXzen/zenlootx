@@ -662,6 +662,9 @@
       // Save URL to user metadata
       await sb.auth.updateUser({ data: { avatar_url: publicUrl } });
 
+      // Also sync to profiles table so public profile shows the avatar
+      await sb.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUserId);
+
       setAvatarImage(publicUrl + '?t=' + Date.now());
       avatarEl.style.opacity = '1';
       e.target.value = '';
