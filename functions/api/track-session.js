@@ -5,10 +5,18 @@ export async function onRequestPost(context) {
     const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
     if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const userId           = payload.sub;
-    const supabaseSessionId = payload.session_id || null;
+    // Verify the JWT is real — Supabase checks the signature for us
+    const userRes = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
+    });
+    if (!userRes.ok) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await userRes.json();
+    const userId = user?.id;
     if (!userId) return Response.json({ error: 'Invalid token' }, { status: 401 });
+
+    // Now that we've verified the token is genuine, decode it to get session_id
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const supabaseSessionId = payload.session_id || null;
 
     const { userAgent, deviceName, browser } = await request.json();
     const now = new Date().toISOString();

@@ -9,11 +9,16 @@ export async function onRequest({ request, env, next }) {
     return next();
   }
 
-  // Admin bypass: visiting /?admin=on sets a cookie that skips maintenance
+  // Admin bypass: requires ?admin=on&key=ADMIN_BYPASS_SECRET — secret must match env var
   if (url.searchParams.get('admin') === 'on') {
+    const provided = url.searchParams.get('key') || '';
+    const expected = env.ADMIN_BYPASS_SECRET || '';
+    if (!expected || provided !== expected) {
+      return new Response('Unauthorized', { status: 401 });
+    }
     const res = await next();
     const headers = new Headers(res.headers);
-    headers.set('Set-Cookie', 'zlx_admin_bypass=1; Path=/; Max-Age=86400; SameSite=Strict');
+    headers.set('Set-Cookie', 'zlx_admin_bypass=1; Path=/; Max-Age=86400; SameSite=Strict; HttpOnly');
     return new Response(res.body, { status: res.status, headers });
   }
 

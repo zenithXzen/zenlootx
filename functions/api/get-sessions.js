@@ -5,8 +5,13 @@ export async function onRequestGet(context) {
     const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
     if (!token) return Response.json({ sessions: [] });
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const userId  = payload.sub;
+    // Verify the JWT is real — Supabase checks the signature for us
+    const userRes = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
+    });
+    if (!userRes.ok) return Response.json({ sessions: [] });
+    const user = await userRes.json();
+    const userId = user?.id;
     if (!userId) return Response.json({ sessions: [] });
 
     const res = await fetch(
