@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -97,7 +97,7 @@
             <li><a href="#sharing">5. What We Share</a></li>
             <li><a href="#retention">6. Data Retention</a></li>
             <li><a href="#rights">7. Your Rights</a></li>
-            <li><a href="#cookies">8. Cookies</a></li>
+            <li><a href="#cookies">8. Cookies & Local Storage</a></li>
             <li><a href="#changes">9. Changes</a></li>
             <li><a href="#contact">10. Contact</a></li>
           </ul>
@@ -106,7 +106,7 @@
         <div>
           <div class="doc-header">
             <h1>Privacy Policy</h1>
-            <div class="doc-meta">Last updated: June 3, 2026</div>
+            <div class="doc-meta">Last updated: June 6, 2026</div>
           </div>
 
           <div class="doc-intro">
@@ -136,12 +136,12 @@
               <tbody>
                 <tr>
                   <td><strong>Account info</strong></td>
-                  <td>Username, email address, password (hashed)</td>
+                  <td>Username, email address, password (hashed — we never store it in plain text)</td>
                   <td>All users</td>
                 </tr>
                 <tr>
                   <td><strong>Profile info</strong></td>
-                  <td>Profile photo, bio, member since date</td>
+                  <td>Profile photo, bio, member since date, last active timestamp</td>
                   <td>All users</td>
                 </tr>
                 <tr>
@@ -150,49 +150,73 @@
                   <td>Sellers only</td>
                 </tr>
                 <tr>
+                  <td><strong>Wallet & financial info</strong></td>
+                  <td>Wallet balance, transaction history (top-ups, purchases, escrow holds, withdrawals), total earnings</td>
+                  <td>Buyers and sellers</td>
+                </tr>
+                <tr>
                   <td><strong>Transaction info</strong></td>
-                  <td>Listings created, orders placed, payment amounts, escrow status</td>
+                  <td>Listings created, orders placed, purchase amounts, escrow status, order history</td>
                   <td>Buyers and sellers</td>
                 </tr>
                 <tr>
                   <td><strong>Communication info</strong></td>
-                  <td>Messages sent through the platform between users</td>
+                  <td>Messages sent through the Platform between buyers and sellers</td>
                   <td>All users</td>
                 </tr>
                 <tr>
-                  <td><strong>Technical info</strong></td>
-                  <td>IP address, browser type, device info, session activity</td>
+                  <td><strong>Session & device info</strong></td>
+                  <td>IP address, browser type, device name, session identifiers, login timestamps — collected to detect unauthorized access and protect your account</td>
                   <td>All users</td>
                 </tr>
                 <tr>
-                  <td><strong>Reports</strong></td>
-                  <td>Report reason and details when a user reports another user</td>
+                  <td><strong>Notification data</strong></td>
+                  <td>In-app notification history (orders, disputes, listings, reviews); push notification subscription token if you enable browser push notifications</td>
+                  <td>All users</td>
+                </tr>
+                <tr>
+                  <td><strong>Tier & activity data</strong></td>
+                  <td>Transaction count and volume used to calculate your account tier (Iron, Bronze, Silver, Gold, Sapphire, Diamond)</td>
+                  <td>All users</td>
+                </tr>
+                <tr>
+                  <td><strong>Reports & disputes</strong></td>
+                  <td>Report reason and details when you report a user or listing; dispute messages and evidence submitted</td>
+                  <td>All users</td>
+                </tr>
+                <tr>
+                  <td><strong>Email rate data</strong></td>
+                  <td>Email address and timestamps of verification/reset emails sent — stored temporarily to prevent spam abuse (auto-deleted after 10 minutes)</td>
                   <td>All users</td>
                 </tr>
               </tbody>
             </table>
-            <p>We do not collect sensitive financial details (such as full card numbers) directly — payment processing is handled by our payment partner.</p>
+            <p>We do not collect sensitive financial details such as full card numbers directly. Any payment processing for wallet top-ups is handled by our payment partner, which has its own privacy policy.</p>
           </div>
 
           <div class="doc-section" id="use">
             <h2>3. How We Use Your Information</h2>
             <p>We use the information we collect for the following purposes:</p>
             <ul>
-              <li>To create and manage your account</li>
+              <li>To create and manage your account and verify your email address</li>
               <li>To verify seller identity and maintain marketplace trust</li>
-              <li>To process transactions and manage escrow</li>
-              <li>To communicate with you about your account, orders, or support requests</li>
+              <li>To process transactions, manage your wallet balance, and operate the escrow system</li>
+              <li>To calculate and display your account tier based on activity</li>
+              <li>To detect and prevent unauthorized account access using session and device data</li>
+              <li>To communicate with you about your account, orders, or support requests via email and in-app notifications</li>
               <li>To investigate disputes, fraud, and reported violations</li>
+              <li>To prevent email system abuse through rate limiting</li>
               <li>To improve the security and performance of the Platform</li>
-              <li>To send important service notifications (not marketing spam)</li>
             </ul>
             <p>We will never use your information for purposes beyond what is listed here without asking for your explicit consent first.</p>
           </div>
 
           <div class="doc-section" id="storage">
             <h2>4. Storage & Security</h2>
-            <p>Your data is stored on secure servers provided by Supabase, a trusted infrastructure provider. All data is encrypted in transit (HTTPS) and at rest.</p>
-            <p><strong>ID documents</strong> submitted during seller verification are stored in a private, encrypted storage bucket. They are not publicly accessible and cannot be viewed by other users, buyers, or sellers — only by ZenLootX administrators during the review process.</p>
+            <p>Your data is stored on secure servers provided by <strong>Supabase</strong>, a trusted infrastructure provider based in the United States. All data is encrypted in transit (HTTPS/TLS) and at rest.</p>
+            <p><strong>ID documents</strong> submitted during seller verification are stored in a private, access-controlled storage bucket. They are not publicly accessible and cannot be viewed by other users — only by ZenLootX administrators during the review process.</p>
+            <p><strong>Session tracking:</strong> We record your active login sessions (device name, browser, IP address, and last seen time) so you can review and revoke sessions from your account settings. This data is used solely for your account's security.</p>
+            <p><strong>Email rate limiting:</strong> When you request a verification or password reset email, we temporarily record your email address and the time of the request. This data is automatically deleted after 10 minutes and is used only to prevent spam and abuse of our email system.</p>
             <p>We take security seriously, but no system is completely immune to breaches. If a security incident occurs that affects your data, we will notify you as required by applicable law.</p>
           </div>
 
@@ -201,21 +225,23 @@
             <p><strong>We do not sell your personal data.</strong> We do not share your personal information with advertisers, data brokers, or marketing companies — ever.</p>
             <p>We may share limited information only in the following circumstances:</p>
             <ul>
-              <li><strong>With service providers:</strong> We use third-party services (Supabase for the database, Resend for email, Cloudflare for hosting) that process data on our behalf. These providers are bound by data processing agreements and cannot use your data for their own purposes.</li>
+              <li><strong>With service providers:</strong> We use third-party services that process data on our behalf — Supabase (database and file storage), Resend (transactional email), and Cloudflare (hosting and security). These providers are bound by data processing agreements and may not use your data for their own purposes.</li>
               <li><strong>For legal reasons:</strong> If we are required by law, court order, or government authority to disclose information, we will comply. We will notify you where legally permitted to do so.</li>
               <li><strong>To protect users:</strong> In cases of fraud, scamming, or threats of harm, we may share relevant information with law enforcement or the affected parties.</li>
             </ul>
-            <p>Between buyers and sellers on the Platform, only your <strong>username and profile information</strong> are visible. Your email, phone number, ID documents, and full name are never shown to other users.</p>
+            <p>Between buyers and sellers on the Platform, only your <strong>username and public profile information</strong> (avatar, bio, tier, rating) are visible. Your email address, phone number, ID documents, wallet balance, and full name are never shown to other users.</p>
           </div>
 
           <div class="doc-section" id="retention">
             <h2>6. Data Retention</h2>
             <p>We keep your data for as long as your account is active or as long as needed to provide our services. If you close your account:</p>
             <ul>
-              <li>Your public profile and listings are removed</li>
-              <li>Transaction records are retained for up to 3 years for legal and dispute purposes</li>
+              <li>Your public profile and active listings are removed</li>
+              <li>Transaction and order records are retained for up to 3 years for legal and dispute purposes</li>
               <li>ID documents submitted for seller verification are deleted within 90 days of account closure</li>
-              <li>Logs and security data may be retained for up to 1 year</li>
+              <li>Session and security logs are retained for up to 1 year</li>
+              <li>Email rate limit records are automatically deleted after 10 minutes regardless of account status</li>
+              <li>Push notification subscriptions are removed immediately upon account closure</li>
             </ul>
           </div>
 
@@ -225,6 +251,7 @@
             <ul>
               <li><strong>Access:</strong> You can request a copy of the personal data we hold about you</li>
               <li><strong>Correction:</strong> You can update your account information at any time through the Account settings page</li>
+              <li><strong>Session control:</strong> You can view and revoke any active login session from your account settings at any time</li>
               <li><strong>Deletion:</strong> You can request that we delete your account and personal data</li>
               <li><strong>Portability:</strong> You can request your data in a structured, machine-readable format</li>
               <li><strong>Objection:</strong> You can object to certain uses of your data</li>
@@ -233,9 +260,15 @@
           </div>
 
           <div class="doc-section" id="cookies">
-            <h2>8. Cookies</h2>
-            <p>ZenLootX uses minimal cookies. We use session cookies to keep you logged in and to maintain your preferences. We do not use advertising cookies or tracking pixels.</p>
-            <p>You can disable cookies in your browser settings, but some features of the Platform may not work correctly without them.</p>
+            <h2>8. Cookies & Local Storage</h2>
+            <p>ZenLootX uses minimal browser storage to operate the Platform. Here is what we use and why:</p>
+            <ul>
+              <li><strong>Session tokens (Local Storage):</strong> When you log in, your authentication token is stored in your browser's local storage so you stay logged in across pages. This token is sent with requests to verify your identity. You can clear it by logging out.</li>
+              <li><strong>Session row ID (Local Storage):</strong> A reference to your current login session is stored locally so the Platform can detect if your session was revoked from another device.</li>
+              <li><strong>HttpOnly cookies:</strong> For certain administrative functions, a secure HttpOnly cookie may be set. This cookie is not accessible to JavaScript and cannot be read by third-party scripts.</li>
+            </ul>
+            <p>We do not use advertising cookies, tracking pixels, or any third-party analytics scripts. We do not use Google Analytics or similar tools.</p>
+            <p>You can clear local storage and cookies at any time through your browser settings. This will log you out of ZenLootX.</p>
           </div>
 
           <div class="doc-section" id="changes">

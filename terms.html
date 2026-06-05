@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -30,14 +30,12 @@
 
     .page-layout { display:grid;grid-template-columns:220px 1fr;gap:48px;align-items:start; }
 
-    /* SIDEBAR TOC */
     .toc { position:sticky;top:88px; }
     .toc-title { font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px; }
     .toc-list { list-style:none;display:flex;flex-direction:column;gap:2px; }
     .toc-list a { font-size:13px;color:var(--text-faint);padding:5px 10px;border-radius:6px;display:block;transition:color 0.16s,background 0.16s; }
     .toc-list a:hover { color:var(--text-dim);background:var(--bg-elevated); }
 
-    /* CONTENT */
     .doc-header { margin-bottom:40px; }
     .doc-header h1 { font-size:32px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px; }
     .doc-meta { font-size:13px;color:var(--text-faint); }
@@ -93,13 +91,15 @@
             <li><a href="#sellers">4. Sellers</a></li>
             <li><a href="#buyers">5. Buyers</a></li>
             <li><a href="#listings">6. Listings</a></li>
-            <li><a href="#transactions">7. Transactions & Escrow</a></li>
-            <li><a href="#prohibited">8. Prohibited Activities</a></li>
-            <li><a href="#disputes">9. Disputes</a></li>
-            <li><a href="#liability">10. Limitation of Liability</a></li>
-            <li><a href="#termination">11. Termination</a></li>
-            <li><a href="#changes">12. Changes to Terms</a></li>
-            <li><a href="#contact">13. Contact</a></li>
+            <li><a href="#wallet">7. Wallet & Top-Up</a></li>
+            <li><a href="#transactions">8. Transactions & Escrow</a></li>
+            <li><a href="#prohibited">9. Prohibited Activities</a></li>
+            <li><a href="#disputes">10. Disputes</a></li>
+            <li><a href="#restrictions">11. Account Restrictions</a></li>
+            <li><a href="#liability">12. Limitation of Liability</a></li>
+            <li><a href="#termination">13. Termination</a></li>
+            <li><a href="#changes">14. Changes to Terms</a></li>
+            <li><a href="#contact">15. Contact</a></li>
           </ul>
         </aside>
 
@@ -107,7 +107,7 @@
         <div>
           <div class="doc-header">
             <h1>Terms of Service</h1>
-            <div class="doc-meta">Last updated: June 4, 2026</div>
+            <div class="doc-meta">Last updated: June 6, 2026</div>
           </div>
 
           <div class="doc-intro">
@@ -124,19 +124,21 @@
             <h2>2. Our Service</h2>
             <p>ZenLootX is an online marketplace that connects buyers and sellers of digital gaming assets, including but not limited to game accounts, in-game items, currencies, and top-up services for games such as Genshin Impact, Mobile Legends: Bang Bang, and Valorant.</p>
             <p>ZenLootX acts as a <strong>platform intermediary only</strong>. We are not a party to transactions between buyers and sellers. We do not own, create, or guarantee any listing on the Platform.</p>
-            <p>We provide an escrow service to protect both parties during a transaction. Funds are held securely until the buyer confirms receipt of the agreed item or account.</p>
+            <p>We provide an escrow service to protect both parties during a transaction. Funds are held securely in the buyer's ZenLootX wallet until the buyer confirms receipt of the agreed item or account, at which point funds are released to the seller.</p>
           </div>
 
           <div class="doc-section" id="accounts">
             <h2>3. User Accounts</h2>
             <p>To use most features of ZenLootX, you must register for an account. When registering, you agree to:</p>
             <ul>
-              <li>Provide accurate, current, and complete information</li>
+              <li>Provide accurate, current, and complete information including a valid email address and unique username</li>
+              <li>Verify your email address using the code sent to you during registration</li>
               <li>Maintain the security of your password and not share it with anyone</li>
               <li>Notify us immediately of any unauthorized access to your account</li>
               <li>Be responsible for all activity that occurs under your account</li>
             </ul>
-            <p>You may not create more than one account. Accounts found to be duplicates may be suspended.</p>
+            <p>You may not create more than one account. Accounts found to be duplicates may be suspended. You must be at least 18 years old to register and use ZenLootX.</p>
+            <p>Your account activity on ZenLootX contributes to a <strong>tier system</strong> (Iron, Bronze, Silver, Gold, Sapphire, Diamond) based on your transaction volume and review history. Tier levels are informational and do not constitute any guarantee or reward.</p>
           </div>
 
           <div class="doc-section" id="sellers">
@@ -146,78 +148,109 @@
             <ul>
               <li>Only list items or accounts that you own and have the right to sell</li>
               <li>Accurately describe everything in your listing — no misleading titles, descriptions, or images</li>
-              <li>Deliver the item or account as described within the agreed timeframe</li>
-              <li>Respond to buyer messages promptly and professionally</li>
+              <li>Deliver the item or account as described within a reasonable timeframe after the order is placed</li>
+              <li>Respond to buyer messages promptly and professionally through the Platform's messaging system</li>
               <li>Not attempt to complete transactions outside of ZenLootX to avoid escrow</li>
+              <li>Not list items at prices exceeding ₱500,000 per listing</li>
             </ul>
             <div class="highlight-box">
               <strong>Important:</strong> Sellers found to be engaging in fraud, misrepresentation, or scamming will be permanently banned from the Platform and may be reported to relevant authorities.
             </div>
-            <p>ZenLootX reserves the right to place a hold on your earnings or suspend your account while investigating any dispute or complaint.</p>
+            <p>ZenLootX reserves the right to place a hold on your earnings or suspend your account while investigating any dispute or complaint. Funds held in escrow will not be released until the dispute is resolved.</p>
           </div>
 
           <div class="doc-section" id="buyers">
             <h2>5. Buyers</h2>
             <p>As a buyer, you agree to:</p>
             <ul>
-              <li>Review listings carefully before purchasing</li>
-              <li>Complete payment through ZenLootX's escrow system — never send payment directly to a seller outside the Platform</li>
+              <li>Review listings carefully before purchasing — all sales are final once escrow is released</li>
+              <li>Complete payment through ZenLootX's wallet and escrow system — never send payment directly to a seller outside the Platform</li>
               <li>Confirm receipt of the item or account honestly — do not falsely claim non-delivery</li>
               <li>Raise disputes through ZenLootX's official dispute process only</li>
+              <li>Not attempt to charge back a wallet top-up after a purchase has been completed</li>
             </ul>
-            <p>Buyers who abuse the dispute system or make false claims may have their accounts suspended.</p>
+            <p>Buyers who abuse the dispute system, make false claims, or attempt unauthorized chargebacks may have their accounts suspended and their wallet balance forfeited.</p>
           </div>
 
           <div class="doc-section" id="listings">
             <h2>6. Listings</h2>
-            <p>All listings on ZenLootX must be honest, accurate, and comply with these Terms. You may not list:</p>
+            <p>All listings on ZenLootX must be honest, accurate, and comply with these Terms. Listings are limited to the following supported games: <strong>Genshin Impact, Mobile Legends: Bang Bang, and Valorant</strong>. Listing types are limited to accounts, in-game items, and top-up services.</p>
+            <p>You may not list:</p>
             <ul>
               <li>Accounts or items obtained through hacking, exploits, or unauthorized means</li>
               <li>Stolen accounts or accounts belonging to another person without their consent</li>
-              <li>Items that are prohibited by the game developer's Terms of Service (note: it is your responsibility to understand these restrictions)</li>
+              <li>Items that are prohibited by the game developer's Terms of Service (it is your responsibility to understand these restrictions)</li>
               <li>Any item or service that is illegal under Philippine law or international law</li>
               <li>Misleading listings with fake screenshots, fabricated stats, or false descriptions</li>
+              <li>More than 10 images per listing</li>
             </ul>
             <p>ZenLootX reserves the right to remove any listing at its sole discretion without prior notice.</p>
           </div>
 
+          <div class="doc-section" id="wallet">
+            <h2>7. Wallet & Top-Up</h2>
+            <p>ZenLootX uses an internal wallet system denominated in Philippine Peso (₱). To make a purchase, buyers must first top up their ZenLootX wallet balance. The wallet balance is held by ZenLootX on your behalf and is used exclusively for purchases on the Platform.</p>
+            <p>Regarding your wallet:</p>
+            <ul>
+              <li>Wallet balances are not transferable to other users</li>
+              <li>Wallet funds are not redeemable for cash except through the Platform's official withdrawal process for verified sellers</li>
+              <li>ZenLootX is not a bank or financial institution — wallet balances are not insured or guaranteed by any government agency</li>
+              <li>You are responsible for ensuring your wallet has sufficient funds before attempting a purchase</li>
+            </ul>
+            <p>Sellers receive their earnings in their ZenLootX wallet as escrow after a buyer confirms delivery. Sellers may request a withdrawal of their available balance subject to ZenLootX's withdrawal policies and verification requirements.</p>
+          </div>
+
           <div class="doc-section" id="transactions">
-            <h2>7. Transactions & Escrow</h2>
+            <h2>8. Transactions & Escrow</h2>
             <p>All transactions on ZenLootX are processed through our escrow system. Here is how it works:</p>
             <ul>
-              <li><strong>Payment held:</strong> The buyer pays and the funds are securely held by ZenLootX</li>
-              <li><strong>Seller delivers:</strong> The seller transfers the account or item to the buyer</li>
-              <li><strong>Buyer confirms:</strong> The buyer confirms everything is as described</li>
-              <li><strong>Funds released:</strong> Payment is released to the seller</li>
+              <li><strong>Payment held:</strong> The buyer's wallet is debited and funds are held in escrow by ZenLootX</li>
+              <li><strong>Seller delivers:</strong> The seller transfers the account or item to the buyer via the Platform's messaging system</li>
+              <li><strong>Buyer confirms:</strong> The buyer confirms everything is as described and releases the payment</li>
+              <li><strong>Funds released:</strong> Payment is transferred to the seller's wallet</li>
             </ul>
-            <p><strong>Auto-release policy:</strong> If the buyer does not confirm delivery or raise a dispute within <strong>7 days</strong> of the purchase date, the escrowed funds will be automatically released to the seller. This is to ensure sellers are not left waiting indefinitely. Buyers are responsible for confirming or disputing within this window.</p>
-            <p>ZenLootX charges a platform fee on each completed transaction. The current fee rate is displayed at checkout.</p>
+            <p><strong>Auto-release policy:</strong> If the buyer does not confirm delivery or raise a dispute within <strong>7 days</strong> of the purchase date, the escrowed funds will be automatically released to the seller. Buyers are responsible for confirming or disputing within this window.</p>
+            <p>ZenLootX charges a platform fee on each completed transaction. The current fee rate is displayed at checkout. Fees are non-refundable once a transaction is completed.</p>
+            <p>Transactions are atomic and final. Once a purchase is confirmed and escrow is released, it cannot be reversed except through ZenLootX's official dispute process.</p>
           </div>
 
           <div class="doc-section" id="prohibited">
-            <h2>8. Prohibited Activities</h2>
+            <h2>9. Prohibited Activities</h2>
             <p>The following are strictly prohibited on ZenLootX:</p>
             <ul>
-              <li>Fraud, scamming, or intentional misrepresentation</li>
+              <li>Fraud, scamming, or intentional misrepresentation of any kind</li>
               <li>Harassment, threats, or abusive behavior toward other users</li>
               <li>Attempting to conduct transactions outside the Platform to bypass escrow</li>
-              <li>Creating fake accounts or impersonating another person</li>
-              <li>Posting spam, fake reviews, or misleading content</li>
-              <li>Any activity that disrupts or interferes with the Platform's operation</li>
+              <li>Creating fake accounts, using another person's identity, or impersonating ZenLootX staff</li>
+              <li>Posting spam, fake reviews, fake screenshots, or misleading content</li>
+              <li>Abusing the email verification or password reset system (excessive requests are rate-limited and may result in a ban)</li>
+              <li>Any attempt to exploit, hack, or disrupt the Platform's systems or infrastructure</li>
               <li>Using the Platform for money laundering or any illegal financial activity</li>
+              <li>Attempting to circumvent account restrictions, bans, or freezes through new accounts</li>
             </ul>
-            <p>Violations may result in immediate account suspension, forfeiture of held funds, and referral to law enforcement where appropriate.</p>
+            <p>Violations may result in immediate account suspension, forfeiture of wallet balance, and referral to law enforcement where appropriate.</p>
           </div>
 
           <div class="doc-section" id="disputes">
-            <h2>9. Disputes</h2>
-            <p>If a transaction does not go as expected, buyers and sellers must use ZenLootX's official dispute resolution process. We will review evidence submitted by both parties and make a final decision on the release or refund of escrowed funds.</p>
+            <h2>10. Disputes</h2>
+            <p>If a transaction does not go as expected, buyers and sellers must use ZenLootX's official dispute resolution process. Disputes must be filed within the 7-day window after purchase. We will review evidence submitted by both parties — including messages, screenshots, and delivery records — and make a final decision on the release or refund of escrowed funds.</p>
             <p>ZenLootX's decision on disputes is final. Both parties agree to accept this outcome as a condition of using the Platform.</p>
-            <p>ZenLootX is not liable for losses arising from transactions that took place outside of the Platform's escrow system.</p>
+            <p>ZenLootX is not liable for losses arising from transactions that took place outside of the Platform's escrow system. If you paid a seller directly outside ZenLootX, we cannot help you recover those funds.</p>
+          </div>
+
+          <div class="doc-section" id="restrictions">
+            <h2>11. Account Restrictions</h2>
+            <p>ZenLootX may restrict accounts at varying levels depending on the severity of a violation:</p>
+            <ul>
+              <li><strong>Frozen:</strong> Your account is temporarily restricted. You cannot create listings, make purchases, or withdraw funds while frozen. This is typically applied during an active investigation. Frozen accounts may be unfrozen once the matter is resolved.</li>
+              <li><strong>Suspended:</strong> Your account is temporarily disabled. You cannot log in or access the Platform. Pending transactions will be held until the suspension is lifted or resolved.</li>
+              <li><strong>Banned:</strong> Your account is permanently closed. Access is revoked and you may not create new accounts. Wallet balances may be forfeited depending on the reason for the ban.</li>
+            </ul>
+            <p>If you believe your account was restricted in error, contact us at <a href="mailto:support@zenlootexchange.com">support@zenlootexchange.com</a>. We will review your case and respond within 5 business days.</p>
           </div>
 
           <div class="doc-section" id="liability">
-            <h2>10. Limitation of Liability</h2>
+            <h2>12. Limitation of Liability</h2>
             <p>ZenLootX provides the Platform on an "as is" and "as available" basis. We do not guarantee that the Platform will be error-free, uninterrupted, or free from security vulnerabilities.</p>
             <p>To the fullest extent permitted by law, ZenLootX shall not be liable for:</p>
             <ul>
@@ -225,24 +258,25 @@
               <li>Loss of data, accounts, or in-game assets</li>
               <li>Actions or misconduct of buyers or sellers on the Platform</li>
               <li>Any transaction conducted outside of the Platform</li>
+              <li>Loss of wallet balance due to account termination for violations of these Terms</li>
             </ul>
             <p>Our total liability to any user for any claim shall not exceed the amount of platform fees paid by that user in the three months preceding the claim.</p>
           </div>
 
           <div class="doc-section" id="termination">
-            <h2>11. Termination</h2>
+            <h2>13. Termination</h2>
             <p>ZenLootX reserves the right to suspend or terminate any account at any time, with or without notice, for violations of these Terms or for any other reason at our sole discretion.</p>
-            <p>You may close your account at any time by contacting us. Pending transactions must be resolved before account closure.</p>
+            <p>You may close your account at any time by contacting us. All pending transactions must be resolved before account closure. Any remaining wallet balance in your account at the time of voluntary closure may be withdrawn subject to our withdrawal policies.</p>
           </div>
 
           <div class="doc-section" id="changes">
-            <h2>12. Changes to These Terms</h2>
+            <h2>14. Changes to These Terms</h2>
             <p>We may update these Terms of Service from time to time. When we do, we will update the "Last updated" date at the top of this page. Continued use of the Platform after changes take effect constitutes your acceptance of the revised terms.</p>
             <p>For significant changes, we will attempt to notify registered users via email.</p>
           </div>
 
           <div class="doc-section" id="contact">
-            <h2>13. Contact</h2>
+            <h2>15. Contact</h2>
             <p>If you have questions about these Terms, please contact us at:</p>
             <ul>
               <li><strong>Email:</strong> <a href="mailto:support@zenlootexchange.com">support@zenlootexchange.com</a></li>
