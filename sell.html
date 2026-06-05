@@ -368,9 +368,28 @@
           <div class="status-card">
             <div class="status-icon">❌</div>
             <h2>Application not approved</h2>
-            <p>Your application was not approved. Please contact support if you believe this is a mistake, or re-apply with valid information.</p>
-            <a href="mailto:support@zenlootexchange.com" class="btn btn-secondary">Contact support</a>
+            <p>Your application was not approved. You can re-apply with updated information, or contact support if you think this is a mistake.</p>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+              <button id="reapplyBtn" class="btn btn-primary">Re-apply</button>
+              <a href="mailto:support@zenlootexchange.com" class="btn btn-secondary">Contact support</a>
+            </div>
           </div>`;
+        document.getElementById('reapplyBtn').addEventListener('click', async () => {
+          const btn = document.getElementById('reapplyBtn');
+          btn.disabled = true; btn.textContent = 'Clearing…';
+          const { data: { session } } = await sb.auth.getSession();
+          const res = await fetch('/api/delete-seller-application', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (!res.ok) { btn.disabled = false; btn.textContent = 'Re-apply'; return; }
+          // Reset form state and show the application form
+          formData = {};
+          currentStep = 1;
+          document.getElementById('appContent').innerHTML = '';
+          renderProgress();
+          renderStep();
+        });
       }
     }
 
