@@ -4,9 +4,26 @@ export async function onRequestPost(context) {
   try {
     const { email } = await request.json();
 
-    if (!email || !email.includes('@')) {
-      return Response.json({ error: 'Invalid email.' }, { status: 400 });
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!email || !emailRe.test(email)) {
+      return Response.json({ error: 'Invalid email address.' }, { status: 400 });
     }
+
+    // Rate limit: max 5 emails per address per 10 minutes
+    const windowStart = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const rlRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/email_rate_limits?email=eq.${encodeURIComponent(email)}&created_at=gte.${encodeURIComponent(windowStart)}&select=id`,
+      { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } }
+    );
+    const rlRows = await rlRes.json().catch(() => []);
+    if (Array.isArray(rlRows) && rlRows.length >= 5) {
+      return Response.json({ error: 'Too many requests. Please wait a few minutes before trying again.' }, { status: 429 });
+    }
+    await fetch(`${env.SUPABASE_URL}/rest/v1/email_rate_limits`, {
+      method: 'POST',
+      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ email }),
+    });
 
     // Signed reset token valid for 15 minutes
     const window  = Math.floor(Date.now() / 900000);
