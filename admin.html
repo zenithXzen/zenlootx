@@ -339,6 +339,7 @@
 
       await Promise.all([loadApplications(), loadReports(), loadDisputes(), loadListings(), loadTopups(), loadWithdrawals(), loadAnalytics()]);
       renderShell();
+      subscribeAdminRealtime();
     }
 
     // ── Data loading ──
@@ -452,6 +453,50 @@
         allListings   = data || [];
         listingsError = null;
       } catch (e) { listingsError = e.message; }
+    }
+
+    // ── Real-time badge counts ──────────────────────────────────
+    function updateTabCounts() {
+      const counts = {
+        applications: allApps.filter(a => a.status === 'pending').length,
+        reports:      allReports.filter(r => r.status === 'pending').length,
+        disputes:     allDisputes.filter(d => d.status === 'open').length,
+        topups:       allTopups.filter(t => t.status === 'pending').length,
+        withdrawals:  allWithdrawals.filter(w => w.status === 'pending').length,
+        listings:     allListings.length,
+      };
+
+      document.querySelectorAll('.section-tab').forEach(tab => {
+        const badge = tab.querySelector('.tab-count');
+        if (!badge) return;
+        const n = counts[tab.dataset.section];
+        if (n === undefined) return;
+        badge.textContent = n;
+        badge.classList.toggle('has-items', n > 0);
+      });
+
+      const total = counts.applications + counts.reports + counts.disputes + counts.topups + counts.withdrawals;
+      document.title = total > 0 ? `(${total}) Admin — ZenLootX` : 'Admin — ZenLootX';
+    }
+
+    function subscribeAdminRealtime() {
+      const watches = [
+        { table: 'seller_applications', load: loadApplications, msg: '📋 New seller application'  },
+        { table: 'topup_requests',      load: loadTopups,        msg: '💳 New top-up request'      },
+        { table: 'withdrawal_requests', load: loadWithdrawals,   msg: '💸 New withdrawal request'  },
+        { table: 'disputes',            load: loadDisputes,       msg: '⚖️ New dispute filed'       },
+        { table: 'reports',             load: loadReports,        msg: '🚩 New report submitted'    },
+      ];
+
+      watches.forEach(({ table, load, msg }) => {
+        sb.channel(`admin-rt-${table}`)
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table }, async () => {
+            await load();
+            updateTabCounts();
+            toast(msg, 'success');
+          })
+          .subscribe();
+      });
     }
 
     async function retryLoad() {
