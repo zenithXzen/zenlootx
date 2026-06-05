@@ -815,6 +815,11 @@
 
         const { error } = await sb.auth.updateUser({ data: { bio: newBio } });
 
+        // Also sync bio to profiles table so public profile shows it
+        if (!error) {
+          await sb.from('profiles').update({ bio: newBio }).eq('id', user.id);
+        }
+
         saveBtn.disabled    = false;
         saveBtn.textContent = 'Save';
 
