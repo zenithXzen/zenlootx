@@ -337,6 +337,15 @@
 
       if (existing) {
         document.getElementById('whyNotice').style.display = 'none';
+        // If approved, refresh session so is_seller: true is in the token
+        // This fixes the stale dropdown and the create-listing redirect loop
+        if (existing.status === 'approved') {
+          const { data: { session: fresh } } = await sb.auth.refreshSession();
+          if (fresh) {
+            currentUser = fresh.user;
+            await initNav(fresh.user); // re-render nav with updated seller status
+          }
+        }
         renderStatusState(existing.status);
         return;
       }
@@ -452,7 +461,12 @@
             <div class="field-row">
               <div class="field">
                 <label>Phone number <span style="color:var(--danger)">*</span></label>
-                <input type="tel" id="f_phone" placeholder="+63 912 345 6789" value="${formData.phone}" maxlength="20">
+                <div style="display:flex;gap:8px;">
+                  <select id="f_phone_code" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 10px;font-family:'Geist',sans-serif;font-size:13px;color:var(--text);outline:none;flex-shrink:0;max-width:130px;cursor:pointer;">
+                    ${PHONE_CODES.map(c => `<option value="${c.code}" ${(formData.phoneCode || '+63') === c.code ? 'selected' : ''}>${c.code} ${c.flag} ${c.name}</option>`).join('')}
+                  </select>
+                  <input type="tel" id="f_phone_num" placeholder="912 345 6789" value="${formData.phoneNum || ''}" maxlength="15" style="flex:1;">
+                </div>
               </div>
               <div class="field">
                 <label>Date of birth <span style="color:var(--danger)">*</span></label>
@@ -561,12 +575,6 @@
             <p>Tell buyers what you're selling and agree to the seller terms.</p>
           </div>
           <div class="form-body">
-            <div class="field">
-              <label>Seller bio <span style="color:var(--text-faint);font-weight:400;">(optional)</span></label>
-              <textarea id="f_bio" placeholder="Tell buyers about yourself — your experience, what you sell, response time…" maxlength="300">${formData.bio}</textarea>
-              <span class="hint" id="bioCount">${formData.bio.length} / 300</span>
-            </div>
-
             <!-- Seller pledge -->
             <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:18px 20px;">
               <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
@@ -655,12 +663,7 @@
         });
       }
 
-      if (currentStep === 3) {
-        const bioInput = document.getElementById('f_bio');
-        bioInput.addEventListener('input', () => {
-          document.getElementById('bioCount').textContent = `${bioInput.value.length} / 300`;
-        });
-      }
+      // step 3 has no extra bindings needed
     }
 
     function updateUploadZone(zoneId, file) {
@@ -699,15 +702,17 @@
     }
 
     function validateStep1() {
-      formData.fullName = document.getElementById('f_fullName').value.trim();
-      formData.phone    = document.getElementById('f_phone').value.trim();
-      formData.dob      = document.getElementById('f_dob').value;
-      formData.country  = document.getElementById('f_country').value;
+      formData.fullName  = document.getElementById('f_fullName').value.trim();
+      formData.phoneCode = document.getElementById('f_phone_code').value;
+      formData.phoneNum  = document.getElementById('f_phone_num').value.trim();
+      formData.phone     = formData.phoneCode + ' ' + formData.phoneNum;
+      formData.dob       = document.getElementById('f_dob').value;
+      formData.country   = document.getElementById('f_country').value;
 
-      if (!formData.fullName) { showStepError('Please enter your full name.'); return false; }
-      if (!formData.phone)    { showStepError('Please enter your phone number.'); return false; }
-      if (!formData.dob)      { showStepError('Please enter your date of birth.'); return false; }
-      if (!formData.country) { showStepError('Please select your country.'); return false; }
+      if (!formData.fullName)  { showStepError('Please enter your full name.'); return false; }
+      if (!formData.phoneNum)  { showStepError('Please enter your phone number.'); return false; }
+      if (!formData.dob)       { showStepError('Please enter your date of birth.'); return false; }
+      if (!formData.country)   { showStepError('Please select your country.'); return false; }
       return true;
     }
 
@@ -724,7 +729,6 @@
       clearStepError();
 
       // Collect step 3 data
-      formData.bio         = document.getElementById('f_bio').value.trim();
       formData.agreeTerms  = document.getElementById('agreeTerms').checked;
       formData.agreePledge = document.getElementById('agreePledge').checked;
       formData.agreeAge    = document.getElementById('agreeAge').checked;
@@ -791,7 +795,6 @@
         id_front_path:        idFrontPath,
         id_back_path:         idBackPath,
         id_verification_path: idVerificationPath,
-        bio:                  formData.bio || null,
         status:               'pending',
       });
 
@@ -817,6 +820,61 @@
           <a href="/" class="btn btn-primary">Back to home</a>
         </div>`;
     }
+
+    const PHONE_CODES = [
+      { code:'+63',  flag:'🇵🇭', name:'Philippines' },
+      { code:'+1',   flag:'🇺🇸', name:'US / Canada'  },
+      { code:'+60',  flag:'🇲🇾', name:'Malaysia'     },
+      { code:'+62',  flag:'🇮🇩', name:'Indonesia'    },
+      { code:'+65',  flag:'🇸🇬', name:'Singapore'    },
+      { code:'+66',  flag:'🇹🇭', name:'Thailand'     },
+      { code:'+84',  flag:'🇻🇳', name:'Vietnam'      },
+      { code:'+81',  flag:'🇯🇵', name:'Japan'        },
+      { code:'+82',  flag:'🇰🇷', name:'Korea'        },
+      { code:'+852', flag:'🇭🇰', name:'Hong Kong'    },
+      { code:'+886', flag:'🇹🇼', name:'Taiwan'       },
+      { code:'+91',  flag:'🇮🇳', name:'India'        },
+      { code:'+44',  flag:'🇬🇧', name:'UK'           },
+      { code:'+61',  flag:'🇦🇺', name:'Australia'    },
+      { code:'+64',  flag:'🇳🇿', name:'New Zealand'  },
+      { code:'+33',  flag:'🇫🇷', name:'France'       },
+      { code:'+49',  flag:'🇩🇪', name:'Germany'      },
+      { code:'+39',  flag:'🇮🇹', name:'Italy'        },
+      { code:'+34',  flag:'🇪🇸', name:'Spain'        },
+      { code:'+31',  flag:'🇳🇱', name:'Netherlands'  },
+      { code:'+46',  flag:'🇸🇪', name:'Sweden'       },
+      { code:'+47',  flag:'🇳🇴', name:'Norway'       },
+      { code:'+45',  flag:'🇩🇰', name:'Denmark'      },
+      { code:'+358', flag:'🇫🇮', name:'Finland'      },
+      { code:'+55',  flag:'🇧🇷', name:'Brazil'       },
+      { code:'+52',  flag:'🇲🇽', name:'Mexico'       },
+      { code:'+54',  flag:'🇦🇷', name:'Argentina'    },
+      { code:'+57',  flag:'🇨🇴', name:'Colombia'     },
+      { code:'+27',  flag:'🇿🇦', name:'South Africa' },
+      { code:'+971', flag:'🇦🇪', name:'UAE'          },
+      { code:'+966', flag:'🇸🇦', name:'Saudi Arabia' },
+      { code:'+20',  flag:'🇪🇬', name:'Egypt'        },
+      { code:'+234', flag:'🇳🇬', name:'Nigeria'      },
+      { code:'+92',  flag:'🇵🇰', name:'Pakistan'     },
+      { code:'+880', flag:'🇧🇩', name:'Bangladesh'   },
+      { code:'+94',  flag:'🇱🇰', name:'Sri Lanka'    },
+      { code:'+95',  flag:'🇲🇲', name:'Myanmar'      },
+      { code:'+855', flag:'🇰🇭', name:'Cambodia'     },
+      { code:'+856',  flag:'🇱🇦', name:'Laos'         },
+      { code:'+673', flag:'🇧🇳', name:'Brunei'       },
+      { code:'+670', flag:'🇹🇱', name:'Timor-Leste'  },
+      { code:'+679', flag:'🇫🇯', name:'Fiji'         },
+      { code:'+7',   flag:'🇷🇺', name:'Russia'       },
+      { code:'+86',  flag:'🇨🇳', name:'China'        },
+      { code:'+32',  flag:'🇧🇪', name:'Belgium'      },
+      { code:'+41',  flag:'🇨🇭', name:'Switzerland'  },
+      { code:'+43',  flag:'🇦🇹', name:'Austria'      },
+      { code:'+48',  flag:'🇵🇱', name:'Poland'       },
+      { code:'+351', flag:'🇵🇹', name:'Portugal'     },
+      { code:'+30',  flag:'🇬🇷', name:'Greece'       },
+      { code:'+90',  flag:'🇹🇷', name:'Turkey'       },
+      { code:'+972', flag:'🇮🇱', name:'Israel'       },
+    ];
 
     const COUNTRIES = [
       'Philippines','United States','Canada','United Kingdom','Australia',
