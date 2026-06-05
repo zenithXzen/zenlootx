@@ -700,8 +700,10 @@
       const pMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
 
       const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
-      const ratingEl = document.getElementById('profileRating');
+      const ratingEl  = document.getElementById('profileRating');
+      const countEl   = document.getElementById('statReviews');
       if (ratingEl) ratingEl.textContent = `★ ${avg}`;
+      if (countEl)  countEl.textContent  = reviews.length;
       updateReviewTab(reviews.length, avg);
 
       wrap.innerHTML = `

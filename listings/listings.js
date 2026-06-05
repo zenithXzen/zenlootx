@@ -22,6 +22,8 @@ let attrFilters     = {};
 let allListings     = null;
 let displayCurrency = 'PHP';
 let exchangeRates   = null; // keyed by currency code, base USD
+const PAGE_SIZE     = 12;
+let visibleCount    = PAGE_SIZE;
 
 // Game-specific attribute filter definitions
 const ATTR_FILTER_DEFS = {
@@ -303,7 +305,7 @@ async function fetchAllListings() {
   const sellerIds = [...new Set(data.map(l => l.seller_id))];
   const { data: profiles } = await sb
     .from('profiles')
-    .select('id, username, avatar_url')
+    .select('id, username, avatar_url, avg_rating, review_count')
     .in('id', sellerIds);
 
   const profileMap = {};
@@ -370,7 +372,10 @@ function renderCard(listing) {
             <div class="card-price">${price}</div>
             <div class="card-seller">
               <div class="seller-av">${listing.seller?.avatar_url ? `<img src="${listing.seller.avatar_url}" alt="${listing.seller.username}">` : `<span>${(listing.seller?.username || 'S').charAt(0).toUpperCase()}</span>`}</div>
-              <div class="seller-name">${listing.seller?.username || 'Seller'}</div>
+              <div>
+                <div class="seller-name">${listing.seller?.username || 'Seller'}</div>
+                ${listing.seller?.avg_rating > 0 ? `<div style="font-size:11px;color:var(--warning);font-weight:600;line-height:1;">★ ${listing.seller.avg_rating} <span style="color:var(--text-faint);font-weight:400;">(${listing.seller.review_count})</span></div>` : ''}
+              </div>
             </div>
           </div>
         </div>
@@ -419,8 +424,26 @@ async function render() {
     return;
   }
 
-  grid.innerHTML = listings.map(renderCard).join('');
+  const page = listings.slice(0, visibleCount);
+  const hasMore = listings.length > visibleCount;
+
+  grid.innerHTML = page.map(renderCard).join('') + (hasMore ? `
+    <div style="grid-column:1/-1;text-align:center;padding:8px 0 4px;">
+      <button class="btn btn-secondary" id="loadMoreBtn" onclick="loadMore()" style="min-width:160px;">
+        Load more <span style="color:var(--text-faint);font-weight:400;">(${listings.length - visibleCount} remaining)</span>
+      </button>
+    </div>` : '');
 }
+
+function loadMore() {
+  visibleCount += PAGE_SIZE;
+  render();
+  // Scroll to where new cards start
+  const btn = document.getElementById('loadMoreBtn');
+  if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetPagination() { visibleCount = PAGE_SIZE; }
 
 // ── Filter + Sort + Price events ──
 document.addEventListener('click', e => {
@@ -429,15 +452,15 @@ document.addEventListener('click', e => {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   activeFilter = btn.dataset.filter;
-  render();
+  resetPagination(); render();
 });
 
 document.addEventListener('change', e => {
-  if (e.target.id === 'sortSelect')    { activeSort = e.target.value; render(); }
+  if (e.target.id === 'sortSelect')    { activeSort = e.target.value; resetPagination(); render(); }
   if (e.target.id === 'currencySelect') { displayCurrency = e.target.value; render(); }
   if (e.target.classList.contains('attr-filter-select')) {
     attrFilters[e.target.dataset.attr] = e.target.value;
-    render();
+    resetPagination(); render();
   }
 });
 
@@ -449,7 +472,7 @@ document.addEventListener('input', e => {
       searchQuery = e.target.value.trim();
       const clearBtn = document.getElementById('clearSearch');
       if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
-      render();
+      resetPagination(); render();
     }, 250);
   }
 });

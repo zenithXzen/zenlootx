@@ -231,9 +231,9 @@
       </ul>
       <p style="font-size:12px;color:var(--text-faint);text-align:center;margin-bottom:22px;">Once released, the payment will be credited to the seller's wallet.</p>
       <div id="releaseConfirmErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;text-align:center;"></div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="closeReleaseConfirm()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text);border:1px solid var(--border-hi);">Cancel</button>
-        <button id="releaseConfirmBtn" onclick="doRelease()" style="flex:1;padding:12px;border-radius:8px;font-family:'Geist',sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:var(--success);color:#fff;border:none;">Yes, release payment</button>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button id="releaseConfirmBtn" onclick="doRelease()" style="width:100%;padding:15px;border-radius:10px;font-family:'Geist',sans-serif;font-size:15px;font-weight:700;cursor:pointer;background:var(--success);color:#fff;border:none;">🔓 Yes, release payment</button>
+        <button onclick="closeReleaseConfirm()" style="width:100%;padding:13px;border-radius:10px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-dim);border:1px solid var(--border);">Cancel — I'm not sure yet</button>
       </div>
     </div>
   </div>
@@ -576,6 +576,7 @@
           <a href="/public-profile?id=${otherId}" style="text-decoration:none;"><div class="chat-header-name" style="cursor:pointer;">${name}</div></a>
           <div class="chat-header-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span>${listingTitle || (isBuyer ? 'Seller' : 'Buyer')}</span>
+            <span id="otherActiveLabel"></span>
             ${releaseBtn}
           </div>
         </div>
@@ -624,8 +625,16 @@
     subscribeMessages(convId);
     subscribeConversations();
     showChat();
-    // Broadcast that we've read this conversation immediately on open
     setTimeout(() => broadcastRead(convId), 300);
+
+    // Load and refresh last active indicator for the other person
+    if (otherId) {
+      (async () => {
+        const { data: p } = await sb.from('profiles').select('last_active_at').eq('id', otherId).maybeSingle();
+        const labelEl = document.getElementById('otherActiveLabel');
+        if (labelEl && p?.last_active_at) labelEl.innerHTML = lastActiveLabel(p.last_active_at);
+      })();
+    }
   }
 
   // ── Messages ──────────────────────────────────────────────────
@@ -876,10 +885,20 @@
     const layout = document.querySelector('.messages-layout');
     function adjust() {
       if (window.innerWidth > 680 || !layout) return;
+      // Set layout height to the visible viewport (shrinks when keyboard is up)
       layout.style.height = window.visualViewport.height + 'px';
+      // Shift layout down by any scroll offset so it stays anchored to the top
+      layout.style.transform = `translateY(${window.visualViewport.offsetTop}px)`;
+      // Scroll messages to bottom when keyboard opens
+      const msgs = document.getElementById('chatMessages');
+      if (msgs) msgs.scrollTop = msgs.scrollHeight;
     }
     window.visualViewport.addEventListener('resize', adjust);
     window.visualViewport.addEventListener('scroll', adjust);
+    // Also trigger on input focus (keyboard appears)
+    document.addEventListener('focusin', e => {
+      if (e.target.classList.contains('chat-input')) setTimeout(adjust, 100);
+    });
   })();
 
   // ── Release Payment ───────────────────────────────────────────

@@ -307,6 +307,28 @@
 
       const listingId = o.listing_id || o.listings?.id || '';
 
+      // Dispute timeline steps
+      const timelineSteps = [
+        { key: 'holding',  label: 'Payment held in escrow', done: true },
+        { key: 'disputed', label: 'Dispute filed — under review', done: ['disputed','refunded','released'].includes(o.escrow_status) },
+        { key: 'resolved', label: o.escrow_status === 'refunded' ? 'Refunded to buyer' : o.escrow_status === 'released' ? 'Released to seller' : 'Awaiting resolution', done: ['refunded','released'].includes(o.escrow_status) },
+      ];
+      const disputeTimeline = o.escrow_status === 'disputed' || (DONE.includes(o.escrow_status) && o.escrow_status !== 'cancelled')
+        ? `<div style="margin-top:12px;padding:12px 14px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);">
+            <div style="font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">Order Timeline</div>
+            <div style="display:flex;flex-direction:column;gap:0;">
+              ${timelineSteps.map((s, i) => `
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                  <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+                    <div style="width:18px;height:18px;border-radius:50%;border:2px solid ${s.done ? 'var(--accent)' : 'var(--border-hi)'};background:${s.done ? 'var(--accent)' : 'var(--bg-base)'};display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--bg-base);">${s.done ? '✓' : ''}</div>
+                    ${i < timelineSteps.length - 1 ? `<div style="width:2px;height:18px;background:${s.done && timelineSteps[i+1].done ? 'var(--accent)' : 'var(--border-hi)'};"></div>` : ''}
+                  </div>
+                  <div style="font-size:12px;color:${s.done ? 'var(--text)' : 'var(--text-faint)'};padding-bottom:${i < timelineSteps.length - 1 ? '0' : '0'};line-height:1.8;">${s.label}</div>
+                </div>`).join('')}
+            </div>
+          </div>`
+        : '';
+
       return `
         <div class="order-card" id="ocard_${o.id}" style="${ongoing ? 'border-color:rgba(245,185,71,0.2);' : ''}">
           <div class="order-game-icon" style="cursor:${listingId ? 'pointer' : 'default'}" onclick="${listingId ? `openListingModal('${listingId}')` : ''}" title="${listingId ? 'View listing' : ''}">${icon}</div>
@@ -317,6 +339,7 @@
               <span>${formatDate(o.created_at)}</span>
               <span>${statusBadge(o.escrow_status)}</span>
             </div>
+            ${disputeTimeline}
           </div>
           <div class="order-right">
             <div class="order-amount">${formatAmount(o.amount || 0)}</div>

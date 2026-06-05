@@ -207,6 +207,37 @@ async function initNav(user) {
   if (!window.location.pathname.startsWith('/notifications')) {
     initNotifBadge(user.id);
   }
+
+  // Heartbeat — keeps last_active_at fresh so others see "Online" / "Last seen"
+  startHeartbeat();
+}
+
+function startHeartbeat() {
+  async function ping() {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.access_token) return;
+      await fetch('/api/heartbeat', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+    } catch {}
+  }
+  ping(); // immediate on load
+  setInterval(ping, 60000); // then every 60 seconds
+}
+
+// ─── Last active label helper (used by messages + public-profile) ──
+function lastActiveLabel(isoString) {
+  if (!isoString) return null;
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins  = Math.floor(diff / 60000);
+  if (mins < 3)  return '<span style="color:var(--success);font-weight:600;">● Online</span>';
+  if (mins < 60) return `<span style="color:var(--text-faint);">Last seen ${mins}m ago</span>`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `<span style="color:var(--text-faint);">Last seen ${hrs}h ago</span>`;
+  const days = Math.floor(hrs / 24);
+  return `<span style="color:var(--text-faint);">Last seen ${days}d ago</span>`;
 }
 
 async function initMsgBadge(userId) {

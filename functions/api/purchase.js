@@ -180,7 +180,7 @@ export async function onRequestPost({ request, env }) {
       } catch {}
     }
 
-    // Notify seller
+    // Notify seller — in-app notification
     try {
       await fetch(`${env.SUPABASE_URL}/rest/v1/notifications`, {
         method: 'POST', headers: hdr,
@@ -192,6 +192,49 @@ export async function onRequestPost({ request, env }) {
           link:    '/orders',
         }),
       });
+    } catch {}
+
+    // Notify seller — email via Resend (so they know even when site is closed)
+    try {
+      const sellerAuthRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${listing.seller_id}`, {
+        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
+      });
+      const sellerAuth    = await sellerAuthRes.json();
+      const sellerEmail   = sellerAuth?.email;
+      const sellerName    = sellerAuth?.user_metadata?.username || 'Seller';
+      const fmt           = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+
+      if (sellerEmail) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from:    'ZenLootX <no-reply@zenlootexchange.com>',
+            to:      [sellerEmail],
+            subject: `🎉 Your listing was just purchased — ZenLootX`,
+            html: `
+              <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;background:#0A0E0C;color:#E8EDE9;padding:40px 32px;border-radius:12px;">
+                <div style="font-size:24px;font-weight:700;margin-bottom:6px;">Zen<span style="color:#19C37D;">Loot</span>X</div>
+                <hr style="border:none;border-top:1px solid #232B26;margin:20px 0;">
+                <h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">Your listing was just sold! 🎉</h2>
+                <p style="font-size:15px;color:#9BA8A0;line-height:1.7;margin-bottom:20px;">
+                  Hi <strong style="color:#E8EDE9;">${sellerName}</strong>, a buyer has just purchased your listing.
+                </p>
+                <div style="background:#121814;border:1px solid #232B26;border-radius:10px;padding:20px 22px;margin-bottom:24px;">
+                  <div style="font-size:13px;color:#6B776F;margin-bottom:6px;">Listing sold</div>
+                  <div style="font-size:17px;font-weight:700;color:#E8EDE9;margin-bottom:4px;">${listing.title}</div>
+                  <div style="font-size:22px;font-weight:700;color:#19C37D;">${fmt(price)}</div>
+                </div>
+                <p style="font-size:14px;color:#9BA8A0;line-height:1.7;margin-bottom:8px;">
+                  The payment is held in escrow. Please deliver the account credentials to the buyer via Messages as soon as possible.
+                </p>
+                <a href="https://zenlootexchange.com/orders" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#19C37D;color:#0A0E0C;font-weight:700;border-radius:8px;text-decoration:none;font-size:14px;">View Order →</a>
+                <hr style="border:none;border-top:1px solid #232B26;margin:28px 0 16px;">
+                <p style="font-size:12px;color:#6B776F;">© 2026 ZenLootX · zenlootexchange.com</p>
+              </div>`,
+          }),
+        });
+      }
     } catch {}
 
     return Response.json({
