@@ -90,6 +90,14 @@
 
 ## 🗓️ Change Log (newest first)
 
+### 2026-06-06 (animations session)
+- **CSS View Transitions** added to all pages via `nav.js`: `@view-transition { navigation: auto }` — cross-document page-fade (slide up-out / slide down-in, 0.16s/0.22s). Chrome 126+; silent fallback on other browsers.
+- **Scroll reveal** (`zlx-reveal` + `zlx-in`) added via Intersection Observer in `nav.js`. Elements fade + slide up when they enter the viewport. Delay variants: `zlx-d1` (70ms), `zlx-d2` (140ms), `zlx-d3` (210ms), `zlx-d4` (290ms).
+- **Card stagger** (`zlx-stagger`, CSS `animation-delay: calc(var(--si) * 55ms)`) added to listing cards in `listings.js`. Index `i` passed via `Array.map` — first 8 cards stagger in, rest appear together.
+- **Fixed syntax error** in `listings.js` `renderCard` — stray backtick was prematurely closing the template literal at the opening `<div>` tag. Removed.
+- **index.html** — `zlx-reveal` classes added to: hero h1, hero-sub, hero-cta, hero-stats (delays d1–d3); section headers + step cards (staggered d1–d2); trust cards (staggered d1–d2); CTA banner.
+- Also injected in `nav.js`: listing card hover lift (translateY -5px, green border glow), skeleton shimmer for loading states, `.btn:active` press scale (0.96).
+
 ### 2026-06-06 (security audit + polish session)
 - **Full codebase security audit** completed. Findings grouped as Critical (C1–C4), High (H1–H7), Medium (M1–M3).
 - **C1 + C4 fixed:** Admin bypass (`?admin=on`) now requires matching `ADMIN_BYPASS_SECRET` env var. Added to `_middleware.js`. Also added `ADMIN_BYPASS_SECRET` as a Cloudflare env var.

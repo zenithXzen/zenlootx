@@ -2,6 +2,89 @@
 // Requires: `sb` (Supabase client) defined globally on the page before calling initNav.
 // Usage: await initNav(user)
 
+// ─── Global Animations ────────────────────────────────────────────
+(function () {
+  if (document.getElementById('zlx-anim')) return;
+  const s = document.createElement('style');
+  s.id = 'zlx-anim';
+  s.textContent = `
+    /* Page transitions — Chrome 126+, ignored by others (graceful fallback) */
+    @view-transition { navigation: auto; }
+    ::view-transition-old(root) { animation: zlx-pg-out 0.16s ease-out forwards; }
+    ::view-transition-new(root) { animation: zlx-pg-in  0.22s ease-out forwards; }
+    @keyframes zlx-pg-out { to   { opacity: 0; transform: translateY(-5px); } }
+    @keyframes zlx-pg-in  { from { opacity: 0; transform: translateY(7px);  } }
+
+    /* Scroll reveal */
+    .zlx-reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.55s cubic-bezier(0.16,1,0.3,1);
+    }
+    .zlx-reveal.zlx-in { opacity: 1; transform: none; }
+    .zlx-d1 { transition-delay: 70ms; }
+    .zlx-d2 { transition-delay: 140ms; }
+    .zlx-d3 { transition-delay: 210ms; }
+    .zlx-d4 { transition-delay: 290ms; }
+
+    /* Listing card hover lift + green glow */
+    .listing-card {
+      transition: transform 0.22s cubic-bezier(0.16,1,0.3,1),
+                  box-shadow 0.22s ease,
+                  border-color 0.22s ease !important;
+    }
+    .listing-card:hover {
+      transform: translateY(-5px) !important;
+      box-shadow: 0 14px 44px rgba(0,0,0,0.45),
+                  0 0 0 1px rgba(25,195,125,0.18) !important;
+      border-color: rgba(25,195,125,0.22) !important;
+    }
+
+    /* Card stagger — applied per-card with --si CSS var */
+    .zlx-stagger {
+      opacity: 0;
+      animation: zlx-card-in 0.42s cubic-bezier(0.16,1,0.3,1) forwards;
+      animation-delay: calc(var(--si, 0) * 55ms);
+    }
+    @keyframes zlx-card-in {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Skeleton shimmer */
+    .skeleton {
+      background: linear-gradient(90deg, #1A211C 0%, #252E28 50%, #1A211C 100%) !important;
+      background-size: 200% 100% !important;
+      animation: zlx-shimmer 1.6s ease-in-out infinite !important;
+      border-radius: 6px;
+    }
+    @keyframes zlx-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Button press */
+    .btn { transition: background 0.18s, border-color 0.18s, color 0.18s,
+                       transform 0.1s ease !important; }
+    .btn:active { transform: scale(0.96) !important; }
+  `;
+  document.head.appendChild(s);
+
+  // Scroll reveal — watches .zlx-reveal elements across every page
+  function initReveal() {
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('zlx-in'); obs.unobserve(e.target); }
+      }),
+      { threshold: 0.07, rootMargin: '0px 0px -28px 0px' }
+    );
+    document.querySelectorAll('.zlx-reveal').forEach(el => obs.observe(el));
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initReveal);
+  else initReveal();
+})();
+
 // ─── Toast ────────────────────────────────────────────────────────
 function toast(message, type = 'error') {
   let container = document.getElementById('zlx-toast-container');

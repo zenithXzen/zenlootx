@@ -351,7 +351,7 @@ function typePill(t) {
   return `<span class="pill ${cls}">${typeLabel(t)}</span>`;
 }
 
-function renderCard(listing) {
+function renderCard(listing, i) {
   const img   = Array.isArray(listing.images) && listing.images[0]
     ? `<img src="${listing.images[0]}" alt="${listing.title}" loading="lazy">`
     : `<span class="fallback">${ICON}</span>`;
@@ -359,7 +359,7 @@ function renderCard(listing) {
   const price = formatPrice(listing.price, listing.currency || 'USD');
 
   return `
-    <div class="listing-card">
+    <div class="listing-card zlx-stagger" style="--si:${Math.min(i, 8)}">
       <a href="/listings/detail?id=${listing.id}">
         <div class="card-img">${img}</div>
         <div class="card-body">
