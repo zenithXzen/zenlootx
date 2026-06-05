@@ -399,7 +399,7 @@
       background-position: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.8s ease;
+      transition: opacity 0.35s ease;
     }
     .slide.active { opacity: 1; pointer-events: auto; }
 
@@ -781,15 +781,27 @@
   <script>
     const slides = document.querySelectorAll('.slide');
     const dots   = document.querySelectorAll('.dot');
-    let current  = 0;
+    let current     = 0;
     let timer;
+    let transitioning = false;
 
     function goTo(index) {
-      slides[current].classList.remove('active');
-      dots[current].classList.remove('active');
+      if (index === current || transitioning) return;
+      transitioning = true;
+
+      const prev = current;
       current = index;
-      slides[current].classList.add('active');
+
+      // Phase 1: fade out old slide
+      slides[prev].classList.remove('active');
+      dots[prev].classList.remove('active');
       dots[current].classList.add('active');
+
+      // Phase 2: after fade-out completes, fade in new slide
+      setTimeout(() => {
+        slides[current].classList.add('active');
+        setTimeout(() => { transitioning = false; }, 350);
+      }, 350);
     }
 
     function next() {
