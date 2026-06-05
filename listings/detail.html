@@ -419,7 +419,7 @@
             const data = await res.json();
             if (!res.ok) { toast(data.error || 'Failed.', 'error'); btn.disabled = false; btn.textContent = label; return; }
             window.location.href = '/profile';
-          } catch { btn.disabled = false; btn.textContent = label; }
+          } catch { btn.disabled = false; btn.textContent = label; toast('Something went wrong. Please try again.', 'error'); }
         }
 
         document.getElementById('deleteListingBtn').addEventListener('click', () => callDelist('delete', '🗑 Delete listing'));

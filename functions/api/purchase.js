@@ -12,7 +12,6 @@ export async function onRequestPost({ request, env }) {
     const { listingId } = await request.json();
     if (!listingId) return Response.json({ error: 'Missing listingId' }, { status: 400 });
 
-    // Check if buyer's account is frozen
     if (user.app_metadata?.is_frozen) {
       return Response.json({ error: 'Your account is currently restricted. You cannot make purchases.' }, { status: 403 });
     }
@@ -24,126 +23,84 @@ export async function onRequestPost({ request, env }) {
       Prefer: 'return=minimal',
     };
 
-    // Get listing
-    const lRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}&status=eq.active&select=*`, { headers: hdr });
-    const lData = await lRes.json();
-    const listing = lData[0];
-    if (!listing) return Response.json({ error: 'Listing not found or no longer available.' }, { status: 404 });
-    if (listing.seller_id === user.id) return Response.json({ error: 'You cannot buy your own listing.' }, { status: 400 });
-
-    const price = Number(listing.price);
-
-    // Check buyer wallet balance
-    const wRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}&select=balance`, { headers: hdr });
-    const wData = await wRes.json();
-    const balance = Number(wData[0]?.balance || 0);
-    if (balance < price) {
-      return Response.json({
-        error: `Insufficient balance. You have ₱${balance.toFixed(2)} but this listing costs ₱${price.toFixed(2)}.`,
-        needTopUp: true,
-        shortfall: price - balance,
-      }, { status: 422 });
-    }
-
-    // Atomic balance deduction — filter ensures balance is still sufficient at update time
-    const deductRes  = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}&balance=gte.${price}`,
-      { method: 'PATCH', headers: { ...hdr, Prefer: 'return=representation' }, body: JSON.stringify({ balance: balance - price }) }
-    );
-    const deductData = await deductRes.json();
-    if (!Array.isArray(deductData) || deductData.length === 0) {
-      return Response.json({ error: 'Insufficient balance. Please refresh and try again.' }, { status: 422 });
-    }
-
-    // Create order
-    const oRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/orders`, {
+    // Atomic purchase — acquires row locks on listing + wallet, deducts balance,
+    // marks listing sold, and creates order all inside one DB transaction.
+    // Prevents double-spend even when two requests arrive simultaneously.
+    const rpcRes = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/purchase_listing`, {
       method: 'POST',
       headers: { ...hdr, Prefer: 'return=representation' },
-      body: JSON.stringify({
-        buyer_id:      user.id,
-        seller_id:     listing.seller_id,
-        listing_id:    listingId,
-        amount:        price,
-        currency:      listing.currency || 'PHP',
-        escrow_status: 'holding',
-      }),
-    });
-    if (!oRes.ok) {
-      // Order creation failed — refund the buyer's balance
-      await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}`, {
-        method: 'PATCH', headers: hdr,
-        body: JSON.stringify({ balance: balance }),
-      });
-      const oErr = await oRes.json();
-      return Response.json({ error: `Order creation failed: ${oErr?.message || oErr?.details || oRes.status}. Your balance has been refunded.` }, { status: 500 });
-    }
-    const oData = await oRes.json();
-    const order = Array.isArray(oData) ? oData[0] : oData;
-    if (!order?.id) {
-      await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${user.id}`, {
-        method: 'PATCH', headers: hdr,
-        body: JSON.stringify({ balance: balance }),
-      });
-      return Response.json({ error: 'Order could not be saved. Please contact support.' }, { status: 500 });
-    }
-
-    // Mark listing as sold
-    await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}`, {
-      method: 'PATCH', headers: hdr,
-      body: JSON.stringify({ status: 'sold' }),
+      body: JSON.stringify({ p_buyer_id: user.id, p_listing_id: listingId }),
     });
 
-    // Add to seller's escrow balance so they can see funds pending
+    if (!rpcRes.ok) {
+      const rpcErr = await rpcRes.json().catch(() => ({}));
+      return Response.json({ error: rpcErr.message || 'Purchase failed. Please try again.' }, { status: 500 });
+    }
+
+    const rpcData = await rpcRes.json();
+
+    if (rpcData.error) {
+      return Response.json({
+        error: rpcData.error,
+        needTopUp: rpcData.needTopUp || false,
+      }, { status: rpcData.needTopUp ? 422 : 400 });
+    }
+
+    const orderId  = rpcData.orderId;
+    const sellerId = rpcData.sellerId;
+    const price    = Number(rpcData.price);
+    const title    = rpcData.title;
+
+    // Update seller's escrow balance
     try {
-      const swRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${listing.seller_id}&select=escrow`, { headers: hdr });
+      const swRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${sellerId}&select=escrow`, { headers: hdr });
       const swData = await swRes.json();
       if (swData[0]) {
-        await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${listing.seller_id}`, {
-          method: 'PATCH', headers: { ...hdr, Prefer: 'return=minimal' },
+        await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${sellerId}`, {
+          method: 'PATCH', headers: hdr,
           body: JSON.stringify({ escrow: Number(swData[0].escrow || 0) + price }),
         });
       } else {
         await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
-          method: 'POST', headers: { ...hdr, Prefer: 'return=minimal' },
-          body: JSON.stringify({ user_id: listing.seller_id, balance: 0, escrow: price, total_earned: 0 }),
+          method: 'POST', headers: hdr,
+          body: JSON.stringify({ user_id: sellerId, balance: 0, escrow: price, total_earned: 0 }),
         });
       }
-      // Log escrow transaction for seller
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
         method: 'POST',
-        headers: { ...hdr, Prefer: 'return=minimal' },
+        headers: hdr,
         body: JSON.stringify({
-          user_id:     listing.seller_id,
+          user_id:     sellerId,
           type:        'escrow',
           amount:      price,
-          description: `Sale in escrow: ${listing.title}`,
-          reference:   order?.id || null,
+          description: `Sale in escrow: ${title}`,
+          reference:   orderId || null,
           status:      'pending',
         }),
       });
     } catch {}
 
-    // Log escrow transaction for buyer
+    // Log buyer transaction
     try {
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        headers: hdr,
         body: JSON.stringify({
           user_id:     user.id,
           type:        'escrow',
           amount:      price,
-          description: `Purchase held in escrow: ${listing.title}`,
-          reference:   order?.id || null,
+          description: `Purchase held in escrow: ${title}`,
+          reference:   orderId || null,
           status:      'pending',
         }),
       });
     } catch {}
 
-    // Create conversation (if one doesn't already exist for this order pair)
+    // Create or find conversation
     let conversationId = null;
     try {
       const cRes  = await fetch(
-        `${env.SUPABASE_URL}/rest/v1/conversations?buyer_id=eq.${user.id}&seller_id=eq.${listing.seller_id}&listing_id=eq.${listingId}&limit=1`,
+        `${env.SUPABASE_URL}/rest/v1/conversations?buyer_id=eq.${user.id}&seller_id=eq.${sellerId}&listing_id=eq.${listingId}&limit=1`,
         { headers: hdr }
       );
       const cData = await cRes.json();
@@ -155,8 +112,8 @@ export async function onRequestPost({ request, env }) {
           headers: { ...hdr, Prefer: 'return=representation' },
           body: JSON.stringify({
             buyer_id:   user.id,
-            seller_id:  listing.seller_id,
-            order_id:   order?.id || null,
+            seller_id:  sellerId,
+            order_id:   orderId || null,
             listing_id: listingId,
           }),
         });
@@ -165,12 +122,12 @@ export async function onRequestPost({ request, env }) {
       }
     } catch {}
 
-    // Send automated welcome message in the conversation
+    // Welcome message
     if (conversationId) {
       try {
         await fetch(`${env.SUPABASE_URL}/rest/v1/messages`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          headers: hdr,
           body: JSON.stringify({
             conversation_id: conversationId,
             sender_id:       user.id,
@@ -180,29 +137,29 @@ export async function onRequestPost({ request, env }) {
       } catch {}
     }
 
-    // Notify seller — in-app notification
+    // In-app notification to seller
     try {
       await fetch(`${env.SUPABASE_URL}/rest/v1/notifications`, {
         method: 'POST', headers: hdr,
         body: JSON.stringify({
-          user_id: listing.seller_id,
+          user_id: sellerId,
           title:   '🎉 Your listing was purchased!',
-          message: `"${listing.title}" was bought for ₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}. Deliver the account details to complete the order.`,
+          message: `"${title}" was bought for ₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}. Deliver the account details to complete the order.`,
           type:    'listing',
           link:    '/orders',
         }),
       });
     } catch {}
 
-    // Notify seller — email via Resend (so they know even when site is closed)
+    // Email notification to seller
     try {
-      const sellerAuthRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${listing.seller_id}`, {
+      const sellerAuthRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${sellerId}`, {
         headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
       });
-      const sellerAuth    = await sellerAuthRes.json();
-      const sellerEmail   = sellerAuth?.email;
-      const sellerName    = sellerAuth?.user_metadata?.username || 'Seller';
-      const fmt           = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+      const sellerAuth  = await sellerAuthRes.json();
+      const sellerEmail = sellerAuth?.email;
+      const sellerName  = sellerAuth?.user_metadata?.username || 'Seller';
+      const fmt         = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
       if (sellerEmail) {
         await fetch('https://api.resend.com/emails', {
@@ -222,7 +179,7 @@ export async function onRequestPost({ request, env }) {
                 </p>
                 <div style="background:#121814;border:1px solid #232B26;border-radius:10px;padding:20px 22px;margin-bottom:24px;">
                   <div style="font-size:13px;color:#6B776F;margin-bottom:6px;">Listing sold</div>
-                  <div style="font-size:17px;font-weight:700;color:#E8EDE9;margin-bottom:4px;">${listing.title}</div>
+                  <div style="font-size:17px;font-weight:700;color:#E8EDE9;margin-bottom:4px;">${title}</div>
                   <div style="font-size:22px;font-weight:700;color:#19C37D;">${fmt(price)}</div>
                 </div>
                 <p style="font-size:14px;color:#9BA8A0;line-height:1.7;margin-bottom:8px;">
@@ -239,9 +196,9 @@ export async function onRequestPost({ request, env }) {
 
     return Response.json({
       success:        true,
-      orderId:        order?.id,
+      orderId,
       conversationId,
-      sellerId:       listing.seller_id,
+      sellerId,
     });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
