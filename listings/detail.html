@@ -661,16 +661,41 @@
         <div style="font-size:16px;font-weight:700;">Report listing</div>
         <button onclick="closeReportListingModal()" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:20px;line-height:1;padding:4px;">✕</button>
       </div>
-      <div id="reportListingBody" style="padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
-        <p style="font-size:13px;color:var(--text-dim);">Help keep ZenLootX safe. Select the reason for your report.</p>
+      <div id="reportListingBody" style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px;">
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.5;">Help keep ZenLootX safe. What's wrong with this listing?</p>
         <div style="display:flex;flex-direction:column;gap:8px;" id="reportListingReasons">
-          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="fake_listing" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Fake or misleading listing</span></label>
-          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="scam" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Scam / fraud attempt</span></label>
-          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="prohibited" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Prohibited or illegal item</span></label>
-          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="already_sold" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Item already sold elsewhere</span></label>
-          <label style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.16s;" class="report-reason-opt" onclick="this.style.borderColor='var(--accent)';document.querySelectorAll('.report-reason-opt').forEach(o=>{if(o!==this)o.style.borderColor='var(--border)'});"><input type="radio" name="listingReason" value="other" style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;"><span style="font-size:14px;">Other</span></label>
+          <label class="report-reason-opt" onclick="selectReportReason(this,'fake_listing')" style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;user-select:none;">
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(245,185,71,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">⚠️</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">Fake or misleading listing</div><div style="font-size:12px;color:var(--text-faint);line-height:1.4;">Description doesn't match the actual account</div></div>
+            <div class="reason-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border-hi);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"></div>
+            <input type="radio" name="listingReason" value="fake_listing" style="display:none;">
+          </label>
+          <label class="report-reason-opt" onclick="selectReportReason(this,'scam')" style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;user-select:none;">
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">🚨</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">Scam or fraud</div><div style="font-size:12px;color:var(--text-faint);line-height:1.4;">Seller appears to be attempting fraud</div></div>
+            <div class="reason-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border-hi);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"></div>
+            <input type="radio" name="listingReason" value="scam" style="display:none;">
+          </label>
+          <label class="report-reason-opt" onclick="selectReportReason(this,'prohibited')" style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;user-select:none;">
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">🚫</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">Prohibited item</div><div style="font-size:12px;color:var(--text-faint);line-height:1.4;">Item violates ZenLootX terms of service</div></div>
+            <div class="reason-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border-hi);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"></div>
+            <input type="radio" name="listingReason" value="prohibited" style="display:none;">
+          </label>
+          <label class="report-reason-opt" onclick="selectReportReason(this,'already_sold')" style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;user-select:none;">
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">🔄</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">Already sold elsewhere</div><div style="font-size:12px;color:var(--text-faint);line-height:1.4;">This account was already sold on another platform</div></div>
+            <div class="reason-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border-hi);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"></div>
+            <input type="radio" name="listingReason" value="already_sold" style="display:none;">
+          </label>
+          <label class="report-reason-opt" onclick="selectReportReason(this,'other')" style="display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;user-select:none;">
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(107,119,111,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">💬</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">Other</div><div style="font-size:12px;color:var(--text-faint);line-height:1.4;">Something else is wrong with this listing</div></div>
+            <div class="reason-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border-hi);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;"></div>
+            <input type="radio" name="listingReason" value="other" style="display:none;">
+          </label>
         </div>
-        <textarea id="reportListingDetails" placeholder="Additional details (optional)" maxlength="500" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:72px;width:100%;box-sizing:border-box;transition:border-color 0.18s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <textarea id="reportListingDetails" placeholder="Additional details (optional)…" maxlength="500" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);outline:none;resize:none;height:80px;width:100%;box-sizing:border-box;transition:border-color 0.18s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
         <div id="reportListingErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;"></div>
       </div>
       <div id="reportListingSuccess" style="display:none;padding:40px 24px;text-align:center;">
@@ -691,8 +716,14 @@
     function openReportListingModal(listingId, accessToken) {
       _reportListingId = listingId;
       _reportToken     = accessToken;
-      document.querySelectorAll('input[name="listingReason"]').forEach(r => r.checked = false);
-      document.querySelectorAll('.report-reason-opt').forEach(o => o.style.borderColor = 'var(--border)');
+      document.querySelectorAll('.report-reason-opt').forEach(o => {
+        o.style.background  = 'var(--bg-elevated)';
+        o.style.borderColor = 'var(--border)';
+        const chk = o.querySelector('.reason-check');
+        if (chk) { chk.style.background = ''; chk.style.borderColor = 'var(--border-hi)'; chk.innerHTML = ''; }
+        const inp = o.querySelector('input[type="radio"]');
+        if (inp) inp.checked = false;
+      });
       document.getElementById('reportListingDetails').value = '';
       document.getElementById('reportListingErr').style.display  = 'none';
       document.getElementById('reportListingBody').style.display = '';
@@ -746,6 +777,27 @@
       document.getElementById('reportListingFoot').style.display = 'none';
       document.getElementById('reportListingSuccess').style.display = 'block';
       setTimeout(closeReportListingModal, 2500);
+    }
+
+    function selectReportReason(el, val) {
+      document.querySelectorAll('.report-reason-opt').forEach(o => {
+        o.style.background  = 'var(--bg-elevated)';
+        o.style.borderColor = 'var(--border)';
+        const chk = o.querySelector('.reason-check');
+        if (chk) { chk.style.background = ''; chk.style.borderColor = 'var(--border-hi)'; chk.innerHTML = ''; }
+        const inp = o.querySelector('input[type="radio"]');
+        if (inp) inp.checked = false;
+      });
+      el.style.background  = 'rgba(25,195,125,0.1)';
+      el.style.borderColor = 'var(--accent)';
+      const chk = el.querySelector('.reason-check');
+      if (chk) {
+        chk.style.background  = 'var(--accent)';
+        chk.style.borderColor = 'var(--accent)';
+        chk.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0A0E0C" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      }
+      const inp = el.querySelector('input[name="listingReason"][value="' + val + '"]');
+      if (inp) inp.checked = true;
     }
   </script>
 

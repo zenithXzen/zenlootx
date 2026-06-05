@@ -38,18 +38,23 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Reset link is invalid or has expired.' }, { status: 400 });
     }
 
-    // Look up user by email to get their ID
-    const lookupRes = await fetch(
-      `${env.SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-          apikey: env.SUPABASE_SERVICE_KEY,
-        },
-      }
-    );
-    const lookupData = await lookupRes.json();
-    const userId = lookupData?.users?.[0]?.id;
+    // Look up user by email — fetch all users and find exact email match
+    // (Supabase admin list does not guarantee email filter works across all versions)
+    let userId = null;
+    let page = 1;
+    while (!userId) {
+      const lookupRes = await fetch(
+        `${env.SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=50`,
+        { headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY } }
+      );
+      const lookupData = await lookupRes.json();
+      const users = lookupData?.users || [];
+      if (!users.length) break;
+      const match = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      if (match) { userId = match.id; break; }
+      if (users.length < 50) break; // last page
+      page++;
+    }
     if (!userId) {
       return Response.json({ error: 'Account not found.' }, { status: 404 });
     }
