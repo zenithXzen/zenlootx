@@ -121,6 +121,7 @@
     .skeleton{background:var(--bg-elevated);border-radius:6px;animation:shimmer 1.4s infinite}
     @keyframes shimmer{0%,100%{opacity:0.5}50%{opacity:1}}
     @keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 
     /* MOBILE */
     .mobile-back{display:none;align-items:center;gap:8px;background:none;border:none;color:var(--text-dim);font-family:'Geist',sans-serif;font-size:14px;font-weight:500;cursor:pointer;padding:0;flex-shrink:0}
@@ -219,19 +220,25 @@
   </div>
 
   <!-- Release Payment Confirm Modal -->
-  <div id="releaseConfirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:center;justify-content:center;padding:20px;">
-    <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:16px;width:100%;max-width:400px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalIn 0.2s ease;">
-      <div style="font-size:36px;text-align:center;margin-bottom:16px;">🔓</div>
-      <h3 style="font-size:18px;font-weight:700;text-align:center;margin-bottom:10px;">Release payment?</h3>
-      <p style="font-size:14px;color:var(--text-dim);text-align:center;line-height:1.65;margin-bottom:10px;">Before confirming, please make sure you have:</p>
-      <ul style="font-size:13px;color:var(--text-dim);line-height:1.9;margin:0 0 18px 20px;">
-        <li>Received the account credentials from the seller</li>
-        <li>Logged in and verified the account is as described</li>
-        <li>Confirmed all items and details match the listing</li>
-      </ul>
-      <p style="font-size:12px;color:var(--text-faint);text-align:center;margin-bottom:22px;">Once released, the payment will be credited to the seller's wallet.</p>
-      <div id="releaseConfirmErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;text-align:center;"></div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
+  <div id="releaseConfirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:600;align-items:flex-end;justify-content:center;">
+    <div style="background:var(--bg-surface);border:1px solid var(--border-hi);border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.5);animation:slideUp 0.25s ease;padding:24px 20px;">
+      <div style="font-size:32px;text-align:center;margin-bottom:12px;">🔓</div>
+      <h3 style="font-size:17px;font-weight:700;text-align:center;margin-bottom:8px;">Release payment?</h3>
+      <p style="font-size:13px;color:var(--text-dim);text-align:center;line-height:1.6;margin-bottom:12px;">Make sure you have:</p>
+      <div style="background:var(--bg-elevated);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-dim);">
+          <span style="color:var(--accent);font-weight:700;flex-shrink:0;">✓</span>Received account credentials from the seller
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-dim);">
+          <span style="color:var(--accent);font-weight:700;flex-shrink:0;">✓</span>Logged in and verified the account
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-dim);">
+          <span style="color:var(--accent);font-weight:700;flex-shrink:0;">✓</span>Items match the listing description
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-faint);text-align:center;margin-bottom:16px;">Once released, the payment goes to the seller's wallet and cannot be undone.</p>
+      <div id="releaseConfirmErr" style="display:none;font-size:13px;color:var(--danger);background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;text-align:center;"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:8px;">
         <button id="releaseConfirmBtn" onclick="doRelease()" style="width:100%;padding:15px;border-radius:10px;font-family:'Geist',sans-serif;font-size:15px;font-weight:700;cursor:pointer;background:var(--success);color:#fff;border:none;">🔓 Yes, release payment</button>
         <button onclick="closeReleaseConfirm()" style="width:100%;padding:13px;border-radius:10px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-dim);border:1px solid var(--border);">Cancel — I'm not sure yet</button>
       </div>
