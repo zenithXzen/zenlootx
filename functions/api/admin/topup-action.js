@@ -77,7 +77,7 @@ export async function onRequestPost({ request, env }) {
       // Upsert wallet row in case it doesn't exist
       await sb(env, 'wallets', {
         method: 'POST',
-        headers: { Prefer: 'resolution=merge-duplicates' },
+        headers: { Prefer: 'resolution=ignore-duplicates' },
         body: JSON.stringify({ user_id: userId, balance: 0, escrow: 0, total_earned: 0 }),
       });
       // Increment balance via RPC
