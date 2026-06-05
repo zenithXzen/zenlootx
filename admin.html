@@ -305,6 +305,10 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    function sanitize(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+
     let token = '';
     let activeSection = 'analytics';
     let allApps = [], allReports = [], allDisputes = [], allListings = [];
@@ -1164,7 +1168,7 @@
             <div class="info-item"><label>Applied</label><span>${date}</span></div>
           </div>
         </div>
-        ${app.bio ? `<div><div class="section-label" style="margin-bottom:10px;">Seller bio</div><p style="font-size:14px;color:var(--text-dim);line-height:1.65;">${app.bio}</p></div>` : ''}
+        ${app.bio ? `<div><div class="section-label" style="margin-bottom:10px;">Seller bio</div><p style="font-size:14px;color:var(--text-dim);line-height:1.65;">${sanitize(app.bio)}</p></div>` : ''}
         <div>
           <div class="section-label" style="margin-bottom:14px;">ID Documents</div>
           <div class="id-photos">

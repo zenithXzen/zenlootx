@@ -36,11 +36,37 @@ export async function onRequestPost({ request, env }) {
 
     const { game, title, type, price, currency, description, images, attributes } = await request.json();
 
+    const ALLOWED_GAMES      = ['genshin', 'mlbb', 'valorant'];
+    const ALLOWED_TYPES      = ['account', 'items', 'topup'];
+    const ALLOWED_CURRENCIES = ['PHP'];
+
     if (!game || !title?.trim() || !type || !price || !Array.isArray(images) || !images.length) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    if (Number(price) <= 0) {
+    if (!ALLOWED_GAMES.includes(game)) {
+      return Response.json({ error: 'Invalid game. Must be genshin, mlbb, or valorant.' }, { status: 400 });
+    }
+    if (!ALLOWED_TYPES.includes(type)) {
+      return Response.json({ error: 'Invalid listing type. Must be account, items, or topup.' }, { status: 400 });
+    }
+    if (currency && !ALLOWED_CURRENCIES.includes(currency)) {
+      return Response.json({ error: 'Invalid currency.' }, { status: 400 });
+    }
+    if (title.trim().length > 100) {
+      return Response.json({ error: 'Title is too long (max 100 characters).' }, { status: 400 });
+    }
+    if (description && description.length > 2000) {
+      return Response.json({ error: 'Description is too long (max 2000 characters).' }, { status: 400 });
+    }
+    const numPrice = Number(price);
+    if (numPrice <= 0 || isNaN(numPrice)) {
       return Response.json({ error: 'Price must be greater than zero' }, { status: 400 });
+    }
+    if (numPrice > 500000) {
+      return Response.json({ error: 'Price exceeds maximum allowed (₱500,000).' }, { status: 400 });
+    }
+    if (images.length > 10) {
+      return Response.json({ error: 'Too many images (max 10).' }, { status: 400 });
     }
 
     // Insert listing
@@ -51,7 +77,7 @@ export async function onRequestPost({ request, env }) {
         game,
         title:       title.trim(),
         type,
-        price:       Number(price),
+        price:       numPrice,
         currency:    currency || 'PHP',
         description: description?.trim() || null,
         images,

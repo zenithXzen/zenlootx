@@ -565,6 +565,10 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    function sanitize(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = '/login'; return; }
@@ -732,7 +736,7 @@
                   </div>
                   <div style="font-size:16px;color:var(--warning);">${stars}</div>
                 </div>
-                ${r.comment ? `<p style="font-size:14px;color:var(--text-dim);line-height:1.65;">${r.comment}</p>` : ''}
+                ${r.comment ? `<p style="font-size:14px;color:var(--text-dim);line-height:1.65;">${sanitize(r.comment)}</p>` : ''}
               </div>`;
           }).join('')}
         </div>`;
