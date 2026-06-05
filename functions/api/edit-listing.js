@@ -8,7 +8,7 @@ export async function onRequestPost({ request, env }) {
     const user = await userRes.json();
     if (!user?.id) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { listingId, title, price, currency, description } = await request.json();
+    const { listingId, title, price, currency, description, attributes } = await request.json();
 
     if (!listingId) return Response.json({ error: 'Missing listingId' }, { status: 400 });
     if (!title?.trim()) return Response.json({ error: 'Title is required' }, { status: 400 });
@@ -36,6 +36,7 @@ export async function onRequestPost({ request, env }) {
         price:       Number(price),
         currency:    currency || 'PHP',
         description: description?.trim() || null,
+        ...(attributes !== undefined ? { attributes } : {}),
       }),
     });
 

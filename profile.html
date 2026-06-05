@@ -941,6 +941,31 @@
     // ── Edit modal ──
     let editingListingId = null;
 
+    const EDIT_ATTR_DEFS = {
+      genshin: [
+        { key:'ar_level',         label:'Adventure Rank',       type:'number', placeholder:'e.g. 60' },
+        { key:'server',           label:'Server',               type:'select', options:['Asia','America','Europe','TW/HK/MO'] },
+        { key:'five_star_count',  label:'Total 5★ Characters',  type:'number', placeholder:'e.g. 12' },
+        { key:'genesis_crystals', label:'Genesis Crystals',     type:'number', placeholder:'0' },
+        { key:'welkin_moon',      label:'Welkin Moon',          type:'select', options:['No','Yes'] },
+        { key:'battle_pass',      label:'Battle Pass',          type:'select', options:['No','Yes'] },
+        { key:'honest_issue',     label:'Known Issues',         type:'text',   placeholder:'None' },
+      ],
+      mlbb: [
+        { key:'season_rank',      label:'Season Rank',          type:'select', options:['Warrior','Elite','Master','Grandmaster','Epic','Legend','Mythic','Mythical Glory','Mythical Immortal'] },
+        { key:'server',           label:'Server',               type:'select', options:['Southeast Asia','North America','Europe','Middle East','South Asia'] },
+        { key:'collection_level', label:'Collection Level',     type:'select', options:['Renowned Collector I','Renowned Collector II','Renowned Collector III','Renowned Collector IV','Renowned Collector V','Exalted Collector I','Exalted Collector II','Exalted Collector III','Exalted Collector IV','Exalted Collector V','Mega Collector','World Collector'] },
+        { key:'total_skins',      label:'Total Skins',          type:'number', placeholder:'0' },
+        { key:'diamonds_amount',  label:'Diamonds',             type:'number', placeholder:'0' },
+      ],
+      valorant: [
+        { key:'rank',             label:'Rank',                 type:'select', options:['Unranked','Iron','Bronze','Silver','Gold','Platinum','Diamond','Ascendant','Immortal','Radiant'] },
+        { key:'region',           label:'Region',               type:'select', options:['NA','EU','APAC','KR','BR','LATAM','TR'] },
+        { key:'premium_skins',    label:'Premium Skins',        type:'number', placeholder:'0' },
+        { key:'vp_amount',        label:'Valorant Points (VP)', type:'number', placeholder:'0' },
+      ],
+    };
+
     function openEditModal(id) {
       const listing = allListings.find(l => l.id === id);
       if (!listing) return;
@@ -950,8 +975,30 @@
       document.getElementById('edit_price').value       = listing.price || '';
       document.getElementById('edit_currency').value    = listing.currency || 'PHP';
       document.getElementById('edit_desc').value        = listing.description || '';
+
+      // Render game-specific attribute fields
+      const defs  = EDIT_ATTR_DEFS[listing.game] || [];
+      const attrs = listing.attributes || {};
+      const wrap  = document.getElementById('edit_attrs_wrap');
+      if (defs.length) {
+        wrap.innerHTML = `
+          <div style="font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.07em;padding-top:4px;border-top:1px solid var(--border);margin-top:4px;">Game Details</div>
+          ${defs.map(def => {
+            const val = attrs[def.key] ?? '';
+            const input = def.type === 'select'
+              ? `<select id="ea_${def.key}" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);width:100%;outline:none;">
+                   <option value="">— select —</option>
+                   ${def.options.map(o => `<option value="${o}" ${String(val)===o?'selected':''}>${o}</option>`).join('')}
+                 </select>`
+              : `<input id="ea_${def.key}" type="${def.type==='number'?'number':'text'}" value="${val}" placeholder="${def.placeholder||''}" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'Geist',sans-serif;font-size:14px;color:var(--text);width:100%;outline:none;">`;
+            return `<div class="edit-field"><label>${def.label}</label>${input}</div>`;
+          }).join('')}`;
+      } else {
+        wrap.innerHTML = '';
+      }
+
       document.getElementById('editListingErr').style.display = 'none';
-      document.getElementById('editSaveBtn').disabled   = false;
+      document.getElementById('editSaveBtn').disabled    = false;
       document.getElementById('editSaveBtn').textContent = 'Save changes';
       document.getElementById('editListingOverlay').style.display = 'flex';
       document.getElementById('edit_title').focus();
@@ -977,8 +1024,20 @@
       const currency    = document.getElementById('edit_currency').value;
       const description = document.getElementById('edit_desc').value.trim();
 
-      if (!title)          { errEl.textContent = 'Title is required.';          errEl.style.display = 'block'; return; }
-      if (!price || price <= 0) { errEl.textContent = 'Enter a valid price.';   errEl.style.display = 'block'; return; }
+      if (!title)          { errEl.textContent = 'Title is required.';        errEl.style.display = 'block'; return; }
+      if (!price || price <= 0) { errEl.textContent = 'Enter a valid price.'; errEl.style.display = 'block'; return; }
+
+      // Collect game attribute values
+      const editingListing = allListings.find(l => l.id === editingListingId);
+      const attrDefs = EDIT_ATTR_DEFS[editingListing?.game] || [];
+      const attributes = { ...(editingListing?.attributes || {}) };
+      attrDefs.forEach(def => {
+        const el = document.getElementById(`ea_${def.key}`);
+        if (!el) return;
+        const v = el.value.trim();
+        if (v) attributes[def.key] = def.type === 'number' ? Number(v) : v;
+        else delete attributes[def.key];
+      });
 
       btn.disabled = true; btn.textContent = 'Saving…';
 
@@ -987,7 +1046,7 @@
         const res  = await fetch('/api/edit-listing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ listingId: editingListingId, title, price, currency, description }),
+          body: JSON.stringify({ listingId: editingListingId, title, price, currency, description, attributes }),
         });
         const data = await res.json();
         if (!res.ok) { errEl.textContent = data.error || 'Failed to save.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Save changes'; return; }
@@ -995,7 +1054,7 @@
         // Update local data and re-render card
         const idx = allListings.findIndex(l => l.id === editingListingId);
         if (idx >= 0) {
-          allListings[idx] = { ...allListings[idx], title, price, currency, description };
+          allListings[idx] = { ...allListings[idx], title, price, currency, description, attributes };
           const card = document.getElementById(`lcard_${editingListingId}`);
           if (card) {
             const newCard = document.createElement('div');
@@ -1314,6 +1373,7 @@
         <label>Description <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);">(optional)</span></label>
         <textarea id="edit_desc" maxlength="2000" placeholder="Describe what makes this account special…"></textarea>
       </div>
+      <div id="edit_attrs_wrap" style="display:flex;flex-direction:column;gap:14px;"></div>
       <div id="editListingErr" class="edit-err"></div>
       <div class="edit-actions">
         <button id="editCancelBtn" style="padding:9px 18px;border-radius:8px;border:1px solid var(--border-hi);background:transparent;color:var(--text);font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>
