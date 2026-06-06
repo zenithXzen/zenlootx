@@ -575,18 +575,23 @@
     await initNav(session.user);
 
     // Fetch via service-key API (bypasses RLS issues)
-    const ordRes  = await fetch('/api/my-orders', {
-      headers: { Authorization: `Bearer ${session.access_token}` },
+    let ordToken = session.access_token;
+    let ordRes   = await fetch('/api/my-orders', {
+      headers: { Authorization: `Bearer ${ordToken}` },
     });
+
+    // Token expired — silent refresh + retry once
+    if (ordRes.status === 401) {
+      const { data: refreshed } = await sb.auth.refreshSession();
+      if (refreshed?.session?.access_token) {
+        ordToken = refreshed.session.access_token;
+        ordRes   = await fetch('/api/my-orders', { headers: { Authorization: `Bearer ${ordToken}` } });
+      }
+    }
 
     if (!ordRes.ok) {
       const err = await ordRes.json().catch(() => ({}));
       console.error('Orders API error:', err);
-      if (ordRes.status === 401) {
-        await sb.auth.signOut();
-        window.location.href = '/login?redirect=/orders&reason=session_expired';
-        return;
-      }
       document.getElementById('purchaseList').innerHTML = `
         <div class="empty" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px;padding:28px;">
           <div style="font-size:13px;color:var(--danger);font-weight:600;margin-bottom:6px;">Could not load orders</div>

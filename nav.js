@@ -233,6 +233,13 @@ function startHeartbeat() {
   }
   ping(); // immediate on load
   setInterval(ping, 60000); // then every 60 seconds
+
+  // Refresh session when user comes back to the tab after being away
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      sb.auth.getSession().catch(() => {});
+    }
+  });
 }
 
 // ─── Last active label helper (used by messages + public-profile) ──
