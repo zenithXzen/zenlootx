@@ -449,13 +449,16 @@ async function initAdminBadge() {
   }
 
   async function fetchCount() {
-    const [{ count: disputes }, { count: apps }, { count: topups }, { count: withdrawals }] = await Promise.all([
-      sb.from('disputes').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-      sb.from('seller_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      sb.from('topup_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      sb.from('withdrawal_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    ]);
-    return (disputes || 0) + (apps || 0) + (topups || 0) + (withdrawals || 0);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.access_token) return 0;
+      const res = await fetch('/api/admin/pending-counts', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.total || 0;
+    } catch { return 0; }
   }
 
   setBadge(await fetchCount());
