@@ -449,22 +449,22 @@ async function initAdminBadge() {
   }
 
   async function fetchCount() {
-    const [{ count: disputes }, { count: apps }] = await Promise.all([
+    const [{ count: disputes }, { count: apps }, { count: topups }, { count: withdrawals }] = await Promise.all([
       sb.from('disputes').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       sb.from('seller_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      sb.from('topup_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      sb.from('withdrawal_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
-    return (disputes || 0) + (apps || 0);
+    return (disputes || 0) + (apps || 0) + (topups || 0) + (withdrawals || 0);
   }
 
   setBadge(await fetchCount());
 
-  // Real-time updates when disputes or applications change
+  // Real-time updates when any of these tables change
   sb.channel('nav-admin-badge')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'disputes' }, async () => {
-      setBadge(await fetchCount());
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'seller_applications' }, async () => {
-      setBadge(await fetchCount());
-    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'disputes' }, async () => setBadge(await fetchCount()))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'seller_applications' }, async () => setBadge(await fetchCount()))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'topup_requests' }, async () => setBadge(await fetchCount()))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawal_requests' }, async () => setBadge(await fetchCount()))
     .subscribe();
 }
