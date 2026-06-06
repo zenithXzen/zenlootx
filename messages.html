@@ -151,9 +151,7 @@
 <nav>
   <div class="nav-inner">
     <a href="/" class="logo"><img src="/wallpaper/zx.png" alt="ZenLootX" style="height:32px;width:auto;"><span>Zen<span class="green">Loot</span>X</span></a>
-    <div id="navActions">
-      <a href="/login" class="btn btn-secondary">Sign in</a>
-    </div>
+    <div id="navActions"></div>
   </div>
 </nav>
 
@@ -258,7 +256,7 @@
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="/nav.js?v=2"></script>
+<script src="/nav.js?v=3"></script>
 <script>
   const { createClient } = supabase;
   const sb = createClient(
@@ -1080,7 +1078,13 @@
     document.body.style.overflow = '';
   }
 
-  init();
+  init().catch(err => {
+    console.error('messages init error:', err);
+    window.location.href = '/login?redirect=/messages';
+  });
+
+  // Force reload when browser restores this page from back/forward cache
+  window.addEventListener('pageshow', e => { if (e.persisted) window.location.reload(); });
 </script>
 </body>
 </html>

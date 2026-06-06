@@ -73,7 +73,7 @@ function zPrompt(message, { title = '', placeholder = '', optional = false } = {
 }
 
 async function initNav(user) {
-  const username = user.user_metadata?.username || user.email.split('@')[0];
+  const username = user.user_metadata?.username || (user.email ? user.email.split('@')[0] : 'User');
   const initial  = username.charAt(0).toUpperCase();
   const avatar   = user.user_metadata?.avatar_url;
 
