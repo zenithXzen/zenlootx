@@ -722,8 +722,8 @@
         <h2>Ready to trade?</h2>
         <p>Sign up in under a minute. No listing fees to start.</p>
         <div class="cta-banner-actions">
-          <a href="/register" class="btn btn-primary btn-lg">Create account</a>
-          <a href="/sell"     class="btn btn-secondary btn-lg">List an account</a>
+          <a href="/register" class="btn btn-primary btn-lg" id="ctaRegisterBtn">Create account</a>
+          <a href="/sell"     class="btn btn-secondary btn-lg" id="ctaListBtn">List an account</a>
         </div>
       </div>
     </div>
@@ -840,6 +840,16 @@
         if (isSeller) {
           const ctaBanner = document.querySelector('.cta-banner')?.closest('section');
           if (ctaBanner) ctaBanner.style.display = 'none';
+        } else {
+          // Already logged in — hide "Create account", change "List an account" to "Apply to sell"
+          const registerBtn = document.getElementById('ctaRegisterBtn');
+          const listBtn     = document.getElementById('ctaListBtn');
+          if (registerBtn) registerBtn.style.display = 'none';
+          if (listBtn) {
+            listBtn.textContent = 'Apply to become a seller';
+            listBtn.href = '/sell';
+            listBtn.className = 'btn btn-primary btn-lg';
+          }
         }
       }
     })();
