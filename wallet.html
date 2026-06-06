@@ -515,22 +515,20 @@
       // Fetch transactions + pending top-up requests
       const [{ data: txs }, { data: pendingTopups }] = await Promise.all([
         sb.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50),
-        sb.from('topup_requests').select('*').eq('user_id', userId).in('status', ['pending', 'rejected']).order('created_at', { ascending: false }),
+        sb.from('topup_requests').select('*').eq('user_id', userId).eq('status', 'pending').order('created_at', { ascending: false }),
       ]);
 
-      // Convert pending/rejected top-up requests into tx-shaped objects
-      const pendingTxs = (pendingTopups || []).map(r => {
-        const isRejected = r.status === 'rejected';
-        return {
-          id:          r.id,
-          type:        isRejected ? 'debit' : 'pending',
-          description: isRejected ? 'Top-up rejected' : 'Top-up pending approval',
-          amount:      isRejected ? 0 : r.amount,
-          status:      isRejected ? 'rejected' : 'pending',
-          created_at:  r.created_at,
-          reference:   r.reference || null,
-        };
-      });
+      // Only pending top-ups appear here — rejected ones already have a transactions row
+      const METHOD_LABEL = { gcash:'GCash', maya:'Maya', maribank:'Maribank', wise:'Wise', binance:'Binance' };
+      const pendingTxs = (pendingTopups || []).map(r => ({
+        id:          r.id,
+        type:        'pending',
+        description: `Top-up pending via ${METHOD_LABEL[r.method] || r.method || 'payment'}`,
+        amount:      r.amount,
+        status:      'pending',
+        created_at:  r.created_at,
+        reference:   r.reference || null,
+      }));
 
       // Merge: pending top-ups first (most recent), then confirmed transactions
       allTx = [...pendingTxs, ...(txs || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
