@@ -20,8 +20,8 @@ export async function onRequestPost({ request, env }) {
       Prefer: 'return=minimal',
     };
 
-    // Verify user is the seller
-    const lRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}&select=seller_id`, { headers: { ...hdr, Prefer: '' } });
+    // Verify user is the seller and fetch images
+    const lRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}&select=seller_id,images`, { headers: { ...hdr, Prefer: '' } });
     const lData = await lRes.json();
     const listing = lData[0];
 
@@ -34,6 +34,20 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({ status: 'inactive' }),
       });
     } else {
+      // Delete images from storage before removing the row
+      const images = Array.isArray(listing.images) ? listing.images : [];
+      const prefix = `${env.SUPABASE_URL}/storage/v1/object/public/listing-images/`;
+      const paths  = images
+        .map(img => typeof img === 'string' ? img : (img?.url || img?.src || ''))
+        .filter(url => url.startsWith(prefix))
+        .map(url => url.replace(prefix, ''));
+      if (paths.length > 0) {
+        await fetch(`${env.SUPABASE_URL}/storage/v1/object/listing-images`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prefixes: paths }),
+        }).catch(() => {});
+      }
       await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listingId}`, {
         method: 'DELETE', headers: hdr,
       });

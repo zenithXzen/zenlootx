@@ -130,6 +130,49 @@ export async function onRequestPost({ request, env }) {
       } catch {}
     }
 
+    // Clean up images for listings sold more than 14 days ago
+    try {
+      const imageCutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+      const soldRes  = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/orders?escrow_status=eq.released&created_at=lt.${encodeURIComponent(imageCutoff)}&select=listing_id`,
+        { headers: hdr }
+      );
+      const soldOrders = await soldRes.json();
+      const listingIds = [...new Set((Array.isArray(soldOrders) ? soldOrders : []).map(o => o.listing_id).filter(Boolean))];
+
+      if (listingIds.length > 0) {
+        const liRes  = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/listings?id=in.(${listingIds.join(',')})&images=neq.[]&select=id,images`,
+          { headers: hdr }
+        );
+        const listings = await liRes.json();
+        const prefix   = `${env.SUPABASE_URL}/storage/v1/object/public/listing-images/`;
+
+        for (const listing of (Array.isArray(listings) ? listings : [])) {
+          const images = Array.isArray(listing.images) ? listing.images : [];
+          const paths  = images
+            .map(img => typeof img === 'string' ? img : (img?.url || img?.src || ''))
+            .filter(url => url.startsWith(prefix))
+            .map(url => url.replace(prefix, ''));
+
+          if (paths.length > 0) {
+            await fetch(`${env.SUPABASE_URL}/storage/v1/object/listing-images`, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prefixes: paths }),
+            }).catch(() => {});
+
+            // Clear images array on the listing row
+            await fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${listing.id}`, {
+              method: 'PATCH',
+              headers: { ...hdr, Prefer: 'return=minimal' },
+              body: JSON.stringify({ images: [] }),
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch {}
+
     return Response.json({ released });
   } catch (e) {
     return Response.json({ released: 0, error: e.message });
