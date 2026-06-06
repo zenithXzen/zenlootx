@@ -6,7 +6,7 @@
 
 ---
 
-## 📍 Current State (snapshot — last updated 2026-06-06)
+## 📍 Current State (snapshot — last updated 2026-06-07)
 
 **Live stack**
 - Frontend: Static HTML/CSS/JS (Vite) — Geist font, dark theme (accent `#19C37D`)
@@ -23,37 +23,40 @@
 - Landing page, auth-aware nav, register/login (email or username), forgot/reset password
 - Email verification via HMAC-signed 6-digit code (Resend)
 - Account page: avatar upload, bio, username change (once), email/password change, sessions + remote sign-out
-- Browse listings (Genshin, MLBB, Valorant) with real-time sold updates
+- Browse listings (Genshin, MLBB, Valorant) with real-time sold updates — expired listings filtered out
 - Listing detail page with buy flow + real-time availability
-- Create listing (server-side, sellers only, input validation, up to 10 images)
+- Create listing (server-side, sellers only, input validation, up to 10 images, 30-day expiry set on creation)
+- Listing expiry: listings expire after 30 days; sellers can renew from dashboard (Renew button appears ≤7 days left)
 - Wallet: balance display, top-up requests, transaction history, withdrawals
 - Purchase flow: atomic buy via Postgres `purchase_listing` RPC (row-level locks, no double-spend)
-- Escrow system: holding → delivered → confirmed → released
-- Orders page: buyer + seller views, file dispute, release payment
+- Escrow system: holding → confirmed → released; auto-releases after 72h if no dispute or manual release
+- Orders page: buyer + seller views, file dispute, release payment, countdown timer showing time until auto-release
 - Messaging: real-time conversations, read receipts, unread badge in nav
 - Notifications: in-app + email via Resend, real-time unread badge
 - Seller onboarding: application flow with ID upload
 - Disputes: file dispute, admin resolution
 - Admin panel: manage users, freeze/ban, review applications, resolve disputes, top-up actions, send notifications
 - Public profile: avatar, bio, tier badge, verified seller badge, active listings (limit 20), reviews, XSS-safe
+- Seller dashboard: stats, chart, active/inactive listings only (sold hidden), expiry column, recent sales
 - Tier system: Iron → Bronze → Silver → Gold → Sapphire → Diamond (based on transaction volume + reviews)
 - Push notification subscriptions
 - Terms of Service + Privacy Policy (up to date as of 2026-06-06)
+- Report listing: buyers can report fraudulent listings (duplicate prevention, goes to admin queue)
 
 **Supabase tables (confirmed)**
 - `user_sessions` (RLS ✅)
 - `profiles` (RLS ✅)
-- `listings` (RLS ✅, realtime enabled)
+- `listings` (RLS ✅, realtime enabled) — `expires_at` column added (30-day expiry)
 - `orders` (RLS ✅)
 - `wallets` (RLS ✅)
-- `transactions` (RLS ✅)
+- `transactions` (RLS ✅) — `hold_until` column added (not actively used — feature removed at owner request)
 - `messages` (RLS ✅)
 - `conversations` (RLS ✅, realtime enabled)
 - `notifications` (RLS ✅, realtime enabled)
 - `seller_applications` (RLS ✅)
 - `disputes` (RLS ✅)
 - `reviews`
-- `email_rate_limits` (RLS ✅, auto-deletes after 10 min)
+- `email_rate_limits` (RLS ✅) — also used for verify-code attempt tracking (prefix `vfy::`)
 - `withdrawal_requests`
 
 **Supabase SQL functions**
@@ -80,11 +83,17 @@
 - M2 (silent catch blocks) not fully fixed across all pages — add error toasts on remaining pages before launch
 - Payments provider not yet integrated (wallet top-up is manual admin action for now)
 
-**Not built yet**
-- Real payment processing integration (provider undecided — see D-016 in decision.md)
-- Referral system (₱50-per-referral) — intentionally deferred
-- Favorites / saved listings — intentionally deferred
-- Mobile PWA wrapping — intentionally deferred
+**Not built yet (priority order)**
+1. Fee system — ZenLootX earns ₱0 per trade. Needs platform % cut inside `purchase_listing` RPC.
+2. Email notifications for key events — order placed, payment released, dispute opened (Resend)
+3. Admin analytics dashboard — GMV, new users, dispute rate, earnings
+4. MFA / 2FA for sellers — TOTP option for high-value accounts
+5. Search on listings — full-text keyword search across titles/descriptions
+6. Audit log table — record all admin actions (ban, freeze, resolve dispute)
+7. Referral system (₱50-per-referral) — intentionally deferred
+8. Favorites / saved listings — intentionally deferred
+9. Real payment processing — provider undecided (see decision.md D-022)
+10. Mobile PWA wrapping — intentionally deferred
 
 ---
 
