@@ -463,11 +463,7 @@ async function initAdminBadge() {
 
   setBadge(await fetchCount());
 
-  // Real-time updates when any of these tables change
-  sb.channel('nav-admin-badge')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'disputes' }, async () => setBadge(await fetchCount()))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'seller_applications' }, async () => setBadge(await fetchCount()))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'topup_requests' }, async () => setBadge(await fetchCount()))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawal_requests' }, async () => setBadge(await fetchCount()))
-    .subscribe();
+  // Poll every 30s — Supabase Realtime respects RLS so events are blocked for rows
+  // the admin client can't read directly; polling via the service-key API is reliable.
+  setInterval(async () => setBadge(await fetchCount()), 30000);
 }

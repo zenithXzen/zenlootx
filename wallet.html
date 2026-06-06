@@ -512,15 +512,26 @@
         }
       }
 
-      // Fetch transactions
-      const { data: txs } = await sb
-        .from('transactions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      // Fetch transactions + pending top-up requests
+      const [{ data: txs }, { data: pendingTopups }] = await Promise.all([
+        sb.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50),
+        sb.from('topup_requests').select('*').eq('user_id', userId).eq('status', 'pending').order('created_at', { ascending: false }),
+      ]);
 
-      allTx = txs || [];
+      // Convert pending top-up requests into tx-shaped objects so they appear in the list
+      const pendingTxs = (pendingTopups || []).map(r => ({
+        id:          r.id,
+        type:        'pending',
+        description: 'Top-up pending approval',
+        amount:      r.amount,
+        status:      'pending',
+        created_at:  r.created_at,
+        reference:   r.reference || null,
+        _isPendingTopup: true,
+      }));
+
+      // Merge: pending top-ups first (most recent), then confirmed transactions
+      allTx = [...pendingTxs, ...(txs || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       renderTransactions();
     }
 
