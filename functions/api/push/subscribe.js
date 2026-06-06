@@ -12,9 +12,9 @@ export async function onRequestPost({ request, env }) {
     const { subscription } = await request.json();
     if (!subscription?.endpoint) return Response.json({ error: 'Invalid subscription' }, { status: 400 });
 
-    // Delete any existing sub for this user+endpoint, then insert fresh (avoids upsert constraint issues)
+    // Replace subscription: delete all for this user, then insert fresh
     await fetch(
-      `${env.SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${user.id}&endpoint=eq.${encodeURIComponent(subscription.endpoint)}`,
+      `${env.SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${user.id}`,
       {
         method: 'DELETE',
         headers: {
@@ -34,7 +34,6 @@ export async function onRequestPost({ request, env }) {
       },
       body: JSON.stringify({
         user_id:    user.id,
-        endpoint:   subscription.endpoint,
         subscription,
         updated_at: new Date().toISOString(),
       }),
