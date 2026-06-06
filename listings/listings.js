@@ -365,7 +365,6 @@ function renderCard(listing) {
         <div class="card-img">${img}</div>
         <div class="card-body">
           <div class="card-tags">
-            <span class="game-tag ${TAGCLS}" style="margin-bottom:0;">${LABEL}</span>
             ${typePill(listing.type)}
           </div>
           <div class="card-title">${listing.title}</div>
