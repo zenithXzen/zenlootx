@@ -85,15 +85,17 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({ balance: bal + amount }),
       });
       // Deduct from seller balance (covers both escrow and already-released orders)
-      const swRes  = await sb(env, `wallets?user_id=eq.${sellerId}&select=balance,escrow`, { method: 'GET', headers: { Prefer: '' } });
+      const swRes  = await sb(env, `wallets?user_id=eq.${sellerId}&select=balance,escrow,total_earned`, { method: 'GET', headers: { Prefer: '' } });
       const swData = await swRes.json();
-      const sellerBalance = Number(swData[0]?.balance || 0);
-      const sellerEscrow  = Number(swData[0]?.escrow  || 0);
+      const sellerBalance      = Number(swData[0]?.balance      || 0);
+      const sellerEscrow       = Number(swData[0]?.escrow       || 0);
+      const sellerTotalEarned  = Number(swData[0]?.total_earned || 0);
       await sb(env, `wallets?user_id=eq.${sellerId}`, {
         method: 'PATCH',
         body: JSON.stringify({
-          balance: Math.max(0, sellerBalance - amount),
-          escrow:  Math.max(0, sellerEscrow  - amount),
+          balance:      sellerBalance - amount,
+          escrow:       Math.max(0, sellerEscrow - amount),
+          total_earned: Math.max(0, sellerTotalEarned - amount),
         }),
       });
       // Mark order refunded

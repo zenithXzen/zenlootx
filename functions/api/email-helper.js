@@ -20,11 +20,17 @@ export async function sendEmail(env, { to, subject, html }) {
 }
 
 export function wrap(content) {
-  return `<div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;background:#0A0E0C;color:#E8EDE9;padding:40px 32px;border-radius:12px;">
-    <div style="font-size:24px;font-weight:700;margin-bottom:6px;">Zen<span style="color:#19C37D;">Loot</span>X</div>
-    <hr style="border:none;border-top:1px solid #232B26;margin:20px 0;">
-    ${content}
-    <hr style="border:none;border-top:1px solid #232B26;margin:28px 0 16px;">
-    <p style="font-size:12px;color:#6B776F;">© 2026 ZenLootX · zenlootexchange.com</p>
+  return `
+  <div style="background:#060908;padding:32px 16px;">
+    <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;background:#0A0E0C;color:#E8EDE9;padding:48px 40px;border-radius:16px;border:1px solid #1A211C;">
+      <div style="margin-bottom:8px;">
+        <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">Zen<span style="color:#19C37D;">Loot</span>X</span>
+      </div>
+      <p style="font-size:12px;color:#6B776F;margin:0 0 28px;">Secure game account marketplace</p>
+      <hr style="border:none;border-top:1px solid #232B26;margin:0 0 32px;">
+      ${content}
+      <hr style="border:none;border-top:1px solid #232B26;margin:36px 0 24px;">
+      <p style="font-size:12px;color:#6B776F;margin:0;line-height:1.8;">© 2026 ZenLootX &nbsp;·&nbsp; <a href="https://zenlootexchange.com" style="color:#6B776F;text-decoration:none;">zenlootexchange.com</a></p>
+    </div>
   </div>`;
 }

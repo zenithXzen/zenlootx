@@ -56,13 +56,22 @@ export async function onRequestPost(context) {
         to: email,
         subject: 'Your ZenLootX verification code',
         html: `
-          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0A0E0C;padding:40px;border-radius:12px">
-            <h2 style="color:#E8EDE9;margin:0 0 16px">Verify your email</h2>
-            <p style="color:#9BA8A0;margin:0 0 24px">Enter this code to finish creating your ZenLootX account.</p>
-            <div style="font-size:36px;font-weight:700;letter-spacing:10px;padding:28px;background:#121814;color:#19C37D;border-radius:8px;text-align:center;border:1px solid #232B26">
-              ${code}
+          <div style="background:#060908;padding:32px 16px;">
+            <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;background:#0A0E0C;color:#E8EDE9;padding:48px 40px;border-radius:16px;border:1px solid #1A211C;">
+              <div style="margin-bottom:8px;">
+                <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">Zen<span style="color:#19C37D;">Loot</span>X</span>
+              </div>
+              <p style="font-size:12px;color:#6B776F;margin:0 0 28px;">Secure game account marketplace</p>
+              <hr style="border:none;border-top:1px solid #232B26;margin:0 0 32px;">
+              <h2 style="font-size:20px;font-weight:700;margin:0 0 12px;color:#E8EDE9;">Verify your email</h2>
+              <p style="font-size:15px;color:#9BA8A0;line-height:1.7;margin:0 0 28px;">Enter this code to finish creating your ZenLootX account. It expires in 10 minutes.</p>
+              <div style="font-size:38px;font-weight:700;letter-spacing:12px;padding:32px 24px;background:#121814;color:#19C37D;border-radius:10px;text-align:center;border:1px solid #232B26;margin-bottom:28px;">
+                ${code}
+              </div>
+              <p style="font-size:13px;color:#6B776F;line-height:1.7;margin:0;">If you didn't request this code, you can safely ignore this email — no account will be created.</p>
+              <hr style="border:none;border-top:1px solid #232B26;margin:36px 0 24px;">
+              <p style="font-size:12px;color:#6B776F;margin:0;line-height:1.8;">© 2026 ZenLootX &nbsp;·&nbsp; <a href="https://zenlootexchange.com" style="color:#6B776F;text-decoration:none;">zenlootexchange.com</a></p>
             </div>
-            <p style="color:#6B776F;font-size:13px;margin-top:20px">Expires in 10 minutes. If you didn't request this, ignore this email.</p>
           </div>
         `,
       }),
