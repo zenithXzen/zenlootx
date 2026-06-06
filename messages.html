@@ -164,13 +164,12 @@
     <div class="sidebar-head">
       <h2>Messages</h2>
     </div>
-    <div class="conv-list" id="convList">
-      <div id="convEmpty" style="display:none;padding:40px 24px;text-align:center;">
-        <div style="font-size:32px;margin-bottom:12px;">💬</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Your inbox is empty</div>
-        <div style="font-size:13px;color:var(--text-faint);line-height:1.6;">Once you make a trade, your messages will appear here.</div>
-      </div>
+    <div id="convEmpty" style="display:none;padding:40px 24px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:12px;">💬</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Your inbox is empty</div>
+      <div style="font-size:13px;color:var(--text-faint);line-height:1.6;">Once you make a trade, your messages will appear here.</div>
     </div>
+    <div class="conv-list" id="convList"></div>
   </div>
 
   <!-- CHAT PANEL -->
@@ -283,43 +282,38 @@
     if (!session) { window.location.href = '/login?redirect=/messages'; return; }
     currentUser = session.user;
     await initNav(session.user);
-    await loadConversations();
+    await loadConversations(session.access_token);
 
     if (openConvId) openConversation(openConvId);
     else if (openWith) findOrOpenConvWith(openWith);
   }
 
   // -- Conversations ---------------------------------------------
-  async function loadConversations() {
-    // Use service-key API to bypass RLS issues
-    const { data: { session } } = await sb.auth.getSession();
-    const res  = await fetch('/api/my-conversations', {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
+  async function loadConversations(token) {
+    const showEmpty = () => { document.getElementById('convEmpty').style.display = 'block'; };
+    const hideEmpty = () => { document.getElementById('convEmpty').style.display = 'none'; };
 
-    if (!res.ok) {
-      console.error('Conversations API error:', await res.text());
-      document.getElementById('convList').innerHTML = `
-        <div class="sidebar-empty">
-          <div style="font-size:32px;">⚠️</div>
-          <p style="color:var(--danger);">Could not load conversations.<br>Please refresh and try again.</p>
-        </div>`;
+    let existing = [], profiles = {};
+    try {
+      const res = await fetch('/api/my-conversations', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { console.error('Conversations API error:', await res.text()); showEmpty(); return; }
+      const data = await res.json();
+      existing   = data.conversations || [];
+      profiles   = data.profiles      || {};
+    } catch (e) {
+      console.error('loadConversations failed:', e);
+      showEmpty();
       return;
     }
 
-    const data     = await res.json();
-    const existing = data.conversations || [];
-    const profiles = data.profiles      || {};
     Object.assign(profileCache, profiles);
 
-    if (!existing.length) {
-      document.getElementById('convEmpty').style.display = 'block';
-      return;
-    }
-    document.getElementById('convEmpty').style.display = 'none';
+    if (!existing.length) { showEmpty(); return; }
+    hideEmpty();
 
     conversations = existing;
-
     renderConvList();
     subscribeConversations();
 
