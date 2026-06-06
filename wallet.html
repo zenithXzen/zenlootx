@@ -587,7 +587,9 @@
 
     function txRow(tx) {
       const t    = TX_ICONS[tx.type] || { cls: 'pending', icon: '•' };
-      const sign = tx.status === 'failed' || tx.status === 'pending' ? '' : tx.type === 'credit' ? '+' : tx.type === 'refund' ? '' : tx.type === 'pending' ? '' : '-';
+      const sign = (tx.status === 'pending' || tx.status === 'failed') ? ''
+                 : (tx.type === 'credit' || tx.type === 'refund') ? '+'
+                 : '-';
       const date     = new Date(tx.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
       const datetime = new Date(tx.created_at).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
       const STATUS_LABEL = { completed:'Done', pending:'Pending', failed:'Failed', rejected:'Rejected' };

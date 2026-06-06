@@ -463,7 +463,8 @@ async function initAdminBadge() {
 
   setBadge(await fetchCount());
 
-  // Poll every 30s — Supabase Realtime respects RLS so events are blocked for rows
-  // the admin client can't read directly; polling via the service-key API is reliable.
-  setInterval(async () => setBadge(await fetchCount()), 30000);
+  // Poll every 10s — Supabase Realtime postgres_changes is blocked by RLS for rows
+  // the admin client can't read directly, so polling the service-key API is the
+  // reliable path. 10s keeps it feeling near-instant.
+  setInterval(async () => setBadge(await fetchCount()), 10000);
 }
