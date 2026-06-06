@@ -509,7 +509,7 @@
       sales.forEach(o => {
         if (o.listing_id) orderCountMap[o.listing_id] = (orderCountMap[o.listing_id] || 0) + 1;
       });
-      renderListings(listings, orderCountMap);
+      renderListings(listings.filter(l => l.status !== 'sold'), orderCountMap);
 
       // ── Recent sales ──
       renderOrders(sales);

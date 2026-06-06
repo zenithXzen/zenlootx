@@ -72,11 +72,10 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({ status: 'completed', description: `Purchase completed: ${title}` }),
       });
       // Upgrade seller's escrow transaction to credit (turns green with + instead of creating a duplicate)
-      const holdUntil = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions?reference=eq.${orderId}&user_id=eq.${order.seller_id}&type=eq.escrow`, {
         method: 'PATCH',
         headers: { ...hdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({ type: 'credit', status: 'completed', description: `Sale completed: ${title}`, hold_until: holdUntil }),
+        body: JSON.stringify({ type: 'credit', status: 'completed', description: `Sale completed: ${title}` }),
       });
     } catch {}
 

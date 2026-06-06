@@ -325,7 +325,7 @@
         if (minsLeft <= 0) return `<div style="font-size:11px;color:var(--text-faint);margin-top:6px;">⏱ Auto-release processing…</div>`;
         const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
         const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-        return `<div style="font-size:11px;color:var(--text-faint);margin-top:6px;">⏱ Auto-releases in ${timeStr} if no dispute is filed</div>`;
+        return `<div style="font-size:11px;color:var(--text-faint);margin-top:6px;">⏱ Auto-releases in ${timeStr} if no release payment or dispute filed</div>`;
       })() : '';
 
       const listingId = o.listing_id || o.listings?.id || '';

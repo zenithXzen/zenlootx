@@ -43,19 +43,7 @@ export async function onRequestPost({ request, env }) {
       return Response.json({ error: 'Your wallet is frozen due to an open dispute. Withdrawals are disabled until the dispute is resolved.' }, { status: 403 });
     }
 
-    // Calculate how much is held (earned within last 72 hours — not yet withdrawable)
-    const nowIso = new Date().toISOString();
-    const heldRes  = await sb(env, `transactions?user_id=eq.${user.id}&hold_until=gt.${encodeURIComponent(nowIso)}&type=eq.credit&status=eq.completed&select=amount`, { method: 'GET', headers: { Prefer: '' } });
-    const heldData = await heldRes.json().catch(() => []);
-    const heldAmount  = Array.isArray(heldData) ? heldData.reduce((s, t) => s + Number(t.amount), 0) : 0;
-    const available   = balance - heldAmount;
-
-    if (available < amount) {
-      if (heldAmount > 0) {
-        return Response.json({
-          error: `₱${heldAmount.toFixed(2)} of your balance is held for 72 hours after recent sales. Available to withdraw: ₱${Math.max(0, available).toFixed(2)}.`,
-        }, { status: 422 });
-      }
+    if (balance < amount) {
       return Response.json({ error: `Insufficient balance. Available: ₱${balance.toFixed(2)}.` }, { status: 422 });
     }
 
