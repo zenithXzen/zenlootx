@@ -393,7 +393,7 @@ function renderCard(listing) {
               <div style="min-width:0;">
                 <div style="font-size:13px;font-weight:600;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${listing.seller?.username || 'Seller'}</div>
                 <div style="line-height:1.3;margin-top:2px;">
-                  ${listing.seller?.avg_rating > 0
+                  ${listing.seller?.avg_rating > 0 && listing.seller?.review_count > 0
                     ? `<span style="color:#F5B947;font-weight:700;font-size:14px;">★ ${listing.seller.avg_rating}</span><span style="color:var(--text-faint);font-size:11px;"> (${listing.seller.review_count})</span>`
                     : ``}
                 </div>
