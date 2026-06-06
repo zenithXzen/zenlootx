@@ -843,6 +843,7 @@
       document.getElementById('afAmountLabel').textContent = isBinance ? 'Amount you\'re sending (USDT)' : 'Amount you\'re sending (PHP)';
       document.getElementById('afAmountPrefix').textContent = isBinance ? 'USDT' : '₱';
       document.getElementById('afAmountHint').textContent   = isBinance ? 'Enter the USDT amount you sent.' : 'Minimum top-up: ₱100.00';
+      document.getElementById('addFundsAmount').style.paddingLeft = isBinance ? '56px' : '30px';
     }
 
     async function submitAddFunds() {
