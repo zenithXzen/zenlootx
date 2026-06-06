@@ -312,7 +312,7 @@ async function initMsgBadge(userId) {
 }
 
 async function doSubscribe() {
-  const VAPID_PUBLIC = 'BKUJriuZ7hXGLjRGvL0uvAkUlIwZJTvbZv4XFaDZGhn7kF09FLORhRgVag3kkdC3tFuSNJBjMOW6tQjYGK37g5o';
+  const VAPID_PUBLIC = 'BNNvBaXi5R4-snm6bQpWmRMhhgVRxzq3AOEDnOhtboWoPa8uj94gMj9jTrv5XsWmFF121H4oweTLGDhoE29i8-Y';
   const p = '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4);
   const key = Uint8Array.from(atob((VAPID_PUBLIC + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 

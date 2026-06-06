@@ -71,9 +71,7 @@
 
 **Cloudflare env vars set**
 `RESEND_API_KEY` · `HMAC_SECRET` · `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_KEY` · `ADMIN_BYPASS_SECRET` · `VAPID_PUBLIC_KEY` · `VAPID_PRIVATE_KEY`
-- VAPID_PUBLIC_KEY = `BKUJriuZ7hXGLjRGvL0uvAkUlIwZJTvbZv4XFaDZGhn7kF09FLORhRgVag3kkdC3tFuSNJBjMOW6tQjYGK37g5o`
-- VAPID_PRIVATE_KEY = `6RzCHCpmeU5nitmPa-ThOvh99kf9tHRD5QkU768tAOM`
-⚠️ VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be added to Cloudflare Pages Settings → Environment Variables before push notifications work.
+⚠️ VAPID keys rotated 2026-06-09 (old private key was accidentally committed). New values are in Cloudflare env vars only — never store key values in this file.
 
 **Security status (full audit completed 2026-06-06)**
 - C1–C4 (Critical): ALL FIXED ✅
