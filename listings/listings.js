@@ -73,7 +73,7 @@ document.body.innerHTML = `
   <div class="game-switcher">
     <div class="container">
       <div class="game-switcher-inner">
-        <span class="game-sw-label">Browse</span>
+        <span class="game-sw-label">Games</span>
         <a href="/listings/genshin" class="game-sw-btn ${GAME === 'genshin' ? 'active' : ''}">
           <span class="game-sw-icon">✦</span> Genshin Impact
         </a>
