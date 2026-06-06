@@ -315,9 +315,9 @@ async function doSubscribe() {
   const p = '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4);
   const key = Uint8Array.from(atob((VAPID_PUBLIC + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
   const reg = await navigator.serviceWorker.ready;
-  const existing = await reg.pushManager.getSubscription();
-  if (existing) return;
-  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+  // Always use the existing subscription if present (it may not be in Supabase yet)
+  const sub = (await reg.pushManager.getSubscription()) ||
+              (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
   const { data: { session } } = await sb.auth.getSession();
   if (!session) throw new Error('Not logged in — please log in and try again');
   const res = await fetch('/api/push/subscribe', {
