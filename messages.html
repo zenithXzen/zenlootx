@@ -991,7 +991,6 @@
       return;
     }
 
-    const releaseBtn = document.getElementById('releaseBtn');
     const revieweeId = _releaseSellerId;
     const oid        = order.id;
     if (releaseBtn) releaseBtn.outerHTML = `<button id="rateBtn" onclick="openRateModal('${oid}','${revieweeId}')"
