@@ -836,8 +836,8 @@
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
         await initNav(session.user);
-        const { data: profile } = await sb.from('profiles').select('seller_verified').eq('id', session.user.id).single();
-        if (profile?.seller_verified) {
+        const isSeller = session.user.app_metadata?.is_seller === true || session.user.app_metadata?.is_admin === true;
+        if (isSeller) {
           const ctaBanner = document.querySelector('.cta-banner')?.closest('section');
           if (ctaBanner) ctaBanner.style.display = 'none';
         }
