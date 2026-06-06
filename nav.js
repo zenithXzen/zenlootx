@@ -310,10 +310,13 @@ async function initMsgBadge(userId) {
     .subscribe();
 }
 
-async function doSubscribe(reg) {
+async function doSubscribe() {
   const VAPID_PUBLIC = 'BKUJriuZ7hXGLjRGvL0uvAkUlIwZJTvbZv4XFaDZGhn7kF09FLORhRgVag3kkdC3tFuSNJBjMOW6tQjYGK37g5o';
   const p = '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4);
   const key = Uint8Array.from(atob((VAPID_PUBLIC + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  const reg = await navigator.serviceWorker.ready;
+  const existing = await reg.pushManager.getSubscription();
+  if (existing) return;
   const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
@@ -325,47 +328,49 @@ async function doSubscribe(reg) {
 }
 
 async function initPushSubscription(user) {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
 
-    // Already subscribed — nothing to do
-    if (Notification.permission === 'granted') {
-      const existing = await reg.pushManager.getSubscription();
-      if (!existing) await doSubscribe(reg);
-      return;
-    }
+  // Register sw early so .ready resolves fast when needed
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
 
-    // Already denied — don't nag
-    if (Notification.permission === 'denied') return;
+  // Already granted — just make sure we're subscribed
+  if (Notification.permission === 'granted') {
+    doSubscribe().catch(() => {});
+    return;
+  }
 
-    // Permission is 'default' — show a one-time banner so the request
-    // comes from a user gesture (Chrome blocks automatic prompts)
-    if (localStorage.getItem('zlx-push-dismissed')) return;
-    const banner = document.createElement('div');
-    banner.id = 'push-banner';
-    banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;background:#1A211C;border:1px solid #33403A;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-width:calc(100vw - 32px);';
-    banner.innerHTML = `
-      <span style="font-size:20px">🔔</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:600;color:#E8EDE9">Enable notifications</div>
-        <div style="font-size:12px;color:#9BA8A0;margin-top:1px">Get notified about orders, payments & disputes</div>
-      </div>
-      <button id="push-allow" style="background:#19C37D;color:#0A0E0C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">Allow</button>
-      <button id="push-dismiss" style="background:none;border:none;cursor:pointer;color:#6B776F;padding:4px;font-size:18px;line-height:1;flex-shrink:0;">✕</button>
-    `;
-    document.body.appendChild(banner);
+  // Already denied — can't do anything programmatically
+  if (Notification.permission === 'denied') return;
 
-    document.getElementById('push-dismiss').onclick = () => {
-      localStorage.setItem('zlx-push-dismissed', '1');
-      banner.remove();
-    };
-    document.getElementById('push-allow').onclick = async () => {
-      banner.remove();
+  // 'default' — show banner; only fire the actual prompt on user tap
+  if (localStorage.getItem('zlx-push-dismissed')) return;
+  if (document.getElementById('push-banner')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'push-banner';
+  banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;background:#1A211C;border:1px solid #33403A;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-width:calc(100vw - 32px);width:max-content;';
+  banner.innerHTML = `
+    <span style="font-size:20px">🔔</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:600;color:#E8EDE9">Enable notifications</div>
+      <div style="font-size:12px;color:#9BA8A0;margin-top:1px">Get notified about orders, payments & disputes</div>
+    </div>
+    <button id="push-allow" style="background:#19C37D;color:#0A0E0C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;">Allow</button>
+    <button id="push-dismiss" style="background:none;border:none;cursor:pointer;color:#6B776F;padding:4px;font-size:18px;line-height:1;flex-shrink:0;">✕</button>
+  `;
+  document.body.appendChild(banner);
+
+  document.getElementById('push-dismiss').addEventListener('click', () => {
+    localStorage.setItem('zlx-push-dismissed', '1');
+    banner.remove();
+  });
+  document.getElementById('push-allow').addEventListener('click', async () => {
+    banner.remove();
+    try {
       const perm = await Notification.requestPermission();
-      if (perm === 'granted') await doSubscribe(reg);
-    };
-  } catch {}
+      if (perm === 'granted') await doSubscribe();
+    } catch {}
+  });
 }
 
 async function initNotifBadge(userId) {
