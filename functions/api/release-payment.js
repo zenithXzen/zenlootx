@@ -1,4 +1,5 @@
 import { sendPushToUser } from './push-helper.js';
+import { getUserInfo, sendEmail, wrap } from './email-helper.js';
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -104,6 +105,30 @@ export async function onRequestPost({ request, env }) {
       title: '💸 Payment released!',
       body:  `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} has been added to your wallet.`,
       url:   '/wallet',
+    }).catch(() => {});
+
+    // Email notification to seller
+    getUserInfo(order.seller_id, env).then(({ email, name }) => {
+      if (!email) return;
+      const fmt   = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+      const listRes = fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${order.listing_id}&select=title`, {
+        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
+      }).then(r => r.json()).then(d => d[0]?.title || 'your listing').catch(() => 'your listing');
+      return listRes.then(title => sendEmail(env, {
+        to:      email,
+        subject: `💸 Payment released — ${fmt(amount)} is in your wallet`,
+        html: wrap(`
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">Payment released! 💸</h2>
+          <p style="font-size:15px;color:#9BA8A0;line-height:1.7;margin-bottom:20px;">
+            Hi <strong style="color:#E8EDE9;">${name}</strong>, the buyer has confirmed receipt of <strong style="color:#E8EDE9;">${title}</strong>.
+          </p>
+          <div style="background:#121814;border:1px solid #232B26;border-radius:10px;padding:20px 22px;margin-bottom:24px;">
+            <div style="font-size:13px;color:#6B776F;margin-bottom:4px;">Amount credited to your wallet</div>
+            <div style="font-size:26px;font-weight:700;color:#19C37D;">${fmt(amount)}</div>
+          </div>
+          <p style="font-size:14px;color:#9BA8A0;line-height:1.7;">You can withdraw your earnings from your wallet at any time.</p>
+          <a href="https://zenlootexchange.com/wallet" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#19C37D;color:#0A0E0C;font-weight:700;border-radius:8px;text-decoration:none;font-size:14px;">View Wallet →</a>`),
+      }));
     }).catch(() => {});
 
     return Response.json({ success: true });
