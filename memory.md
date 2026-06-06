@@ -99,6 +99,12 @@
 
 ## 🗓️ Change Log (newest first)
 
+### 2026-06-08 (security hardening session — round 2)
+- **Reverted reset link to 15 min:** Owner preference. Reverted 300000 → 900000 in send-reset.js and reset-password.js; UI text back to "15 minutes".
+- **CSP fixed for Cloudflare analytics:** Added `https://static.cloudflareinsights.com` to script-src and `https://cloudflareinsights.com` to connect-src. Cloudflare Pages injects a beacon script automatically which was being blocked.
+- **Login wall added to all listings pages:** Unauthenticated users visiting /listings, /listings/genshin, /listings/mlbb, /listings/valorant, or /listings/detail are now redirected to /login. Changed listings.html, listings/listings.js (initNav), and listings/detail.html.
+- **Message button added to orders page:** Purchases, Sales, and Disputes tabs now all have a "💬 Message [Seller/Buyer]" button that opens /messages?with=<otherId>. Disputes query updated to include buyer_id and seller_id so the correct other party is identified.
+
 ### 2026-06-08 (security hardening session)
 - **Fix #3 — Dispute amount validation:** `file-dispute.js` now fetches `amount` from the order row and validates `amount > 0` before a dispute can be filed. Prevents zero-refund disputes.
 - **Fix #4 — Username lookup rate limiting:** `check-username.js` now rate-limits by IP (10 checks per minute per IP) using the `email_rate_limits` table with key prefix `ipck::`. Blocks user enumeration via brute-force username lookup.

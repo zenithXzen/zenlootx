@@ -354,7 +354,8 @@
     );
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
-      if (session) await initNav(session.user);
+      if (!session) { window.location.href = '/login'; return; }
+      await initNav(session.user);
     })();
   </script>
   <script>

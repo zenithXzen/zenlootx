@@ -590,7 +590,11 @@
         .subscribe();
     }
 
-    (async () => { const { data: { session } } = await sb.auth.getSession(); if (session) await initNav(session.user); })();
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search); return; }
+      await initNav(session.user);
+    })();
     load();
   </script>
 

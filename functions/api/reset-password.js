@@ -23,7 +23,7 @@ export async function onRequestPost(context) {
       ['sign']
     );
 
-    const now = Math.floor(Date.now() / 300000);
+    const now = Math.floor(Date.now() / 900000);
     let valid = false;
 
     for (const w of [now, now - 1]) {

@@ -179,7 +179,7 @@ document.body.innerHTML = `
 // ── Auth-aware nav ──
 async function initNav() {
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) return;
+  if (!session) { window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
   const user     = session.user;
   const username = user.user_metadata?.username || user.email.split('@')[0];
   const initial  = username.charAt(0).toUpperCase();

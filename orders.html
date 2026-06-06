@@ -385,6 +385,7 @@
             <div class="order-actions">
               ${listingId ? `<button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="openListingModal('${listingId}')">View Listing</button>` : ''}
               ${releaseBtn}
+              ${otherId ? `<a href="/messages?with=${otherId}" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">💬 Message ${otherLabel}</a>` : ''}
               ${canDispute(o, role) ? `<button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="openDispute('${o.id}', '${title.replace(/'/g,"\\'")}', '${formatAmount(o.amount || 0)}')">File a Dispute</button>` : ''}
             </div>
           </div>
@@ -498,7 +499,7 @@
   async function loadDisputes(userId) {
     const { data: disputes } = await sb
       .from('disputes')
-      .select('id,order_id,reason,status,created_at,orders(amount,listings(title,game))')
+      .select('id,order_id,buyer_id,seller_id,reason,status,created_at,orders(amount,listings(title,game))')
       .eq('filed_by', userId)
       .order('created_at', { ascending: false });
 
@@ -528,6 +529,7 @@
         fraud:'Fraud / Scam', wrong_listing:'Wrong listing', communication:'Communication',
         harassment:'Harassment', other:'Other reason',
       };
+      const disputeOtherId = d.buyer_id === userId ? d.seller_id : d.buyer_id;
       return `
         <div class="order-card" style="${d.status === 'open' ? 'border-color:rgba(239,68,68,0.2);' : ''}">
           <div class="order-game-icon">${icon}</div>
@@ -547,6 +549,12 @@
                 ✅ <strong>Resolved</strong> — This dispute has been reviewed and resolved by our team.
               </div>`}
           </div>
+          ${disputeOtherId ? `
+          <div class="order-right">
+            <div class="order-actions">
+              <a href="/messages?with=${disputeOtherId}" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">💬 Message</a>
+            </div>
+          </div>` : ''}
         </div>`;
     }).join('');
   }
