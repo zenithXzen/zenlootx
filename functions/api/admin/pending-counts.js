@@ -9,23 +9,24 @@ export async function onRequestGet({ request, env }) {
   const user = await userRes.json();
   if (!user.app_metadata?.is_admin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-  const svcHeaders = {
+  const svc = {
     Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
     apikey: env.SUPABASE_SERVICE_KEY,
-    Prefer: 'count=exact',
   };
 
-  function parseCount(cr) {
-    if (!cr) return 0;
-    const m = cr.match(/\/(\d+)$/);
-    return m ? parseInt(m[1], 10) : 0;
+  async function count(table, filter) {
+    try {
+      const res  = await fetch(`${env.SUPABASE_URL}/rest/v1/${table}?${filter}&select=id`, { headers: svc });
+      const data = await res.json();
+      return Array.isArray(data) ? data.length : 0;
+    } catch { return 0; }
   }
 
   const [d, a, t, w] = await Promise.all([
-    fetch(`${env.SUPABASE_URL}/rest/v1/disputes?status=eq.open&select=id`, { headers: svcHeaders }).then(r => parseCount(r.headers.get('content-range'))),
-    fetch(`${env.SUPABASE_URL}/rest/v1/seller_applications?status=eq.pending&select=id`, { headers: svcHeaders }).then(r => parseCount(r.headers.get('content-range'))),
-    fetch(`${env.SUPABASE_URL}/rest/v1/topup_requests?status=eq.pending&select=id`, { headers: svcHeaders }).then(r => parseCount(r.headers.get('content-range'))),
-    fetch(`${env.SUPABASE_URL}/rest/v1/withdrawal_requests?status=eq.pending&select=id`, { headers: svcHeaders }).then(r => parseCount(r.headers.get('content-range'))),
+    count('disputes',            'status=eq.open'),
+    count('seller_applications', 'status=eq.pending'),
+    count('topup_requests',      'status=eq.pending'),
+    count('withdrawal_requests', 'status=eq.pending'),
   ]);
 
   return Response.json({ disputes: d, applications: a, topups: t, withdrawals: w, total: d + a + t + w });
