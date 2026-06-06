@@ -164,7 +164,7 @@
     <div class="sidebar-head">
       <h2>Messages</h2>
     </div>
-    <div id="convEmpty" style="display:none;padding:40px 24px;text-align:center;">
+    <div id="convEmpty" style="display:block;padding:40px 24px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">💬</div>
       <div style="font-size:14px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Your inbox is empty</div>
       <div style="font-size:13px;color:var(--text-faint);line-height:1.6;">Once you make a trade, your messages will appear here.</div>
@@ -278,7 +278,16 @@
 
   // -- Init ------------------------------------------------------
   async function init() {
-    const { data: { session } } = await sb.auth.getSession();
+    let session = (await sb.auth.getSession()).data?.session;
+
+    // Mobile fallback: getSession() can return null briefly on first load
+    if (!session) {
+      session = await new Promise(resolve => {
+        const timer = setTimeout(() => resolve(null), 2000);
+        sb.auth.onAuthStateChange((_evt, s) => { if (s) { clearTimeout(timer); resolve(s); } });
+      });
+    }
+
     if (!session) { window.location.href = '/login?redirect=/messages'; return; }
     currentUser = session.user;
     await initNav(session.user);
