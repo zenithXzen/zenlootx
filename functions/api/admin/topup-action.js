@@ -130,13 +130,13 @@ export async function onRequestPost({ request, env }) {
         headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
           user_id:     userId,
-          type:        'credit',
-          amount:      Number(amount),
+          type:        action === 'approve' ? 'credit' : 'debit',
+          amount:      action === 'approve' ? Number(amount) : 0,
           description: action === 'approve'
             ? `Top-up via ${label}`
             : `Top-up rejected via ${label}`,
           reference:   id,
-          status:      action === 'approve' ? 'completed' : 'failed',
+          status:      action === 'approve' ? 'completed' : 'rejected',
         }),
       });
     }

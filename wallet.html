@@ -587,9 +587,12 @@
       withdrawal: { cls: 'debit', icon: '↓' },
     };
 
-    function txRow(tx) {
+    function txRow(rawTx) {
+      // A failed/rejected credit means a rejected top-up — display as debit-styled, ₱0
+      const isRejectedTopup = rawTx.type === 'credit' && (rawTx.status === 'failed' || rawTx.status === 'rejected');
+      const tx   = isRejectedTopup ? { ...rawTx, type: 'debit', amount: 0, status: 'rejected' } : rawTx;
       const t    = TX_ICONS[tx.type] || { cls: 'pending', icon: '•' };
-      const sign = (tx.status === 'pending' || tx.status === 'failed') ? ''
+      const sign = (tx.status === 'pending' || tx.status === 'rejected') ? ''
                  : (tx.type === 'credit' || tx.type === 'refund') ? '+'
                  : '-';
       const date     = new Date(tx.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
