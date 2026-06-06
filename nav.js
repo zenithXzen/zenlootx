@@ -89,7 +89,7 @@ async function initNav(user) {
         ${username}
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
       </button>
-      <div class="user-dropdown" id="userDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:210px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200;">
+      <div class="user-dropdown" id="userDropdown" style="display:none;position:fixed;top:0;right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:210px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:9999;">
         <div style="padding:12px 16px;font-size:12px;color:var(--text-faint);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</div>
 
         <a href="/profile" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
@@ -165,15 +165,25 @@ async function initNav(user) {
   const userDropdown = document.getElementById('userDropdown');
   const userMenu     = document.getElementById('userMenu');
 
-  if (userMenu) userMenu.style.position = 'relative';
+  // Append dropdown to body so it's never clipped by any parent overflow/z-index
+  document.body.appendChild(userDropdown);
+
+  function positionDropdown() {
+    const rect = userBtn.getBoundingClientRect();
+    userDropdown.style.top  = (rect.bottom + 6) + 'px';
+    userDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+  }
 
   userBtn.addEventListener('click', e => {
     e.stopPropagation();
     const open = userDropdown.style.display === 'block';
+    if (!open) positionDropdown();
     userDropdown.style.display = open ? 'none' : 'block';
   });
   document.addEventListener('click', e => {
-    if (userMenu && !userMenu.contains(e.target)) userDropdown.style.display = 'none';
+    if (!userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+      userDropdown.style.display = 'none';
+    }
   });
 
   document.getElementById('navLogoutBtn').addEventListener('click', async () => {
