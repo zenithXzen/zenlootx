@@ -343,19 +343,49 @@
             <th>Orders</th>
             <th>Price</th>
             <th>Status</th>
+            <th>Expires</th>
             <th></th>
           </tr></thead>
-          <tbody>${listings.map(l => `
+          <tbody>${listings.map(l => {
+            const expiryHtml = (() => {
+              if (!l.expires_at || l.status === 'sold') return '<span style="color:var(--text-faint);font-size:12px">—</span>';
+              const days = Math.ceil((new Date(l.expires_at) - Date.now()) / 86400000);
+              if (days < 0)  return '<span style="color:var(--danger);font-size:12px">Expired</span>';
+              if (days <= 7) return `<span style="color:var(--warning);font-size:12px">${days}d left</span>`;
+              return `<span style="color:var(--text-faint);font-size:12px">${days}d</span>`;
+            })();
+            const renewBtn = (l.status === 'active' && l.expires_at && Math.ceil((new Date(l.expires_at) - Date.now()) / 86400000) <= 7)
+              ? `<button onclick="renewListing('${l.id}', this)" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:inherit;font-weight:600;">Renew</button>`
+              : '';
+            return `
             <tr>
               <td class="listing-title-cell"><span class="listing-title-text" title="${l.title}">${l.title}</span></td>
               <td><span class="game-chip ${GAME_CHIP[l.game] || ''}">${GAME_LABEL[l.game] || l.game}</span></td>
               <td style="color:var(--text-dim)">${orderCountMap[l.id] || 0}</td>
               <td style="font-weight:600">${fmtMoney(l.price)}</td>
               <td>${l.status === 'active' ? '<span class="badge-live">Live</span>' : l.status === 'sold' ? '<span class="badge-sold">Sold</span>' : '<span class="badge-sold">Inactive</span>'}</td>
+              <td>${expiryHtml} ${renewBtn}</td>
               <td><a href="/listings/detail?id=${l.id}" style="font-size:12px;color:var(--accent)">View →</a></td>
-            </tr>`).join('')}
+            </tr>`;
+          }).join('')}
           </tbody>
         </table>`;
+    }
+
+    // ── Renew listing ──
+    async function renewListing(listingId, btn) {
+      btn.disabled = true; btn.textContent = 'Renewing…';
+      const { data: { session } } = await sb.auth.getSession();
+      const res  = await fetch('/api/renew-listing', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Failed to renew.'); btn.disabled = false; btn.textContent = 'Renew'; return; }
+      const days = Math.ceil((new Date(data.expires_at) - Date.now()) / 86400000);
+      const cell = btn.parentElement;
+      cell.innerHTML = `<span style="color:var(--text-faint);font-size:12px">${days}d</span>`;
     }
 
     // ── Render recent sales ──
@@ -423,7 +453,7 @@
         ordersRes,
       ] = await Promise.all([
         sb.from('wallets').select('balance,escrow,total_earned').eq('user_id', user.id).maybeSingle(),
-        sb.from('listings').select('id,title,price,currency,game,status,created_at').eq('seller_id', user.id).order('created_at', { ascending: false }),
+        sb.from('listings').select('id,title,price,currency,game,status,created_at,expires_at').eq('seller_id', user.id).order('created_at', { ascending: false }),
         sb.from('reviews').select('rating,comment,created_at').eq('reviewee_id', user.id).order('created_at', { ascending: false }),
         sb.from('transactions').select('amount,created_at').eq('user_id', user.id).eq('type', 'credit').eq('status', 'completed').gte('created_at', sixMonthsAgo.toISOString()),
         fetch('/api/my-orders', { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.json()),

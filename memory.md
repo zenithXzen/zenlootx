@@ -90,6 +90,13 @@
 
 ## 🗓️ Change Log (newest first)
 
+### 2026-06-07
+- **Feature 1 — Auto-release escrow:** Created `functions/api/auto-release-orders.js`. Orders in `holding` for 72+ hours with no open dispute are automatically released when either party visits the orders page. Seller and buyer both receive in-app notifications. Auto-released funds also get a 72h `hold_until` on the seller credit transaction.
+- **Feature 3 — Verify-code rate limiting:** `verify-code.js` now tracks failed code attempts in `email_rate_limits` table under key `vfy::${email}`. Max 5 wrong attempts per 10 minutes → 429 error with clear message.
+- **Feature 5 — Seller withdrawal hold period:** `release-payment.js` now stamps `hold_until = now + 72h` on the seller's credit transaction when payment is released. `request-withdrawal.js` calculates held amount and subtracts from available balance. Sellers see a clear error message if trying to withdraw held funds.
+- **Feature 7 — Listing expiry (30 days):** `create-listing.js` now sets `expires_at = now + 30 days` on every new listing. `listings.js` browse query filters out expired listings. `seller-dashboard.html` shows expiry days and a "Renew" button for listings expiring within 7 days. `functions/api/renew-listing.js` created — extends expiry by 30 days.
+- **SQL run in Supabase:** `ALTER TABLE transactions ADD COLUMN IF NOT EXISTS hold_until timestamptz` · `ALTER TABLE listings ADD COLUMN IF NOT EXISTS expires_at timestamptz`
+
 ### 2026-06-06 (animations session)
 - **CSS View Transitions** added to all pages via `nav.js`: `@view-transition { navigation: auto }` — cross-document page-fade (slide up-out / slide down-in, 0.16s/0.22s). Chrome 126+; silent fallback on other browsers.
 - **Scroll reveal** (`zlx-reveal` + `zlx-in`) added via Intersection Observer in `nav.js`. Elements fade + slide up when they enter the viewport. Delay variants: `zlx-d1` (70ms), `zlx-d2` (140ms), `zlx-d3` (210ms), `zlx-d4` (290ms).

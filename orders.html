@@ -319,6 +319,15 @@
         ? `<button class="btn" style="font-size:12px;padding:6px 12px;background:rgba(34,197,94,0.1);color:var(--success);border:1px solid rgba(34,197,94,0.3);" onclick="releaseFromOrder('${o.id}', this)">🔓 Release Payment</button>`
         : '';
 
+      const autoReleaseMs = new Date(o.created_at).getTime() + 72 * 60 * 60 * 1000;
+      const minsLeft      = Math.ceil((autoReleaseMs - Date.now()) / 60000);
+      const countdownHtml = o.escrow_status === 'holding' ? (() => {
+        if (minsLeft <= 0) return `<div style="font-size:11px;color:var(--text-faint);margin-top:6px;">⏱ Auto-release processing…</div>`;
+        const h = Math.floor(minsLeft / 60), m = minsLeft % 60;
+        const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+        return `<div style="font-size:11px;color:var(--text-faint);margin-top:6px;">⏱ Auto-releases in ${timeStr} if no dispute is filed</div>`;
+      })() : '';
+
       const listingId = o.listing_id || o.listings?.id || '';
 
       // Order timeline — shows for every order
@@ -369,6 +378,7 @@
               <span>${statusBadge(o.escrow_status)}</span>
             </div>
             ${disputeTimeline}
+            ${countdownHtml}
           </div>
           <div class="order-right">
             <div class="order-amount">${formatAmount(o.amount || 0)}</div>
@@ -586,6 +596,15 @@
     renderOrders(allPurchases, 'buyer',  'purchaseList', pFilter);
     renderOrders(allSales,     'seller', 'saleList',     sFilter);
     loadDisputes(userId);
+
+    // Silently auto-release any orders past the 72-hour window
+    fetch('/api/auto-release-orders', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    }).then(r => r.json()).then(d => {
+      if (d.released > 0) location.reload();
+    }).catch(() => {});
 
     // Filter buttons — purchases
     document.querySelectorAll('[data-pfilter]').forEach(btn => {

@@ -297,6 +297,7 @@ async function fetchAllListings() {
     .select('id, title, price, currency, type, images, created_at, seller_id, attributes')
     .eq('game', GAME)
     .eq('status', 'active')
+    .gt('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false });
 
   if (error || !data?.length) return error ? [] : [];
