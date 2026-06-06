@@ -834,7 +834,14 @@
 
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
-      if (session) await initNav(session.user);
+      if (session) {
+        await initNav(session.user);
+        const { data: profile } = await sb.from('profiles').select('seller_verified').eq('id', session.user.id).single();
+        if (profile?.seller_verified) {
+          const ctaBanner = document.querySelector('.cta-banner')?.closest('section');
+          if (ctaBanner) ctaBanner.style.display = 'none';
+        }
+      }
     })();
 
     // Auto sign-out if session revoked remotely
