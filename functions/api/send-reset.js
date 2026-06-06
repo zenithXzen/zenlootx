@@ -28,7 +28,8 @@ export async function onRequestPost(context) {
     // Signed reset token valid for 15 minutes
     const window  = Math.floor(Date.now() / 900000);
     const message = `reset:${email}:${window}`;
-    const secret  = env.HMAC_SECRET || 'zenlootx-default-secret';
+    const secret  = env.HMAC_SECRET;
+    if (!secret) return Response.json({ error: 'Server misconfiguration' }, { status: 500 });
     const key     = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),
