@@ -23,7 +23,7 @@ export async function onRequestPost(context) {
       ['sign']
     );
 
-    const now = Math.floor(Date.now() / 900000);
+    const now = Math.floor(Date.now() / 300000);
     let valid = false;
 
     for (const w of [now, now - 1]) {
@@ -56,7 +56,7 @@ export async function onRequestPost(context) {
       page++;
     }
     if (!userId) {
-      return Response.json({ error: 'Account not found.' }, { status: 404 });
+      return Response.json({ error: 'Reset link is invalid or has expired.' }, { status: 400 });
     }
 
     // Update password via Supabase admin API

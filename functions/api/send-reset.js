@@ -25,8 +25,8 @@ export async function onRequestPost(context) {
       body: JSON.stringify({ email }),
     });
 
-    // Signed reset token valid for 15 minutes
-    const window  = Math.floor(Date.now() / 900000);
+    // Signed reset token valid for 5 minutes
+    const window  = Math.floor(Date.now() / 300000);
     const message = `reset:${email}:${window}`;
     const secret  = env.HMAC_SECRET || 'zenlootx-default-secret';
     const key     = await crypto.subtle.importKey(
@@ -64,7 +64,7 @@ export async function onRequestPost(context) {
               Reset password →
             </a>
             <p style="color:#6B776F;font-size:13px;margin-top:24px;line-height:1.6;">
-              This link expires in <strong style="color:#E8EDE9;">15 minutes</strong>. If you did not request a password reset, you can safely ignore this email — your account has not been changed.
+              This link expires in <strong style="color:#E8EDE9;">5 minutes</strong>. If you did not request a password reset, you can safely ignore this email — your account has not been changed.
             </p>
             <hr style="border:none;border-top:1px solid #232B26;margin:24px 0 14px;">
             <p style="font-size:12px;color:#6B776F;">© 2026 ZenLootX · zenlootexchange.com</p>

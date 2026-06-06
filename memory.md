@@ -99,6 +99,16 @@
 
 ## 🗓️ Change Log (newest first)
 
+### 2026-06-08 (security hardening session)
+- **Fix #3 — Dispute amount validation:** `file-dispute.js` now fetches `amount` from the order row and validates `amount > 0` before a dispute can be filed. Prevents zero-refund disputes.
+- **Fix #4 — Username lookup rate limiting:** `check-username.js` now rate-limits by IP (10 checks per minute per IP) using the `email_rate_limits` table with key prefix `ipck::`. Blocks user enumeration via brute-force username lookup.
+- **Fix #5 — Reset link window 15 min → 5 min:** `send-reset.js` and `reset-password.js` both changed from 900000ms (15 min) to 300000ms (5 min) window. `forgot-password.html` and the reset email template updated to say "5 minutes".
+- **Fix #6 — Email enumeration in reset-password.js:** "Account not found." 404 response changed to "Reset link is invalid or has expired." 400 — same generic message used for all failure modes.
+- **Fix #7 — CSP + security headers:** `_headers` now includes `Content-Security-Policy` (script/style unsafe-inline, Google Fonts, Supabase origin, JSDelivr CDN, WSS for realtime), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
+- **Fix #2 — Admin audit log:** All 9 admin action files updated. `verifyAdmin()` now returns the user object (not just true/false). Added `logAdminAction()` helper to all admin files. Every action (ban, unban, freeze, unfreeze, dispute resolve, topup approve/reject, withdrawal approve/reject, seller approve/reject, delete listing, dismiss report, send notification) is logged to `admin_logs` table with: admin_id, action name, target_id, target_type, details JSON, timestamp. **SQL must be run in Supabase — see session notes below.**
+- **SQL to run:** Create `admin_logs` table (see instructions in session response).
+- **Security status note:** Issue #1 (verify-code brute force) was already fixed 2026-06-07. Issue #6 (email enumeration on send-reset) was already handled — frontend always shows success regardless of API response.
+
 ### 2026-06-07
 - **Feature 1 — Auto-release escrow:** Created `functions/api/auto-release-orders.js`. Orders in `holding` for 72+ hours with no open dispute are automatically released when either party visits the orders page. Seller and buyer both receive in-app notifications. Auto-released funds also get a 72h `hold_until` on the seller credit transaction.
 - **Feature 3 — Verify-code rate limiting:** `verify-code.js` now tracks failed code attempts in `email_rate_limits` table under key `vfy::${email}`. Max 5 wrong attempts per 10 minutes → 429 error with clear message.

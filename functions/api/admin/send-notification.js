@@ -120,16 +120,31 @@ async function verifyAdmin(token, env) {
     const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
       headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
     });
-    if (!res.ok) return false;
-    return (await res.json())?.app_metadata?.is_admin === true;
-  } catch { return false; }
+    if (!res.ok) return null;
+    const user = await res.json();
+    return user?.app_metadata?.is_admin === true ? user : null;
+  } catch { return null; }
+}
+
+async function logAdminAction(env, adminId, action, targetId, targetType, details = {}) {
+  await fetch(`${env.SUPABASE_URL}/rest/v1/admin_logs`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      apikey: env.SUPABASE_SERVICE_KEY,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ admin_id: adminId, action, target_id: targetId ? String(targetId) : null, target_type: targetType, details }),
+  }).catch(() => {});
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export async function onRequestPost({ request, env }) {
   try {
     const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-    if (!await verifyAdmin(token, env)) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const admin = await verifyAdmin(token, env);
+    if (!admin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const { title, message, type = 'announcement', link = '/notifications', userId = null } = await request.json();
     if (!title || !message) return Response.json({ error: 'Missing title or message' }, { status: 400 });
@@ -167,6 +182,7 @@ export async function onRequestPost({ request, env }) {
       sent = results.filter(r => r.status === 'fulfilled' && r.value >= 200 && r.value < 300).length;
     }
 
+    await logAdminAction(env, admin.id, 'send_notification', userId || null, userId ? 'user' : 'broadcast', { title });
     return Response.json({ success: true, dbInserted: true, pushSent: sent, totalSubs: subs.length });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

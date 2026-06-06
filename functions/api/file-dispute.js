@@ -33,11 +33,14 @@ export async function onRequestPost({ request, env }) {
     }
 
     // Verify the order exists and belongs to this user
-    const orderRes  = await sb(env, `orders?id=eq.${orderId}&select=id,buyer_id,seller_id,escrow_status`, { method: 'GET', headers: { Prefer: '' } });
+    const orderRes  = await sb(env, `orders?id=eq.${orderId}&select=id,buyer_id,seller_id,escrow_status,amount`, { method: 'GET', headers: { Prefer: '' } });
     const orderData = await orderRes.json();
     const order     = orderData[0];
 
     if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
+    if (!order.amount || Number(order.amount) <= 0) {
+      return Response.json({ error: 'Order has no valid amount and cannot be disputed.' }, { status: 400 });
+    }
     if (order.buyer_id !== user.id && order.seller_id !== user.id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }

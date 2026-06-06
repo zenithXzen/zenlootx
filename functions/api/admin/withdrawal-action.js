@@ -3,10 +3,23 @@ async function verifyAdmin(token, env) {
     const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
       headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
     });
-    if (!res.ok) return false;
+    if (!res.ok) return null;
     const user = await res.json();
-    return user?.app_metadata?.is_admin === true;
-  } catch { return false; }
+    return user?.app_metadata?.is_admin === true ? user : null;
+  } catch { return null; }
+}
+
+async function logAdminAction(env, adminId, action, targetId, targetType, details = {}) {
+  await fetch(`${env.SUPABASE_URL}/rest/v1/admin_logs`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      apikey: env.SUPABASE_SERVICE_KEY,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ admin_id: adminId, action, target_id: targetId ? String(targetId) : null, target_type: targetType, details }),
+  }).catch(() => {});
 }
 
 async function notify(env, userId, title, message, link = '/wallet') {
@@ -38,9 +51,9 @@ function sb(env, path, opts = {}) {
 // GET ?list=1  →  return all withdrawal_requests
 export async function onRequestGet({ request, env }) {
   try {
-    const token   = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-    const isAdmin = await verifyAdmin(token, env);
-    if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
+    const admin = await verifyAdmin(token, env);
+    if (!admin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const res  = await sb(env, 'withdrawal_requests?order=created_at.desc', { method: 'GET', headers: { Prefer: '' } });
     const data = await res.json();
@@ -54,9 +67,9 @@ export async function onRequestGet({ request, env }) {
 // POST  { id, userId, amount, action: 'approve'|'reject' }
 export async function onRequestPost({ request, env }) {
   try {
-    const token   = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-    const isAdmin = await verifyAdmin(token, env);
-    if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
+    const admin = await verifyAdmin(token, env);
+    if (!admin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const { id, userId, amount, action } = await request.json();
     if (!id || !userId || !['approve', 'reject'].includes(action)) {
@@ -142,6 +155,7 @@ export async function onRequestPost({ request, env }) {
       await notify(env, userId, 'Withdrawal rejected', `Your withdrawal of ${fmt(amount)} was not approved. Your balance has been refunded.`);
     }
 
+    await logAdminAction(env, admin.id, action === 'approve' ? 'withdrawal_approve' : 'withdrawal_reject', id, 'withdrawal', { userId, amount: Number(amount) });
     return Response.json({ success: true, status: newStatus });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
