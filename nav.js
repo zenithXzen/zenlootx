@@ -347,7 +347,11 @@ async function initPushSubscription(user) {
   const pm  = 'PushManager' in window;
   const ntf = 'Notification' in window;
   const perm = ntf ? Notification.permission : 'none';
-  toast('Push debug: sw=' + sw + ' pm=' + pm + ' ntf=' + ntf + ' perm=' + perm, 'info');
+  const dbg = document.createElement('div');
+  dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#F5B947;color:#000;font-size:13px;font-weight:700;padding:10px 16px;text-align:center;';
+  dbg.textContent = 'PUSH DEBUG: sw=' + sw + ' pm=' + pm + ' ntf=' + ntf + ' perm=' + perm;
+  document.body.appendChild(dbg);
+  setTimeout(() => dbg.remove(), 30000);
 
   if (!sw || !pm || !ntf) return;
 
