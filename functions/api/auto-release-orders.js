@@ -38,9 +38,11 @@ export async function onRequestPost({ request, env }) {
     let released = 0;
     for (const order of toRelease) {
       try {
-        const amount = Number(order.amount);
+        const amount    = Number(order.amount);
+        const feeAmount = Math.round(amount * 5) / 100;
+        const netAmount = amount - feeAmount;
 
-        // Credit seller wallet
+        // Credit seller wallet (net of 5% platform fee)
         const wRes = await fetch(
           `${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}&select=balance,total_earned,escrow`,
           { headers: hdr }
@@ -53,8 +55,8 @@ export async function onRequestPost({ request, env }) {
             method: 'PATCH',
             headers: { ...hdr, Prefer: 'return=minimal' },
             body: JSON.stringify({
-              balance:      Number(wallet.balance) + amount,
-              total_earned: Number(wallet.total_earned) + amount,
+              balance:      Number(wallet.balance) + netAmount,
+              total_earned: Number(wallet.total_earned) + netAmount,
               escrow:       Math.max(0, Number(wallet.escrow || 0) - amount),
             }),
           });
@@ -62,9 +64,20 @@ export async function onRequestPost({ request, env }) {
           await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
             method: 'POST',
             headers: { ...hdr, Prefer: 'return=minimal' },
-            body: JSON.stringify({ user_id: order.seller_id, balance: amount, total_earned: amount, escrow: 0 }),
+            body: JSON.stringify({ user_id: order.seller_id, balance: netAmount, total_earned: netAmount, escrow: 0 }),
           });
         }
+
+        // Log platform earnings
+        fetch(`${env.SUPABASE_URL}/rest/v1/platform_earnings`, {
+          method: 'POST',
+          headers: { ...hdr, Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            order_id: order.id, listing_id: order.listing_id,
+            seller_id: order.seller_id, gross_amount: amount,
+            fee_percent: 5, fee_amount: feeAmount, net_amount: netAmount,
+          }),
+        }).catch(() => {});
 
         // Mark order released
         await fetch(`${env.SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`, {
@@ -74,7 +87,6 @@ export async function onRequestPost({ request, env }) {
         });
 
         // Update transactions
-        const holdUntil = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
         try {
           await fetch(`${env.SUPABASE_URL}/rest/v1/transactions?reference=eq.${order.id}&user_id=eq.${order.buyer_id}`, {
             method: 'PATCH',
@@ -87,7 +99,6 @@ export async function onRequestPost({ request, env }) {
             body: JSON.stringify({
               type: 'credit', status: 'completed',
               description: 'Sale auto-completed after 72 hours',
-              hold_until: holdUntil,
             }),
           });
         } catch {}
@@ -100,7 +111,7 @@ export async function onRequestPost({ request, env }) {
             body: JSON.stringify({
               user_id: order.seller_id,
               title:   '💸 Payment auto-released',
-              message: `${fmt(amount)} was automatically released after 72 hours. It is held for 72 hours before withdrawal.`,
+              message: `${fmt(netAmount)} (after 5% fee) was automatically released after 72 hours.`,
               type: 'listing', link: '/wallet',
             }),
           });
