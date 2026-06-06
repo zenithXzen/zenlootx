@@ -211,6 +211,11 @@ async function initNav(user) {
     initNotifBadge(user.id);
   }
 
+  // Admin badge — pending disputes + seller applications
+  if (user.app_metadata?.is_admin) {
+    initAdminBadge();
+  }
+
   // Heartbeat — keeps last_active_at fresh so others see "Online" / "Last seen"
   startHeartbeat();
 }
@@ -428,4 +433,38 @@ async function initNotifBadge(userId) {
         setInterval(async () => setBadge(await fetchCount()), 30000);
       }
     });
+}
+
+async function initAdminBadge() {
+  function setBadge(count) {
+    document.querySelectorAll('.nav-admin-badge').forEach(el => el.remove());
+    if (count <= 0) return;
+    document.querySelectorAll('a[href="/admin"]').forEach(link => {
+      const badge = document.createElement('span');
+      badge.className = 'nav-admin-badge';
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:999px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;padding:0 4px;margin-left:auto;line-height:1;';
+      link.appendChild(badge);
+    });
+  }
+
+  async function fetchCount() {
+    const [{ count: disputes }, { count: apps }] = await Promise.all([
+      sb.from('disputes').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+      sb.from('seller_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    ]);
+    return (disputes || 0) + (apps || 0);
+  }
+
+  setBadge(await fetchCount());
+
+  // Real-time updates when disputes or applications change
+  sb.channel('nav-admin-badge')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'disputes' }, async () => {
+      setBadge(await fetchCount());
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'seller_applications' }, async () => {
+      setBadge(await fetchCount());
+    })
+    .subscribe();
 }
