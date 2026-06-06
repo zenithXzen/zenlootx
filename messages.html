@@ -298,7 +298,10 @@
       const res = await fetch('/api/my-conversations', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) { console.error('Conversations API error:', await res.text()); showEmpty(); return; }
+      if (!res.ok) {
+        if (res.status === 401) { await sb.auth.signOut(); window.location.href = '/login?redirect=/messages&reason=session_expired'; return; }
+        console.error('Conversations API error:', await res.text()); showEmpty(); return;
+      }
       const data = await res.json();
       existing   = data.conversations || [];
       profiles   = data.profiles      || {};

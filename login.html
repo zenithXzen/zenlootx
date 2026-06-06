@@ -290,6 +290,11 @@
       // Badge hidden — attempts tracked internally only
     }
 
+    // Show session-expired notice if redirected here automatically
+    if (new URLSearchParams(window.location.search).get('reason') === 'session_expired') {
+      showWarning('Your session expired. Please sign in again.');
+    }
+
     async function triggerReset(identifier) {
       const email = identifier.includes('@') ? identifier : null;
       locked = true;
@@ -447,10 +452,11 @@
           if (d.sessionRowId) localStorage.setItem('zlx_session_row', d.sessionRowId);
         }).catch(() => {});
 
-        // Success
+        // Success — redirect back to original page if set
+        const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
         showSuccess('Signed in! Redirecting…');
         btn.textContent = 'Signed in!';
-        setTimeout(() => { window.location.href = '/'; }, 1000);
+        setTimeout(() => { window.location.href = redirectTo; }, 1000);
 
       } catch {
         showError('Network error. Check your connection and try again.');
