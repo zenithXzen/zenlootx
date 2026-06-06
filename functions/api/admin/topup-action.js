@@ -142,10 +142,14 @@ export async function onRequestPost({ request, env }) {
     }
 
     const fmt = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+    const isBinanceMethod = bodyMethod === 'binance';
     if (action === 'approve') {
       await notify(env, userId, '✅ Funds added', `${fmt(amount)} has been added to your ZenLootX wallet.`);
     } else {
-      await notify(env, userId, 'Top-up rejected', `Your top-up request of ${fmt(amount)} was not approved.`);
+      const rejectMsg = isBinanceMethod
+        ? `Your Binance (USDT) top-up request was not approved. Please contact support if you believe this is an error.`
+        : `Your top-up request of ${fmt(amount)} was not approved.`;
+      await notify(env, userId, 'Top-up rejected', rejectMsg);
     }
 
     await logAdminAction(env, admin.id, action === 'approve' ? 'topup_approve' : 'topup_reject', id, 'topup_request', { userId, amount: Number(amount) });
