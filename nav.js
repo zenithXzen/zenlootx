@@ -27,8 +27,9 @@ function toast(message, type = 'error') {
   el.style.cssText = `display:flex;align-items:flex-start;gap:10px;padding:13px 16px;background:#1A211C;border:1px solid #232B26;border-left:3px solid ${cfg.border};border-radius:10px;max-width:320px;min-width:220px;box-shadow:0 4px 24px rgba(0,0,0,0.5);pointer-events:all;cursor:pointer;animation:zlx-in 0.22s ease;`;
   el.innerHTML = `<span style="width:18px;height:18px;border-radius:50%;background:${cfg.iconBg};border:1px solid ${cfg.border}33;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${cfg.iconColor};flex-shrink:0;margin-top:1px;">${cfg.icon}</span><span style="font-size:13px;color:#E8EDE9;line-height:1.5;flex:1;">${message}</span>`;
   container.appendChild(el);
+  const duration = type === 'info' ? 12000 : 4500;
   const dismiss = () => { el.style.animation = 'zlx-out 0.2s ease forwards'; setTimeout(() => el.remove(), 200); };
-  setTimeout(dismiss, 4500);
+  setTimeout(dismiss, duration);
   el.addEventListener('click', dismiss);
 }
 
@@ -342,7 +343,13 @@ async function doSubscribe() {
 }
 
 async function initPushSubscription(user) {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+  const sw  = 'serviceWorker' in navigator;
+  const pm  = 'PushManager' in window;
+  const ntf = 'Notification' in window;
+  const perm = ntf ? Notification.permission : 'none';
+  toast('Push debug: sw=' + sw + ' pm=' + pm + ' ntf=' + ntf + ' perm=' + perm, 'info');
+
+  if (!sw || !pm || !ntf) return;
 
   // Register sw early so .ready resolves fast when needed
   navigator.serviceWorker.register('/sw.js').catch(() => {});
