@@ -395,7 +395,11 @@
           window.location.href = `/login?redirect=/listings/detail?id=${listingId}`;
           return;
         }
-        if (session.user.id === l.seller_id) return; // seller can't buy their own
+        if (session.user.id === l.seller_id) return;
+        if (l.currency && l.currency !== 'PHP') {
+          alert('This listing uses a currency that is not yet supported for purchase. Only PHP listings can be bought at this time.');
+          return;
+        }
         openBuyModal(l, session.access_token);
       });
 
@@ -464,7 +468,7 @@
       if (sellerSub) {
         sellerSub.innerHTML = seller.avg_rating > 0
           ? `<span style="color:#F5B947;font-weight:600;font-size:13px;">★ ${seller.avg_rating}</span> <span style="color:var(--text-faint);font-size:12px;">(${seller.review_count} review${seller.review_count !== 1 ? 's' : ''})</span>`
-          : `<span style="color:var(--text-faint);font-size:12px;">New seller</span>`;
+          : ``;
       }
     }
 

@@ -395,7 +395,7 @@ function renderCard(listing) {
                 <div style="line-height:1.3;margin-top:2px;">
                   ${listing.seller?.avg_rating > 0
                     ? `<span style="color:#F5B947;font-weight:700;font-size:14px;">★ ${listing.seller.avg_rating}</span><span style="color:var(--text-faint);font-size:11px;"> (${listing.seller.review_count})</span>`
-                    : `<span style="color:#F5B947;font-size:14px;letter-spacing:1px;">☆☆☆☆☆</span>`}
+                    : ``}
                 </div>
               </div>
             </div>
