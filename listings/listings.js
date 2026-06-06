@@ -19,25 +19,28 @@ let minPrice        = '';
 let maxPrice        = '';
 let searchQuery     = '';
 let attrFilters     = {};
+let minFiveStars    = '';
 let allListings     = null;
 let displayCurrency = 'PHP';
-let exchangeRates   = null; // keyed by currency code, base USD
+let exchangeRates   = null;
 const PAGE_SIZE     = 12;
 let visibleCount    = PAGE_SIZE;
 
 // Game-specific attribute filter definitions
+// type:'min_number' = numeric >= filter; type:'select' (default) = exact match
 const ATTR_FILTER_DEFS = {
   genshin: [
-    { key:'server',         label:'Server',  options:['Asia','America','Europe','TW/HK/MO'] },
+    { key:'server',          label:'Server',       options:['Asia','America','Europe','TW/HK/MO'] },
+    { key:'five_star_count', label:'Min 5★ chars', type:'min_number', options:['5','10','20','30','50'] },
   ],
   mlbb: [
-    { key:'season_rank',    label:'Rank',    options:['Warrior','Elite','Master','Grandmaster','Epic','Legend','Mythic','Mythical Glory','Mythical Immortal'] },
-    { key:'server',         label:'Server',  options:['Southeast Asia','North America','Europe','Middle East','South Asia'] },
+    { key:'season_rank',      label:'Rank',       options:['Warrior','Elite','Master','Grandmaster','Epic','Legend','Mythic','Mythical Glory','Mythical Immortal'] },
+    { key:'server',           label:'Server',     options:['Southeast Asia','North America','Europe','Middle East','South Asia'] },
     { key:'collection_level', label:'Collection', options:['Renowned Collector I','Renowned Collector II','Renowned Collector III','Renowned Collector IV','Renowned Collector V','Exalted Collector I','Exalted Collector II','Exalted Collector III','Exalted Collector IV','Exalted Collector V','Mega Collector','World Collector'] },
   ],
   valorant: [
-    { key:'rank',    label:'Rank',   options:['Unranked','Iron','Bronze','Silver','Gold','Platinum','Diamond','Ascendant','Immortal','Radiant'] },
-    { key:'region',  label:'Region', options:['NA','EU','APAC','KR','BR','LATAM','TR'] },
+    { key:'rank',   label:'Rank',   options:['Unranked','Iron','Bronze','Silver','Gold','Platinum','Diamond','Ascendant','Immortal','Radiant'] },
+    { key:'region', label:'Region', options:['NA','EU','APAC','KR','BR','LATAM','TR'] },
   ],
 };
 
@@ -105,15 +108,25 @@ document.body.innerHTML = `
             ${GAME !== 'genshin' ? '<button class="filter-btn" data-filter="items">Items</button>' : ''}
             <button class="filter-btn" data-filter="topup">Top-up</button>
           </div>
-          <!-- Game-specific attribute filters -->
-          ${(ATTR_FILTER_DEFS[GAME] || []).map(f => `
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="filter-label">${f.label}:</span>
-              <select class="sort-select attr-filter-select" data-attr="${f.key}" style="min-width:110px;">
-                <option value="">Any</option>
-                ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
-              </select>
-            </div>`).join('')}
+          <!-- Game-specific attribute filters (single panel) -->
+          ${(ATTR_FILTER_DEFS[GAME] || []).length ? `
+          <div style="position:relative;" id="filterDropdown">
+            <button id="filterToggleBtn" onclick="toggleFilterPanel(event)" style="display:flex;align-items:center;gap:8px;background:#1A211C;border:1px solid #232B26;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:#9BA8A0;transition:border-color 0.18s,color 0.18s;white-space:nowrap;font-family:inherit;">
+              &#9881; Filters
+              <span id="filterBadge" style="display:none;background:#19C37D;color:#0A0E0C;border-radius:999px;padding:1px 7px;font-size:11px;font-weight:700;line-height:1.4;">0</span>
+            </button>
+            <div id="filterPanel" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:#121814;border:1px solid #33403A;border-radius:12px;padding:20px;z-index:50;min-width:240px;box-shadow:0 8px 32px rgba(0,0,0,0.55);">
+              ${(ATTR_FILTER_DEFS[GAME] || []).map(f => `
+              <div style="margin-bottom:14px;">
+                <div style="font-size:11px;font-weight:600;color:#6B776F;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">${f.label}</div>
+                <select class="sort-select attr-filter-select" data-attr="${f.key}" data-filtertype="${f.type || 'select'}" style="width:100%;">
+                  <option value="">Any</option>
+                  ${f.options.map(o => `<option value="${o}">${f.type === 'min_number' ? o + '+' : o}</option>`).join('')}
+                </select>
+              </div>`).join('')}
+              <button onclick="clearAttrFilters()" id="clearAttrBtn" style="display:none;width:100%;padding:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#EF4444;font-family:inherit;">Clear filters</button>
+            </div>
+          </div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">
           <div class="price-range">
@@ -325,7 +338,7 @@ function applyFilters(listings) {
     result = result.filter(l => l.title.toLowerCase().includes(q));
   }
 
-  // Attribute filters
+  // Attribute filters — exact match (select type)
   Object.entries(attrFilters).forEach(([key, val]) => {
     if (!val) return;
     result = result.filter(l => {
@@ -333,6 +346,11 @@ function applyFilters(listings) {
       return attr && String(attr).toLowerCase() === val.toLowerCase();
     });
   });
+
+  // Min 5-star count filter (Genshin, numeric >=)
+  if (minFiveStars !== '') {
+    result = result.filter(l => Number(l.attributes?.five_star_count || 0) >= Number(minFiveStars));
+  }
 
   if (minPrice !== '') result = result.filter(l => Number(l.price) >= parseFloat(minPrice));
   if (maxPrice !== '') result = result.filter(l => Number(l.price) <= parseFloat(maxPrice));
@@ -451,6 +469,11 @@ function resetPagination() { visibleCount = PAGE_SIZE; }
 
 // ── Filter + Sort + Price events ──
 document.addEventListener('click', e => {
+  // Close filter panel when clicking outside
+  if (!e.target.closest('#filterDropdown')) {
+    const panel = document.getElementById('filterPanel');
+    if (panel) panel.style.display = 'none';
+  }
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -463,7 +486,12 @@ document.addEventListener('change', e => {
   if (e.target.id === 'sortSelect')    { activeSort = e.target.value; resetPagination(); render(); }
   if (e.target.id === 'currencySelect') { displayCurrency = e.target.value; render(); }
   if (e.target.classList.contains('attr-filter-select')) {
-    attrFilters[e.target.dataset.attr] = e.target.value;
+    if (e.target.dataset.filtertype === 'min_number') {
+      minFiveStars = e.target.value;
+    } else {
+      attrFilters[e.target.dataset.attr] = e.target.value;
+    }
+    updateFilterBadge();
     resetPagination(); render();
   }
 });
@@ -516,13 +544,39 @@ function clearPriceFilter() {
   render();
 }
 
+function toggleFilterPanel(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('filterPanel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function clearAttrFilters() {
+  attrFilters = {};
+  minFiveStars = '';
+  document.querySelectorAll('.attr-filter-select').forEach(s => s.value = '');
+  updateFilterBadge();
+  resetPagination(); render();
+}
+
+function updateFilterBadge() {
+  const count = Object.values(attrFilters).filter(v => v).length + (minFiveStars ? 1 : 0);
+  const badge    = document.getElementById('filterBadge');
+  const btn      = document.getElementById('filterToggleBtn');
+  const clearBtn = document.getElementById('clearAttrBtn');
+  if (badge)    { badge.textContent = count; badge.style.display = count ? 'inline-flex' : 'none'; }
+  if (btn)      { btn.style.borderColor = count ? '#19C37D' : '#232B26'; btn.style.color = count ? '#19C37D' : '#9BA8A0'; }
+  if (clearBtn) { clearBtn.style.display = count ? 'block' : 'none'; }
+}
+
 function clearAllFilters() {
-  searchQuery = ''; attrFilters = {}; minPrice = ''; maxPrice = '';
+  searchQuery = ''; attrFilters = {}; minFiveStars = ''; minPrice = ''; maxPrice = '';
   const inp = document.getElementById('searchInput');
   if (inp) inp.value = '';
   const clr = document.getElementById('clearSearch');
   if (clr) clr.style.display = 'none';
   document.querySelectorAll('.attr-filter-select').forEach(s => s.value = '');
+  updateFilterBadge();
   const mn = document.getElementById('minPrice'); if (mn) mn.value = '';
   const mx = document.getElementById('maxPrice'); if (mx) mx.value = '';
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
