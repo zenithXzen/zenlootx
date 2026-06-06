@@ -6,7 +6,7 @@
 
 ---
 
-## 📍 Current State (snapshot — last updated 2026-06-07)
+## 📍 Current State (snapshot — last updated 2026-06-08)
 
 **Live stack**
 - Frontend: Static HTML/CSS/JS (Vite) — Geist font, dark theme (accent `#19C37D`)
@@ -98,6 +98,9 @@
 ---
 
 ## 🗓️ Change Log (newest first)
+
+### 2026-06-08 (seller unresponsive escalation)
+- **Feature #3 — Seller unresponsive escalation:** Created `functions/api/notify-unresponsive-sellers.js`. When either party visits /orders, it silently checks for orders in `holding` that are 24–72 hours old. For each unnotified order, it sends: (1) a `seller_reminder` notification to the seller warning them the buyer may dispute, and (2) a `seller_reminder` notification to the buyer telling them they can now dispute. Uses the notification `link` field as the idempotency key so each order only gets one reminder. Buyer's Orders page also shows a yellow warning banner on any holding order that's 24+ hours old.
 
 ### 2026-06-08 (security hardening session — round 2)
 - **Reverted reset link to 15 min:** Owner preference. Reverted 300000 → 900000 in send-reset.js and reset-password.js; UI text back to "15 minutes".

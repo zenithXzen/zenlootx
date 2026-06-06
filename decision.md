@@ -118,6 +118,12 @@
 
 ---
 
+### D-023 · Mobile-first design standard ⭐
+- **Decision:** Every UI feature and page must be designed and tested for both Android and iPhone screens, starting at 360px wide. Mobile layout is checked before anything ships.
+- **Why:** Real users reported overlapping elements and broken layouts on their phones. The marketplace is used by Filipino gamers who primarily browse on Android phones, not desktops. A layout that only works on desktop loses most of the user base.
+- **Rule:** Any element that overlaps, clips, or disappears on a phone screen is a bug — not acceptable. Always use `@media (max-width: 600px)` breakpoints, `flex-wrap`, and `width:100%` on mobile as needed.
+- **Status:** ✅ Active standard — applies to all future UI work.
+
 ## Open / Upcoming Decisions (not yet made)
 
 ### D-021 · Mobile app approach (future)
