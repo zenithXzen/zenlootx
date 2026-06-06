@@ -319,12 +319,13 @@ async function doSubscribe() {
   if (existing) return;
   const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) return;
-  await fetch('/api/push/subscribe', {
+  if (!session) throw new Error('Not logged in — please log in and try again');
+  const res = await fetch('/api/push/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
     body: JSON.stringify({ subscription: sub.toJSON() }),
   });
+  if (!res.ok) throw new Error('Server error ' + res.status + ': ' + await res.text());
 }
 
 async function initPushSubscription(user) {
@@ -335,7 +336,7 @@ async function initPushSubscription(user) {
 
   // Already granted — just make sure we're subscribed
   if (Notification.permission === 'granted') {
-    doSubscribe().catch(() => {});
+    doSubscribe().catch(e => toast('Push sync failed: ' + (e.message || e), 'error'));
     return;
   }
 
@@ -368,8 +369,14 @@ async function initPushSubscription(user) {
     banner.remove();
     try {
       const perm = await Notification.requestPermission();
-      if (perm === 'granted') await doSubscribe();
-    } catch {}
+      if (perm === 'granted') {
+        await doSubscribe();
+        toast('Notifications enabled ✓', 'success');
+      }
+    } catch (e) {
+      localStorage.setItem('zlx-push-err', e.message || String(e));
+      toast('Notification setup failed: ' + (e.message || e), 'error');
+    }
   });
 }
 
