@@ -1,3 +1,6 @@
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+
 self.addEventListener('push', event => {
   let data = { title: 'ZenLootX', body: 'You have a new notification', url: '/notifications' };
   try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
@@ -5,8 +8,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: '/wallpaper/zx.png',
+      badge: '/wallpaper/zx.png',
       tag: data.tag || 'zlx',
       data: { url: data.url },
       requireInteraction: false,

@@ -27,9 +27,8 @@ function toast(message, type = 'error') {
   el.style.cssText = `display:flex;align-items:flex-start;gap:10px;padding:13px 16px;background:#1A211C;border:1px solid #232B26;border-left:3px solid ${cfg.border};border-radius:10px;max-width:320px;min-width:220px;box-shadow:0 4px 24px rgba(0,0,0,0.5);pointer-events:all;cursor:pointer;animation:zlx-in 0.22s ease;`;
   el.innerHTML = `<span style="width:18px;height:18px;border-radius:50%;background:${cfg.iconBg};border:1px solid ${cfg.border}33;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${cfg.iconColor};flex-shrink:0;margin-top:1px;">${cfg.icon}</span><span style="font-size:13px;color:#E8EDE9;line-height:1.5;flex:1;">${message}</span>`;
   container.appendChild(el);
-  const duration = type === 'info' ? 12000 : 4500;
   const dismiss = () => { el.style.animation = 'zlx-out 0.2s ease forwards'; setTimeout(() => el.remove(), 200); };
-  setTimeout(dismiss, duration);
+  setTimeout(dismiss, 4500);
   el.addEventListener('click', dismiss);
 }
 
@@ -315,45 +314,23 @@ async function doSubscribe() {
   const VAPID_PUBLIC = 'BNNvBaXi5R4-snm6bQpWmRMhhgVRxzq3AOEDnOhtboWoPa8uj94gMj9jTrv5XsWmFF121H4oweTLGDhoE29i8-Y';
   const p = '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4);
   const key = Uint8Array.from(atob((VAPID_PUBLIC + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-
-  let step = 'sw-register';
-  try {
-    const swReg = await navigator.serviceWorker.register('/sw.js');
-    step = 'sw-ready';
-    const reg = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise((_, rej) => setTimeout(() => rej(new Error('Service worker timed out')), 12000)),
-    ]);
-    step = 'get-subscription';
-    const sub = (await reg.pushManager.getSubscription()) ||
-                (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
-    step = 'get-session';
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) throw new Error('No session — please log in again');
-    step = 'save-to-server';
-    const res = await fetch('/api/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ subscription: sub.toJSON() }),
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' — ' + await res.text());
-  } catch (e) {
-    throw new Error('[' + step + '] ' + (e.message || e));
-  }
+  // Register and wait for active state (skipWaiting in sw.js makes this instant)
+  const reg = await navigator.serviceWorker.register('/sw.js');
+  await navigator.serviceWorker.ready;
+  const sub = (await reg.pushManager.getSubscription()) ||
+              (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw new Error('Not logged in');
+  const res = await fetch('/api/push/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ subscription: sub.toJSON() }),
+  });
+  if (!res.ok) throw new Error('Server error ' + res.status);
 }
 
 async function initPushSubscription(user) {
-  const sw  = 'serviceWorker' in navigator;
-  const pm  = 'PushManager' in window;
-  const ntf = 'Notification' in window;
-  const perm = ntf ? Notification.permission : 'none';
-  const dbg = document.createElement('div');
-  dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#F5B947;color:#000;font-size:13px;font-weight:700;padding:10px 16px;text-align:center;';
-  dbg.textContent = 'PUSH DEBUG: sw=' + sw + ' pm=' + pm + ' ntf=' + ntf + ' perm=' + perm;
-  document.body.appendChild(dbg);
-  setTimeout(() => dbg.remove(), 30000);
-
-  if (!sw || !pm || !ntf) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
 
   // Register sw early so .ready resolves fast when needed
   navigator.serviceWorker.register('/sw.js').catch(() => {});
