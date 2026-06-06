@@ -94,8 +94,7 @@ export async function onRequestPost({ request, env }) {
     }).catch(() => {});
 
     // Email both parties
-    const otherId  = user.id === order.buyer_id ? order.seller_id : order.buyer_id;
-    const filerId  = user.id;
+    const filerId = user.id;
 
     Promise.all([
       getUserInfo(filerId, env),

@@ -347,6 +347,9 @@
             </div>
 
             <button class="btn btn-primary btn-buy" id="buyBtn">Buy now — ${price}</button>
+            <div id="sellerFeeNote" style="display:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text-dim);line-height:1.6;">
+              💡 <strong style="color:var(--text);">Seller fee:</strong> ZenLootX charges a 5% platform fee on sales. You'll receive <strong id="sellerNetNote" style="color:var(--accent);">—</strong> when the buyer confirms.
+            </div>
             <div id="sellerControls" style="display:none;flex-direction:column;gap:10px;">
               <button id="deleteListingBtn" class="btn" style="width:100%;justify-content:center;background:transparent;border-color:rgba(239,68,68,0.35);color:var(--danger);">🗑 Delete listing</button>
             </div>
@@ -402,6 +405,10 @@
         if (!session || session.user.id !== l.seller_id) return;
         document.getElementById('buyBtn').style.display = 'none';
         document.getElementById('sellerControls').style.display = 'flex';
+        // Show fee note for seller
+        const netForSeller = (Number(l.price) * 0.95).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('sellerNetNote').textContent = `₱${netForSeller}`;
+        document.getElementById('sellerFeeNote').style.display = 'block';
 
         async function callDelist(action, label) {
           if (action === 'delete' && !await zConfirm('This listing will be permanently removed. This cannot be undone.', { title: 'Delete listing?', confirmText: 'Delete', confirmDanger: true })) return;

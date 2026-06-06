@@ -281,6 +281,7 @@
                 <span class="preview-price" id="prevPrice">—</span>
                 <span class="preview-currency" id="prevCurrency">PHP</span>
               </div>
+              <div id="prevReceive" style="display:none;font-size:12px;color:#9BA8A0;margin-top:4px;">You'll receive: <strong id="prevReceiveAmt" style="color:#19C37D;">—</strong> after 5% fee</div>
             </div>
           </div>
 
@@ -584,6 +585,14 @@
 
       document.getElementById('prevPrice').textContent = price ? Number(price).toLocaleString() : '—';
       document.getElementById('prevCurrency').textContent = currency;
+      const receiveEl = document.getElementById('prevReceive');
+      if (price && Number(price) > 0) {
+        const net = (Number(price) * 0.95).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('prevReceiveAmt').textContent = `₱${net}`;
+        receiveEl.style.display = 'block';
+      } else {
+        receiveEl.style.display = 'none';
+      }
 
       const prevGame = document.getElementById('prevGame');
       if (selectedGame) {

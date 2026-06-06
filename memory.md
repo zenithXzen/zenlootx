@@ -59,6 +59,9 @@
 - `email_rate_limits` (RLS ✅) — also used for verify-code attempt tracking (prefix `vfy::`)
 - `push_subscriptions` (RLS ✅, service key only) — ⚠️ must be created manually in Supabase (see 2026-06-09 session notes)
 - `withdrawal_requests`
+- `platform_earnings` (RLS ✅, admin only) — logs every completed sale: gross_amount, fee_percent, fee_amount, net_amount per order
+- `topup_requests` (RLS ✅) — user top-up requests, pending/approved/rejected
+- `admin_logs` (RLS ✅, admin only) — audit log for all 9 admin actions
 
 **Supabase SQL functions**
 - `get_email_by_username` — username → email lookup for login
@@ -86,7 +89,7 @@
 - Payments provider not yet integrated (wallet top-up is manual admin action for now)
 
 **Not built yet (priority order)**
-1. Fee system — ZenLootX earns ₱0 per trade. Needs platform % cut inside `purchase_listing` RPC.
+1. ~~Fee system~~ — ✅ DONE (2026-06-09). 5% platform fee applied at release. `platform_earnings` table logs every sale.
 2. Admin analytics dashboard — GMV, new users, dispute rate, earnings
 3. MFA / 2FA for sellers — TOTP option for high-value accounts
 4. Search on listings — full-text keyword search across titles/descriptions
@@ -98,6 +101,14 @@
 ---
 
 ## 🗓️ Change Log (newest first)
+
+### 2026-06-09 (fee system + email notifications + wallet polish)
+- **5% platform fee system:** `purchase.js` now puts `netAmount` (price × 0.95) in seller's escrow (not full price). Seller escrow transaction shows fee breakdown in description. `release-payment.js` releases `netAmount` to seller's balance, deducts `netAmount` from escrow, logs to `platform_earnings` table. Fee logged once — at release time (when actually earned), not at purchase. Fee is clearly shown to sellers everywhere.
+- **Fee transparency for sellers:** `create-listing.html` preview now shows "You'll receive ₱X after 5% fee" live as seller types the price. `listings/detail.html` shows a fee breakdown note to seller when they view their own listing.
+- **Email notifications — payment released:** `release-payment.js` email to seller now shows full breakdown: Sale price / Platform fee (5%) / Credited to your wallet. In-app + push notifications also updated to show net amount.
+- **Email notifications — listing purchased:** `purchase.js` email to seller shows fee breakdown box (sale price → fee → you'll receive). In-app + push notifications updated to show net amount.
+- **Bug fix — duplicate otherId variable:** `file-dispute.js` had `const otherId` declared twice (lines 84 and 97). Removed the duplicate on line 97; the push and email blocks now share the same variable.
+- **`platform_earnings` table:** Already created by owner via SQL (2026-06-09). Columns: `order_id`, `listing_id`, `seller_id`, `gross_amount`, `fee_percent` (5), `fee_amount`, `net_amount`, `created_at`. RLS: admin only.
 
 ### 2026-06-09 (push notifications + mobile audit)
 - **Web Push notifications (full VAPID + aes128gcm):** Created `functions/api/push-helper.js` — complete Web Push implementation using only Web Crypto API (no npm). Exports `sendPushToUser(userId, env, {title,body,url})`. Reads subscriptions from Supabase `push_subscriptions` table, encrypts payload per RFC 8291, signs VAPID JWT, posts to browser push endpoint.

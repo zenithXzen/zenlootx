@@ -48,24 +48,28 @@ export async function onRequestPost({ request, env }) {
       }, { status: rpcData.needTopUp ? 422 : 400 });
     }
 
-    const orderId  = rpcData.orderId;
-    const sellerId = rpcData.sellerId;
-    const price    = Number(rpcData.price);
-    const title    = rpcData.title;
+    const orderId    = rpcData.orderId;
+    const sellerId   = rpcData.sellerId;
+    const price      = Number(rpcData.price);
+    const title      = rpcData.title;
+    const feePercent = 5;
+    const feeAmount  = Math.round(price * feePercent) / 100;
+    const netAmount  = price - feeAmount;
+    const fmt        = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
-    // Update seller's escrow balance
+    // Update seller's escrow balance (net of 5% platform fee)
     try {
       const swRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${sellerId}&select=escrow`, { headers: hdr });
       const swData = await swRes.json();
       if (swData[0]) {
         await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${sellerId}`, {
           method: 'PATCH', headers: hdr,
-          body: JSON.stringify({ escrow: Number(swData[0].escrow || 0) + price }),
+          body: JSON.stringify({ escrow: Number(swData[0].escrow || 0) + netAmount }),
         });
       } else {
         await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
           method: 'POST', headers: hdr,
-          body: JSON.stringify({ user_id: sellerId, balance: 0, escrow: price, total_earned: 0 }),
+          body: JSON.stringify({ user_id: sellerId, balance: 0, escrow: netAmount, total_earned: 0 }),
         });
       }
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
@@ -74,8 +78,8 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({
           user_id:     sellerId,
           type:        'escrow',
-          amount:      price,
-          description: `Sale in escrow: ${title}`,
+          amount:      netAmount,
+          description: `Sale in escrow: ${title} (${fmt(price)} − 5% fee = ${fmt(netAmount)})`,
           reference:   orderId || null,
           status:      'pending',
         }),
@@ -146,7 +150,7 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({
           user_id: sellerId,
           title:   '🎉 Your listing was purchased!',
-          message: `"${title}" was bought for ₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}. Deliver the account details to complete the order.`,
+          message: `"${title}" sold for ${fmt(price)}. You'll receive ${fmt(netAmount)} after the 5% platform fee once the buyer confirms. Deliver the account to complete the order.`,
           type:    'listing',
           link:    '/orders',
         }),
@@ -156,7 +160,7 @@ export async function onRequestPost({ request, env }) {
     // Push notification to seller
     sendPushToUser(sellerId, env, {
       title: '🎉 Your listing was purchased!',
-      body:  `"${title}" sold for ₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}. Deliver the account to complete the order.`,
+      body:  `"${title}" sold for ${fmt(price)}. You'll receive ${fmt(netAmount)} after fees. Deliver the account to complete.`,
       url:   '/orders',
     }).catch(() => {});
 
@@ -168,7 +172,6 @@ export async function onRequestPost({ request, env }) {
       const sellerAuth  = await sellerAuthRes.json();
       const sellerEmail = sellerAuth?.email;
       const sellerName  = sellerAuth?.user_metadata?.username || 'Seller';
-      const fmt         = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 
       if (sellerEmail) {
         await fetch('https://api.resend.com/emails', {
@@ -188,11 +191,13 @@ export async function onRequestPost({ request, env }) {
                 </p>
                 <div style="background:#121814;border:1px solid #232B26;border-radius:10px;padding:20px 22px;margin-bottom:24px;">
                   <div style="font-size:13px;color:#6B776F;margin-bottom:6px;">Listing sold</div>
-                  <div style="font-size:17px;font-weight:700;color:#E8EDE9;margin-bottom:4px;">${title}</div>
-                  <div style="font-size:22px;font-weight:700;color:#19C37D;">${fmt(price)}</div>
+                  <div style="font-size:17px;font-weight:700;color:#E8EDE9;margin-bottom:12px;">${title}</div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;color:#9BA8A0;margin-bottom:4px;"><span>Sale price</span><span style="color:#E8EDE9;">${fmt(price)}</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;color:#9BA8A0;margin-bottom:10px;"><span>Platform fee (5%)</span><span style="color:#EF4444;">−${fmt(feeAmount)}</span></div>
+                  <div style="border-top:1px solid #232B26;padding-top:10px;display:flex;justify-content:space-between;"><span style="font-size:13px;color:#9BA8A0;">You'll receive</span><span style="font-size:22px;font-weight:700;color:#19C37D;">${fmt(netAmount)}</span></div>
                 </div>
                 <p style="font-size:14px;color:#9BA8A0;line-height:1.7;margin-bottom:8px;">
-                  The payment is held in escrow. Please deliver the account credentials to the buyer via Messages as soon as possible.
+                  The payment is held in escrow. Please deliver the account credentials to the buyer via Messages as soon as possible. You'll receive ${fmt(netAmount)} once the buyer confirms delivery.
                 </p>
                 <a href="https://zenlootexchange.com/orders" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#19C37D;color:#0A0E0C;font-weight:700;border-radius:8px;text-decoration:none;font-size:14px;">View Order →</a>
                 <hr style="border:none;border-top:1px solid #232B26;margin:28px 0 16px;">

@@ -32,9 +32,11 @@ export async function onRequestPost({ request, env }) {
     if (order.escrow_status === 'released') return Response.json({ error: 'Payment already released.' }, { status: 409 });
     if (order.escrow_status !== 'holding')  return Response.json({ error: 'Order is not in escrow.' }, { status: 400 });
 
-    const amount = Number(order.amount);
+    const amount     = Number(order.amount);
+    const feeAmount  = Math.round(amount * 5) / 100;
+    const netAmount  = amount - feeAmount;
 
-    // Credit seller wallet
+    // Credit seller wallet with net amount (after 5% platform fee)
     const wRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}&select=balance,total_earned,escrow`, { headers: hdr });
     const wData = await wRes.json();
     const wallet = wData[0];
@@ -43,18 +45,33 @@ export async function onRequestPost({ request, env }) {
       await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}`, {
         method: 'PATCH', headers: { ...hdr, Prefer: 'return=minimal' },
         body: JSON.stringify({
-          balance:      Number(wallet.balance) + amount,
-          total_earned: Number(wallet.total_earned) + amount,
-          escrow:       Math.max(0, Number(wallet.escrow || 0) - amount),
+          balance:      Number(wallet.balance) + netAmount,
+          total_earned: Number(wallet.total_earned) + netAmount,
+          escrow:       Math.max(0, Number(wallet.escrow || 0) - netAmount),
         }),
       });
     } else {
       // Create wallet for seller if missing
       await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
         method: 'POST', headers: { ...hdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({ user_id: order.seller_id, balance: amount, total_earned: amount, escrow: 0 }),
+        body: JSON.stringify({ user_id: order.seller_id, balance: netAmount, total_earned: netAmount, escrow: 0 }),
       });
     }
+
+    // Log platform earnings
+    fetch(`${env.SUPABASE_URL}/rest/v1/platform_earnings`, {
+      method: 'POST',
+      headers: { ...hdr, Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        order_id:     orderId,
+        listing_id:   order.listing_id,
+        seller_id:    order.seller_id,
+        gross_amount: amount,
+        fee_percent:  5,
+        fee_amount:   feeAmount,
+        net_amount:   netAmount,
+      }),
+    }).catch(() => {});
 
     // Mark order as released + completed
     await fetch(`${env.SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
@@ -93,7 +110,7 @@ export async function onRequestPost({ request, env }) {
         body: JSON.stringify({
           user_id: order.seller_id,
           title:   '💸 Payment released!',
-          message: `The buyer confirmed delivery of "${title}". ₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} has been added to your wallet.`,
+          message: `The buyer confirmed delivery of "${title}". ₱${netAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} has been added to your wallet (after 5% platform fee).`,
           type:    'listing',
           link:    '/wallet',
         }),
@@ -103,28 +120,29 @@ export async function onRequestPost({ request, env }) {
     // Push notification to seller
     sendPushToUser(order.seller_id, env, {
       title: '💸 Payment released!',
-      body:  `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} has been added to your wallet.`,
+      body:  `₱${netAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} has been added to your wallet (after 5% fee).`,
       url:   '/wallet',
     }).catch(() => {});
 
     // Email notification to seller
     getUserInfo(order.seller_id, env).then(({ email, name }) => {
       if (!email) return;
-      const fmt   = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+      const fmt     = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
       const listRes = fetch(`${env.SUPABASE_URL}/rest/v1/listings?id=eq.${order.listing_id}&select=title`, {
         headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
       }).then(r => r.json()).then(d => d[0]?.title || 'your listing').catch(() => 'your listing');
       return listRes.then(title => sendEmail(env, {
         to:      email,
-        subject: `💸 Payment released — ${fmt(amount)} is in your wallet`,
+        subject: `💸 Payment released — ${fmt(netAmount)} is in your wallet`,
         html: wrap(`
           <h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">Payment released! 💸</h2>
           <p style="font-size:15px;color:#9BA8A0;line-height:1.7;margin-bottom:20px;">
             Hi <strong style="color:#E8EDE9;">${name}</strong>, the buyer has confirmed receipt of <strong style="color:#E8EDE9;">${title}</strong>.
           </p>
           <div style="background:#121814;border:1px solid #232B26;border-radius:10px;padding:20px 22px;margin-bottom:24px;">
-            <div style="font-size:13px;color:#6B776F;margin-bottom:4px;">Amount credited to your wallet</div>
-            <div style="font-size:26px;font-weight:700;color:#19C37D;">${fmt(amount)}</div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#6B776F;margin-bottom:6px;"><span>Sale price</span><span style="color:#9BA8A0;">${fmt(amount)}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#6B776F;margin-bottom:12px;"><span>Platform fee (5%)</span><span style="color:#EF4444;">−${fmt(feeAmount)}</span></div>
+            <div style="border-top:1px solid #232B26;padding-top:12px;"><div style="font-size:13px;color:#6B776F;margin-bottom:4px;">Credited to your wallet</div><div style="font-size:26px;font-weight:700;color:#19C37D;">${fmt(netAmount)}</div></div>
           </div>
           <p style="font-size:14px;color:#9BA8A0;line-height:1.7;">You can withdraw your earnings from your wallet at any time.</p>
           <a href="https://zenlootexchange.com/wallet" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#19C37D;color:#0A0E0C;font-weight:700;border-radius:8px;text-decoration:none;font-size:14px;">View Wallet →</a>`),
