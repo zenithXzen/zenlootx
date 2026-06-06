@@ -314,18 +314,31 @@ async function doSubscribe() {
   const VAPID_PUBLIC = 'BKUJriuZ7hXGLjRGvL0uvAkUlIwZJTvbZv4XFaDZGhn7kF09FLORhRgVag3kkdC3tFuSNJBjMOW6tQjYGK37g5o';
   const p = '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4);
   const key = Uint8Array.from(atob((VAPID_PUBLIC + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-  const reg = await navigator.serviceWorker.ready;
-  // Always use the existing subscription if present (it may not be in Supabase yet)
-  const sub = (await reg.pushManager.getSubscription()) ||
-              (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) throw new Error('Not logged in — please log in and try again');
-  const res = await fetch('/api/push/subscribe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-    body: JSON.stringify({ subscription: sub.toJSON() }),
-  });
-  if (!res.ok) throw new Error('Server error ' + res.status + ': ' + await res.text());
+
+  let step = 'sw-register';
+  try {
+    const swReg = await navigator.serviceWorker.register('/sw.js');
+    step = 'sw-ready';
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_, rej) => setTimeout(() => rej(new Error('Service worker timed out')), 12000)),
+    ]);
+    step = 'get-subscription';
+    const sub = (await reg.pushManager.getSubscription()) ||
+                (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+    step = 'get-session';
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('No session — please log in again');
+    step = 'save-to-server';
+    const res = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ subscription: sub.toJSON() }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' — ' + await res.text());
+  } catch (e) {
+    throw new Error('[' + step + '] ' + (e.message || e));
+  }
 }
 
 async function initPushSubscription(user) {
