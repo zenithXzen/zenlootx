@@ -278,15 +278,13 @@
 
   // -- Init ------------------------------------------------------
   async function init() {
-    let session = (await sb.auth.getSession()).data?.session;
-
-    // Mobile fallback: getSession() can return null briefly on first load
-    if (!session) {
-      session = await new Promise(resolve => {
-        const timer = setTimeout(() => resolve(null), 2000);
-        sb.auth.onAuthStateChange((_evt, s) => { if (s) { clearTimeout(timer); resolve(s); } });
+    // Wait for INITIAL_SESSION event — more reliable than getSession() alone on mobile
+    const session = await new Promise(resolve => {
+      const timer = setTimeout(() => resolve(null), 3000);
+      sb.auth.onAuthStateChange((evt, s) => {
+        if (evt === 'INITIAL_SESSION' || s) { clearTimeout(timer); resolve(s); }
       });
-    }
+    });
 
     if (!session) { window.location.href = '/login?redirect=/messages'; return; }
     currentUser = session.user;
