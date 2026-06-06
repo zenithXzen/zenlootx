@@ -21,7 +21,8 @@ export async function onRequestPost({ request, env }) {
         Prefer: 'resolution=merge-duplicates',
       },
       body: JSON.stringify({
-        user_id: user.id,
+        user_id:    user.id,
+        endpoint:   subscription.endpoint,
         subscription,
         updated_at: new Date().toISOString(),
       }),

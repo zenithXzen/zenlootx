@@ -1,3 +1,5 @@
+import { sendPushToUser } from './push-helper.js';
+
 async function verifyUser(token, env) {
   try {
     const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
@@ -76,6 +78,19 @@ export async function onRequestPost({ request, env }) {
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ escrow_status: 'disputed' }),
     });
+
+    // Push notifications to both parties
+    const otherId = user.id === order.buyer_id ? order.seller_id : order.buyer_id;
+    sendPushToUser(otherId, env, {
+      title: '⚠️ A dispute has been opened',
+      body:  'A dispute was filed on one of your orders. Our team will review it shortly.',
+      url:   '/orders',
+    }).catch(() => {});
+    sendPushToUser(user.id, env, {
+      title: '📋 Dispute submitted',
+      body:  'Your dispute has been filed. We\'ll review it and respond within 24 hours.',
+      url:   '/orders',
+    }).catch(() => {});
 
     return Response.json({ success: true });
   } catch (e) {

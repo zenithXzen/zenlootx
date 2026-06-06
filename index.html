@@ -835,56 +835,7 @@
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
       if (session) await initNav(session.user);
-      initPush();
     })();
-
-    async function initPush() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session || !('serviceWorker' in navigator)) return;
-
-      // Load unread badge
-      const { count } = await sb.from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', session.user.id)
-        .eq('read', false);
-      if (count > 0) {
-        const badge = document.getElementById('notifBadge');
-        if (badge) { badge.textContent = count > 9 ? '9+' : count; badge.style.display = ''; }
-      }
-
-      // Register service worker
-      try {
-        const reg = await navigator.serviceWorker.register('/sw.js');
-        if (Notification.permission === 'default') {
-          const perm = await Notification.requestPermission();
-          if (perm !== 'granted') return;
-        }
-        if (Notification.permission !== 'granted') return;
-
-        const existing = await reg.pushManager.getSubscription();
-        if (existing) return; // already subscribed
-
-        const VAPID_PUBLIC = 'BFDr9pcjpXjELSlZN8cO9fkQaikO8biEHPnEr3If1AS7BmUB5t36oI8P6ROGvbVdQk9P_RUgM0ttdvz9hcANUQo';
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlB64ToUint8(VAPID_PUBLIC),
-        });
-        await fetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ subscription: sub.toJSON() }),
-        });
-      } catch {}
-    }
-
-    function urlB64ToUint8(b64) {
-      const p = '='.repeat((4 - b64.length % 4) % 4);
-      const s = (b64 + p).replace(/-/g, '+').replace(/_/g, '/');
-      return Uint8Array.from(atob(s), c => c.charCodeAt(0));
-    }
 
     // Auto sign-out if session revoked remotely
     sb.auth.onAuthStateChange((event) => {

@@ -39,7 +39,7 @@
 - Public profile: avatar, bio, tier badge, verified seller badge, active listings (limit 20), reviews, XSS-safe
 - Seller dashboard: stats, chart, active/inactive listings only (sold hidden), expiry column, recent sales
 - Tier system: Iron → Bronze → Silver → Gold → Sapphire → Diamond (based on transaction volume + reviews)
-- Push notification subscriptions
+- Push notifications (Web Push / VAPID): order placed → seller notified; payment released → seller notified; dispute opened → both parties notified. Full aes128gcm encryption, no npm deps, all via Web Crypto API in Cloudflare Workers.
 - Terms of Service + Privacy Policy (up to date as of 2026-06-06)
 - Report listing: buyers can report fraudulent listings (duplicate prevention, goes to admin queue)
 
@@ -57,6 +57,7 @@
 - `disputes` (RLS ✅)
 - `reviews`
 - `email_rate_limits` (RLS ✅) — also used for verify-code attempt tracking (prefix `vfy::`)
+- `push_subscriptions` (RLS ✅, service key only) — ⚠️ must be created manually in Supabase (see 2026-06-09 session notes)
 - `withdrawal_requests`
 
 **Supabase SQL functions**
@@ -69,7 +70,10 @@
 - `id_documents` (private) — seller verification IDs
 
 **Cloudflare env vars set**
-`RESEND_API_KEY` · `HMAC_SECRET` · `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_KEY` · `ADMIN_BYPASS_SECRET`
+`RESEND_API_KEY` · `HMAC_SECRET` · `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_KEY` · `ADMIN_BYPASS_SECRET` · `VAPID_PUBLIC_KEY` · `VAPID_PRIVATE_KEY`
+- VAPID_PUBLIC_KEY = `BKUJriuZ7hXGLjRGvL0uvAkUlIwZJTvbZv4XFaDZGhn7kF09FLORhRgVag3kkdC3tFuSNJBjMOW6tQjYGK37g5o`
+- VAPID_PRIVATE_KEY = `6RzCHCpmeU5nitmPa-ThOvh99kf9tHRD5QkU768tAOM`
+⚠️ VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be added to Cloudflare Pages Settings → Environment Variables before push notifications work.
 
 **Security status (full audit completed 2026-06-06)**
 - C1–C4 (Critical): ALL FIXED ✅
@@ -85,19 +89,27 @@
 
 **Not built yet (priority order)**
 1. Fee system — ZenLootX earns ₱0 per trade. Needs platform % cut inside `purchase_listing` RPC.
-2. Email notifications for key events — order placed, payment released, dispute opened (Resend)
-3. Admin analytics dashboard — GMV, new users, dispute rate, earnings
-4. MFA / 2FA for sellers — TOTP option for high-value accounts
-5. Search on listings — full-text keyword search across titles/descriptions
-6. Audit log table — record all admin actions (ban, freeze, resolve dispute)
-7. Referral system (₱50-per-referral) — intentionally deferred
-8. Favorites / saved listings — intentionally deferred
-9. Real payment processing — provider undecided (see decision.md D-022)
-10. Mobile PWA wrapping — intentionally deferred
+2. Admin analytics dashboard — GMV, new users, dispute rate, earnings
+3. MFA / 2FA for sellers — TOTP option for high-value accounts
+4. Search on listings — full-text keyword search across titles/descriptions
+5. Referral system (₱50-per-referral) — intentionally deferred
+6. Favorites / saved listings — intentionally deferred
+7. Real payment processing — provider undecided (see decision.md D-022)
+8. Mobile PWA wrapping — intentionally deferred
 
 ---
 
 ## 🗓️ Change Log (newest first)
+
+### 2026-06-09 (push notifications + mobile audit)
+- **Web Push notifications (full VAPID + aes128gcm):** Created `functions/api/push-helper.js` — complete Web Push implementation using only Web Crypto API (no npm). Exports `sendPushToUser(userId, env, {title,body,url})`. Reads subscriptions from Supabase `push_subscriptions` table, encrypts payload per RFC 8291, signs VAPID JWT, posts to browser push endpoint.
+- **Push wired into 3 events:** `purchase.js` → seller notified when listing sold; `release-payment.js` → seller notified when payment released; `file-dispute.js` → both buyer and seller notified when dispute opened.
+- **Push subscription endpoint:** `functions/api/push/subscribe.js` updated to store `endpoint` as a separate column alongside the subscription JSON — required for `unique(user_id, endpoint)` upsert to work with PostgREST.
+- **Push registration in nav.js:** Moved from one-off in `index.html` to `initNav()` call in `nav.js` → every logged-in page now registers the service worker and subscribes. VAPID public key updated to new key.
+- **Mobile audit completed:** Checked all 28 pages. Pages already mobile-friendly: messages, wallet, orders, create-listing, notifications, account, profile, index, listings/* (all have breakpoints). Fixed: seller-dashboard.html (table overflow + column hiding at 480px/768px), wallet.html (tx-row too cramped at 360px → hide status badge, shrink icon/text at ≤600px), listings/detail.html (detail-grid collapses to 1 col at 900px).
+- **⚠️ Pending manual steps (user must do):**
+  1. Run SQL in Supabase to create `push_subscriptions` table (see TEST 050 setup below)
+  2. Add `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` to Cloudflare Pages env vars
 
 ### 2026-06-08 (seller unresponsive escalation)
 - **Feature #3 — Seller unresponsive escalation:** Created `functions/api/notify-unresponsive-sellers.js`. When either party visits /orders, it silently checks for orders in `holding` that are 24–72 hours old. For each unnotified order, it sends: (1) a `seller_reminder` notification to the seller warning them the buyer may dispute, and (2) a `seller_reminder` notification to the buyer telling them they can now dispute. Uses the notification `link` field as the idempotency key so each order only gets one reminder. Buyer's Orders page also shows a yellow warning banner on any holding order that's 24+ hours old.

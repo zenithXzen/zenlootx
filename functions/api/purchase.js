@@ -1,3 +1,5 @@
+import { sendPushToUser } from './push-helper.js';
+
 export async function onRequestPost({ request, env }) {
   try {
     // Verify auth
@@ -150,6 +152,13 @@ export async function onRequestPost({ request, env }) {
         }),
       });
     } catch {}
+
+    // Push notification to seller
+    sendPushToUser(sellerId, env, {
+      title: '🎉 Your listing was purchased!',
+      body:  `"${title}" sold for ₱${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}. Deliver the account to complete the order.`,
+      url:   '/orders',
+    }).catch(() => {});
 
     // Email notification to seller
     try {

@@ -117,11 +117,19 @@
       .chart-wrap{grid-template-columns:1fr}
       .dash-header h1{font-size:20px}
       .listing-table th:nth-child(3),.listing-table td:nth-child(3){display:none}
-      .order-table th:nth-child(3),.order-table td:nth-child(3){display:none}
+      .order-table  th:nth-child(3),.order-table td:nth-child(3){display:none}
+      #listingsSection,#ordersSection{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .listing-table,.order-table{min-width:480px}
     }
     @media(max-width:480px){
       .stats-row{grid-template-columns:1fr 1fr}
       .stat-value{font-size:22px}
+      /* On very small screens hide more columns to reduce required width */
+      .listing-table th:nth-child(6),.listing-table td:nth-child(6){display:none}
+      .listing-table th:nth-child(5),.listing-table td:nth-child(5){display:none}
+      .listing-table{min-width:320px}
+      .order-table th:nth-child(4),.order-table td:nth-child(4){display:none}
+      .order-table{min-width:320px}
     }
   </style>
 </head>

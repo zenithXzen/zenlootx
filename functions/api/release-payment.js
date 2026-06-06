@@ -1,3 +1,5 @@
+import { sendPushToUser } from './push-helper.js';
+
 export async function onRequestPost({ request, env }) {
   try {
     // Verify auth
@@ -96,6 +98,13 @@ export async function onRequestPost({ request, env }) {
         }),
       });
     } catch {}
+
+    // Push notification to seller
+    sendPushToUser(order.seller_id, env, {
+      title: '💸 Payment released!',
+      body:  `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} has been added to your wallet.`,
+      url:   '/wallet',
+    }).catch(() => {});
 
     return Response.json({ success: true });
   } catch (e) {

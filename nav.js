@@ -198,6 +198,9 @@ async function initNav(user) {
     });
   }
 
+  // Push notifications — register service worker and subscribe if not already subscribed
+  initPushSubscription(user).catch(() => {});
+
   // Message badge — skip on the messages page (it manages its own badge)
   if (!window.location.pathname.startsWith('/messages')) {
     initMsgBadge(user.id);
@@ -305,6 +308,28 @@ async function initMsgBadge(userId) {
   sb.channel(`nav-msg-seller-${userId}`)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations', filter: `seller_id=eq.${userId}` }, onConvUpdate)
     .subscribe();
+}
+
+async function initPushSubscription(user) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    if (Notification.permission === 'default') await Notification.requestPermission();
+    if (Notification.permission !== 'granted') return;
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) return;
+    const VAPID_PUBLIC = 'BKUJriuZ7hXGLjRGvL0uvAkUlIwZJTvbZv4XFaDZGhn7kF09FLORhRgVag3kkdC3tFuSNJBjMOW6tQjYGK37g5o';
+    const p = '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4);
+    const key = Uint8Array.from(atob((VAPID_PUBLIC + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ subscription: sub.toJSON() }),
+    });
+  } catch {}
 }
 
 async function initNotifBadge(userId) {
