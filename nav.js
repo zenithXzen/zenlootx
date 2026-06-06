@@ -314,9 +314,9 @@ async function doSubscribe() {
   const VAPID_PUBLIC = 'BNNvBaXi5R4-snm6bQpWmRMhhgVRxzq3AOEDnOhtboWoPa8uj94gMj9jTrv5XsWmFF121H4oweTLGDhoE29i8-Y';
   const p = '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4);
   const key = Uint8Array.from(atob((VAPID_PUBLIC + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-  // Register and wait for active state (skipWaiting in sw.js makes this instant)
-  const reg = await navigator.serviceWorker.register('/sw.js');
-  await navigator.serviceWorker.ready;
+  // Register, then use the active registration from .ready (guaranteed active)
+  await navigator.serviceWorker.register('/sw.js');
+  const reg = await navigator.serviceWorker.ready;
   const sub = (await reg.pushManager.getSubscription()) ||
               (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
   const { data: { session } } = await sb.auth.getSession();
