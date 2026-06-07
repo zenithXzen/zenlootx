@@ -687,6 +687,7 @@
         { id: 'wiseDestination', label: 'Bank or e-wallet name',        type: 'text',   placeholder: 'e.g. Wise, Revolut, [your bank\'s name]' },
         { id: 'wiseName',        label: 'Full name on the account',     type: 'text',   placeholder: 'Name on the receiving account' },
         { id: 'wiseAccountNo',   label: 'Account number / IBAN / mobile number', type: 'text', placeholder: 'The account details Wise needs to send your payout' },
+        { id: 'wiseExtra',       label: 'Additional details (optional)', type: 'textarea', placeholder: 'SWIFT/BIC code, branch, routing number, or anything else we should know to send your payout correctly', optional: true },
       ],
       binance: [
         { id: 'binanceName', label: 'Full name',       type: 'text',  placeholder: 'Name on Binance' },
@@ -739,6 +740,12 @@
             </select>
           </div>`;
         }
+        if (f.type === 'textarea') {
+          return `<div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" for="${f.id}">${f.label}</label>
+            <textarea class="form-input" id="${f.id}" rows="3" style="resize:vertical;font-family:inherit;" placeholder="${f.placeholder}"></textarea>
+          </div>`;
+        }
         return `<div class="form-group" style="margin-bottom:12px;">
           <label class="form-label" for="${f.id}">${f.label}</label>
           <input class="form-input" id="${f.id}" type="${f.type}" placeholder="${f.placeholder}">
@@ -764,7 +771,10 @@
       for (const f of fields) {
         if (f.type === 'note') continue;
         const val = document.getElementById(f.id)?.value?.trim();
-        if (!val) { showErr(`Please fill in all payout details.`); return; }
+        if (!val) {
+          if (f.optional) continue;
+          showErr(`Please fill in all payout details.`); return;
+        }
         details[f.id] = val;
       }
 
