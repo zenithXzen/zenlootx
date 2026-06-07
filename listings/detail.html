@@ -511,7 +511,7 @@
       document.getElementById('buyAfter').style.color   = after < 0 ? 'var(--danger)' : 'var(--success)';
 
       if (after < 0) {
-        document.getElementById('buyErr').innerHTML = `Insufficient balance. You need <strong>${fmt(Math.abs(after))}</strong> more. <a href="/wallet" style="color:var(--accent);text-decoration:underline;">Top up wallet →</a>`;
+        document.getElementById('buyErr').innerHTML = `Insufficient balance. You need <strong>${fmt(Math.abs(after))}</strong> more. <a href="/wallet" style="color:var(--accent);text-decoration:underline;">Add funds here →</a>`;
         document.getElementById('buyErr').classList.add('show');
         document.getElementById('buyConfirmBtn').disabled = true;
       }
@@ -547,7 +547,7 @@
       if (!res.ok) {
         const errEl = document.getElementById('buyErr');
         if (data.needTopUp) {
-          errEl.innerHTML = `${data.error || 'Insufficient balance.'} <a href="/wallet" style="color:var(--accent);text-decoration:underline;">Top up wallet →</a>`;
+          errEl.innerHTML = `${data.error || 'Insufficient balance.'} <a href="/wallet" style="color:var(--accent);text-decoration:underline;">Add funds here →</a>`;
         } else {
           errEl.textContent = data.error || 'Something went wrong. Please try again.';
         }
