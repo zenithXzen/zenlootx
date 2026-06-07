@@ -650,6 +650,23 @@
     // ── Withdraw Modal ──────────────────────────────────────────
     let selectedMethod = null;
 
+    // Currencies Wise can convert PHP into and deliver to a local bank or e-wallet
+    // (per Wise's supported-currency list — https://wise.com/help/articles/2571907)
+    const WISE_CURRENCIES = [
+      'USD — US Dollar', 'EUR — Euro', 'GBP — British Pound', 'AUD — Australian Dollar',
+      'CAD — Canadian Dollar', 'SGD — Singapore Dollar', 'JPY — Japanese Yen', 'HKD — Hong Kong Dollar',
+      'CHF — Swiss Franc', 'NZD — New Zealand Dollar', 'AED — UAE Dirham', 'INR — Indian Rupee',
+      'IDR — Indonesian Rupiah', 'MYR — Malaysian Ringgit', 'THB — Thai Baht', 'VND — Vietnamese Dong',
+      'KRW — South Korean Won', 'CNY — Chinese Yuan', 'BDT — Bangladeshi Taka', 'PKR — Pakistani Rupee',
+      'LKR — Sri Lankan Rupee', 'NPR — Nepalese Rupee', 'BRL — Brazilian Real', 'MXN — Mexican Peso',
+      'ARS — Argentine Peso', 'CLP — Chilean Peso', 'COP — Colombian Peso', 'CRC — Costa Rican Colón',
+      'UYU — Uruguayan Peso', 'ZAR — South African Rand', 'NGN — Nigerian Naira', 'KES — Kenyan Shilling',
+      'GHS — Ghanaian Cedi', 'TZS — Tanzanian Shilling', 'UGX — Ugandan Shilling', 'EGP — Egyptian Pound',
+      'MAD — Moroccan Dirham', 'GEL — Georgian Lari', 'TRY — Turkish Lira', 'UAH — Ukrainian Hryvnia',
+      'PLN — Polish Złoty', 'CZK — Czech Koruna', 'HUF — Hungarian Forint', 'RON — Romanian Leu',
+      'SEK — Swedish Krona', 'NOK — Norwegian Krone', 'DKK — Danish Krone', 'ILS — Israeli Shekel',
+    ];
+
     const METHOD_FIELDS = {
       gcash: [
         { id: 'gcashName',   label: 'Account name',   type: 'text',   placeholder: 'Full name on GCash' },
@@ -665,8 +682,11 @@
         { id: 'bankHolder', label: 'Account name',    type: 'text',   placeholder: 'Full name on account' },
       ],
       wise: [
-        { id: 'wiseName',  label: 'Full name',        type: 'text',  placeholder: 'Name on Wise account' },
-        { id: 'wiseEmail', label: 'Wise email',        type: 'email', placeholder: 'you@email.com' },
+        { id: 'wiseNote', type: 'note', text: 'We send your payout in PHP — Wise converts it for you, so the amount you receive depends on Wise\'s exchange rate at the time of transfer. Make sure the currency you pick is one your bank or e-wallet can actually receive.' },
+        { id: 'wiseCurrency',    label: 'Currency you want to receive', type: 'select', options: WISE_CURRENCIES },
+        { id: 'wiseDestination', label: 'Bank or e-wallet name',        type: 'text',   placeholder: 'e.g. Wise, Revolut, [your bank\'s name]' },
+        { id: 'wiseName',        label: 'Full name on the account',     type: 'text',   placeholder: 'Name on the receiving account' },
+        { id: 'wiseEmail',       label: 'Contact email',                type: 'email',  placeholder: 'you@email.com' },
       ],
       binance: [
         { id: 'binanceName', label: 'Full name',       type: 'text',  placeholder: 'Name on Binance' },
@@ -707,11 +727,14 @@
       const fields = METHOD_FIELDS[m];
       const container = document.getElementById('dynamicFields');
       container.innerHTML = fields.map(f => {
+        if (f.type === 'note') {
+          return `<div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text-dim);line-height:1.6;">💡 ${f.text}</div>`;
+        }
         if (f.type === 'select') {
           return `<div class="form-group" style="margin-bottom:12px;">
             <label class="form-label" for="${f.id}">${f.label}</label>
             <select class="form-input form-select" id="${f.id}">
-              <option value="">Select bank</option>
+              <option value="">${f.id === 'wiseCurrency' ? 'Select currency' : 'Select bank'}</option>
               ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
             </select>
           </div>`;
@@ -739,6 +762,7 @@
       const fields = METHOD_FIELDS[selectedMethod];
       const details = {};
       for (const f of fields) {
+        if (f.type === 'note') continue;
         const val = document.getElementById(f.id)?.value?.trim();
         if (!val) { showErr(`Please fill in all payout details.`); return; }
         details[f.id] = val;
