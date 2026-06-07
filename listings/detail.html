@@ -545,8 +545,13 @@
       const data = await res.json();
 
       if (!res.ok) {
-        document.getElementById('buyErr').textContent = data.error || 'Something went wrong. Please try again.';
-        document.getElementById('buyErr').classList.add('show');
+        const errEl = document.getElementById('buyErr');
+        if (data.needTopUp) {
+          errEl.innerHTML = `${data.error || 'Insufficient balance.'} <a href="/wallet" style="color:var(--accent);text-decoration:underline;">Top up wallet →</a>`;
+        } else {
+          errEl.textContent = data.error || 'Something went wrong. Please try again.';
+        }
+        errEl.classList.add('show');
         btn.disabled    = false;
         btn.textContent = 'Confirm & Pay';
         return;
