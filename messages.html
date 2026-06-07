@@ -273,6 +273,7 @@
   const params  = new URLSearchParams(window.location.search);
   const openConvId = params.get('conv');
   const openWith   = params.get('with');
+  const openListing = params.get('listing');
 
   // -- Init ------------------------------------------------------
   async function init() {
@@ -427,7 +428,27 @@
       (c.buyer_id === currentUser.id && c.seller_id === sellerId) ||
       (c.seller_id === currentUser.id && c.buyer_id === sellerId)
     );
-    if (conv) openConversation(conv.id);
+    if (conv) { openConversation(conv.id); return; }
+
+    // No existing conversation — admins can start one from the admin panel
+    // (e.g. messaging a seller about a listing, or a party in a dispute, with no prior order/thread)
+    if (currentUser.app_metadata?.is_admin === true) {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await fetch('/api/admin/start-conversation', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: sellerId, listingId: openListing || null }),
+        });
+        if (res.ok) {
+          const { conversationId } = await res.json();
+          if (conversationId) {
+            await loadConversations(session.access_token);
+            openConversation(conversationId);
+          }
+        }
+      } catch {}
+    }
   }
 
   // -- Open conversation -----------------------------------------
