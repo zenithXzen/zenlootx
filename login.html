@@ -24,6 +24,7 @@
       --danger:      #EF4444;
       --warning:     #F5B947;
       --success:     #22C55E;
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -135,6 +136,7 @@
     .alert-success { background: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.2);  color: var(--success); }
 
     .btn-submit {
+      position: relative;
       width: 100%;
       padding: 13px;
       border-radius: 8px;
@@ -145,10 +147,69 @@
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.18s, opacity 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.18s, opacity 0.18s, box-shadow 0.22s var(--ease-out-quart);
     }
     .btn-submit:hover { background: var(--accent-hover); }
-    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-submit:disabled { cursor: not-allowed; }
+    .btn-submit:disabled:not(.is-loading):not(.is-success) { opacity: 0.5; }
+
+    .btn-label {
+      transition: opacity 0.16s var(--ease-out-quart), transform 0.16s var(--ease-out-quart);
+    }
+    .btn-spinner, .btn-check {
+      position: absolute;
+      width: 17px;
+      height: 17px;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.18s var(--ease-out-quart), transform 0.18s var(--ease-out-quart);
+    }
+    .btn-spinner-ring {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(10,14,12,0.25);
+      border-top-color: var(--bg-base);
+    }
+    .btn-check { color: var(--bg-base); }
+
+    .btn-submit.is-loading .btn-label,
+    .btn-submit.is-success .btn-label {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    .btn-submit.is-loading .btn-spinner {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .btn-submit.is-loading .btn-spinner-ring {
+      animation: btn-spin 0.7s linear infinite;
+    }
+    .btn-submit.is-success {
+      background: var(--accent-hover);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+    .btn-submit.is-success .btn-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    @keyframes btn-spin { to { transform: rotate(360deg); } }
+
+    body.page-exiting {
+      opacity: 0;
+      transition: opacity 0.22s var(--ease-out-quart);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn-submit.is-loading .btn-spinner-ring { animation: none; }
+      .btn-label, .btn-spinner, .btn-check, body.page-exiting {
+        transition-duration: 0.01ms !important;
+      }
+    }
 
     .form-footer { text-align: center; font-size: 13px; color: var(--text-faint); margin-top: 4px; }
     .form-footer a { color: var(--accent); font-weight: 500; }
@@ -227,7 +288,13 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-submit" id="submitBtn">Sign in</button>
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="btn-label">Sign in</span>
+          <span class="btn-spinner" aria-hidden="true"><span class="btn-spinner-ring"></span></span>
+          <svg class="btn-check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
 
         <div class="form-footer">
           Don't have an account? <a href="/register">Create one</a>
@@ -252,6 +319,14 @@
     const MAX_ATTEMPTS = 6;
     let failedAttempts = 0;
     let locked = false;
+
+    const submitBtn = document.getElementById('submitBtn');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function setBtnLabel(text) { submitBtn.querySelector('.btn-label').textContent = text; }
+    function setBtnState(state) {
+      submitBtn.classList.remove('is-loading', 'is-success');
+      if (state) submitBtn.classList.add('is-' + state);
+    }
 
     // Password toggle
     const pwInput  = document.getElementById('password');
@@ -283,16 +358,17 @@
     async function triggerReset(identifier) {
       const email = identifier.includes('@') ? identifier : null;
       locked = true;
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
-      btn.textContent = 'Sending reset email…';
+      submitBtn.disabled = true;
+      setBtnState('loading');
+      setBtnLabel('Sending reset email…');
       clearAlerts();
       if (!email) {
         showWarning('Too many failed attempts. Enter your email and click "Forgot password?" to reset.');
         document.getElementById('identifier').value = '';
         document.getElementById('identifier').focus();
-        btn.textContent = 'Sign in';
-        btn.disabled = false;
+        setBtnState('');
+        setBtnLabel('Sign in');
+        submitBtn.disabled = false;
         locked = false;
         failedAttempts = 0;
         return;
@@ -304,8 +380,9 @@
           body: JSON.stringify({ email }),
         });
       } catch {}
+      setBtnState('success');
       showSuccess(`Too many failed attempts. A reset link has been sent to ${email}.`);
-      btn.textContent = 'Reset email sent';
+      setBtnLabel('Reset email sent');
     }
 
     async function loginByUsername(username, password) {
@@ -347,9 +424,9 @@
         return;
       }
 
-      const btn = document.getElementById('submitBtn');
-      btn.disabled    = true;
-      btn.textContent = 'Signing in…';
+      submitBtn.disabled = true;
+      setBtnState('loading');
+      setBtnLabel('Signing in…');
 
       try {
         // Username login — done entirely server-side; email never sent to browser
@@ -358,16 +435,18 @@
           const result = await loginByUsername(identifier, password);
           if (result.error === 'server_error') {
             showError('Unable to reach the server. Please try again or use your email to sign in.');
-            btn.disabled    = false;
-            btn.textContent = 'Sign in';
+            submitBtn.disabled = false;
+            setBtnState('');
+            setBtnLabel('Sign in');
             return;
           }
           if (result.error === 'not_found') {
             failedAttempts++;
             document.getElementById('identifier').classList.add('error');
             showError('Username not found. Check your username or sign in with your email.');
-            btn.disabled    = false;
-            btn.textContent = 'Sign in';
+            submitBtn.disabled = false;
+            setBtnState('');
+            setBtnLabel('Sign in');
             return;
           }
           if (result.error === 'invalid_credentials') {
@@ -385,8 +464,9 @@
 
         if (error) {
           failedAttempts++;
-          btn.disabled    = false;
-          btn.textContent = 'Sign in';
+          submitBtn.disabled = false;
+          setBtnState('');
+          setBtnLabel('Sign in');
 
           if (failedAttempts >= MAX_ATTEMPTS) {
             await triggerReset(identifier);
@@ -436,14 +516,24 @@
 
         // Success — redirect back to original page if set
         const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
+        setBtnState('success');
+        setBtnLabel('Signed in');
         showSuccess('Signed in! Redirecting…');
-        btn.textContent = 'Signed in!';
-        setTimeout(() => { window.location.href = redirectTo; }, 1000);
+
+        if (prefersReducedMotion) {
+          window.location.href = redirectTo;
+        } else {
+          setTimeout(() => {
+            document.body.classList.add('page-exiting');
+            setTimeout(() => { window.location.href = redirectTo; }, 220);
+          }, 420);
+        }
 
       } catch {
         showError('Network error. Check your connection and try again.');
-        btn.disabled    = false;
-        btn.textContent = 'Sign in';
+        submitBtn.disabled = false;
+        setBtnState('');
+        setBtnLabel('Sign in');
       }
     });
   </script>
