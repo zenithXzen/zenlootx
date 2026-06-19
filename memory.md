@@ -116,7 +116,17 @@ Owner ran TEST 051–066 against the live site after the 2026-06-19 cleanup depl
 
 **Content removal:** `sell.html` — removed the "Contact support" mailto button from the rejected-application screen, keeping only "Re-apply" (TEST 051).
 
-**Deferred to redesign pass (not fixed, owner's explicit choice):** `messages.html` mobile spacing (buttons/names crowding the screen on phone), `login.html` error message styling, `listings/genshin.html`/`mlbb.html`/`valorant.html` — owner wants horizontal swipe/slide instead of current layout. Phase 3 (admin action tests, TEST 067+) not yet run — owner is testing Phase 3 next, then pausing all further testing to focus on a full UI/mobile redesign pass across features.
+**Deferred to redesign pass (not fixed, owner's explicit choice):** `messages.html` mobile spacing (buttons/names crowding the screen on phone), `login.html` error message styling, `listings/genshin.html`/`mlbb.html`/`valorant.html` — owner wants horizontal swipe/slide instead of current layout.
+
+**Retest results (same day):** TEST 056 and TEST 052 both passed after the fixes above.
+
+**Phase 3/4 test results — TEST 067–074:** TEST 068, 070, 071, 074 passed. TEST 067 (ban user) and TEST 069 (seller application approve/reject) intentionally skipped by owner — only has 1 test device/account, can't safely test account-locking actions without risking their own access. TEST 073 not yet tested. **TEST 072 failed — push notifications not arriving** (covers both the order-released push and admin broadcast push, both built on the same `functions/api/push-helper.js` sender consolidated in Phase 3).
+
+**TEST 072 diagnosis — root-caused, likely already fixed, needs final retest.** Used Playwright MCP (now active) to log into zenlootexchange.com as the test account, pull the Supabase access token from `localStorage`, and POST it to `/api/push/test`. Result: `subscriptions_found: 1`, `fcmStatus: 201`, `err: null` — the test push was actually delivered and received on the owner's device. This proves the push sender itself (VAPID JWT signing, aes128gcm encryption, FCM delivery in `push-helper.js`) works correctly right now, and all three real call sites (`order-released.js`, `release-payment.js`, `admin/send-notification.js`) call that exact same helper — so there's no code bug left to fix there.
+
+Most likely explanation for the original TEST 072 failure: it was run with a subscription row created by `profile.html`'s old standalone `initPush()`, which used a **stale, pre-rotation VAPID key** (see Phase 4 entry below, fixed 2026-06-19). That subscription would have silently failed to deliver. Once any page using the shared `nav.js` was visited, the browser silently re-subscribed with the correct key — which is why the test push just now succeeded.
+
+**Not fully closed:** couldn't verify the `admin/send-notification.js` broadcast path end-to-end — the test account isn't an admin, so the actual admin UI broadcast flow wasn't fired live. Code is identical to the proven path, but TEST 076 below should confirm it for real.
 
 ### 2026-06-19 (full codebase cleanup: bug fixes + dead code + duplication consolidation, Phases 1–4)
 Approved plan: `bug fixes + safe deletions + duplication consolidation` (6-part parallel audit → fix). Tests for this session start at **TEST 051**.
