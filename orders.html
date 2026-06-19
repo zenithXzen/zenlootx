@@ -415,7 +415,6 @@
     const card = document.getElementById(`ocard_${orderId}`);
     if (card) {
       card.style.borderColor = '';
-      card.querySelector('.badge')?.outerHTML;
       const badgeEl = card.querySelector('.badge');
       if (badgeEl) badgeEl.outerHTML = `<span class="badge badge-completed"><span class="badge-dot"></span>Completed</span>`;
       btn.outerHTML = `<span style="font-size:12px;color:var(--success);">✓ Released</span>`;

@@ -123,16 +123,6 @@
     .forgot a { font-size: 13px; color: var(--text-faint); transition: color 0.16s; }
     .forgot a:hover { color: var(--text-dim); }
 
-    .attempt-badge {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 999px;
-      display: none;
-    }
-    .attempt-badge.warn { display: inline-block; background: rgba(245,185,71,0.12); color: var(--warning); }
-    .attempt-badge.danger { display: inline-block; background: rgba(239,68,68,0.12); color: var(--danger); }
-
     .alert {
       display: none;
       border-radius: 8px;
@@ -233,7 +223,6 @@
             </button>
           </div>
           <div class="forgot">
-            <span class="attempt-badge" id="attemptBadge"></span>
             <a href="/forgot-password" id="forgotLink">Forgot password?</a>
           </div>
         </div>
@@ -286,10 +275,6 @@
     function showWarning(msg) { const el = document.getElementById('warnMsg');    el.textContent = msg; el.classList.add('visible'); }
     function showSuccess(msg) { const el = document.getElementById('successMsg'); el.textContent = msg; el.classList.add('visible'); }
 
-    function updateAttemptBadge() {
-      // Badge hidden — attempts tracked internally only
-    }
-
     // Show session-expired notice if redirected here automatically
     if (new URLSearchParams(window.location.search).get('reason') === 'session_expired') {
       showWarning('Your session expired. Please sign in again.');
@@ -310,7 +295,6 @@
         btn.disabled = false;
         locked = false;
         failedAttempts = 0;
-        updateAttemptBadge();
         return;
       }
       try {
@@ -380,7 +364,6 @@
           }
           if (result.error === 'not_found') {
             failedAttempts++;
-            updateAttemptBadge();
             document.getElementById('identifier').classList.add('error');
             showError('Username not found. Check your username or sign in with your email.');
             btn.disabled    = false;
@@ -402,7 +385,6 @@
 
         if (error) {
           failedAttempts++;
-          updateAttemptBadge();
           btn.disabled    = false;
           btn.textContent = 'Sign in';
 

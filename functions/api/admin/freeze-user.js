@@ -1,26 +1,4 @@
-async function verifyAdmin(token, env) {
-  try {
-    const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
-    });
-    if (!res.ok) return null;
-    const user = await res.json();
-    return user?.app_metadata?.is_admin === true ? user : null;
-  } catch { return null; }
-}
-
-async function logAdminAction(env, adminId, action, targetId, targetType, details = {}) {
-  await fetch(`${env.SUPABASE_URL}/rest/v1/admin_logs`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      apikey: env.SUPABASE_SERVICE_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify({ admin_id: adminId, action, target_id: targetId ? String(targetId) : null, target_type: targetType, details }),
-  }).catch(() => {});
-}
+import { verifyAdmin, logAdminAction } from './_shared.js';
 
 export async function onRequestPost({ request, env }) {
   try {

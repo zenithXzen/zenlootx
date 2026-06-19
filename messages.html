@@ -485,8 +485,6 @@
       } catch {}
     }
 
-    const releaseBtn = ''; // moved into purchase summary card
-
     const listingTitle = conv?.listing?.title || null;
     const orderAmount  = orderData?.amount ? '₱' + Number(orderData.amount).toLocaleString('en-PH', {minimumFractionDigits:2}) : null;
     const orderDate    = orderData?.created_at ? new Date(orderData.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : null;
@@ -572,7 +570,6 @@
           <div class="chat-header-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span>${listingTitle || (isBuyer ? 'Seller' : 'Buyer')}</span>
             <span id="otherActiveLabel"></span>
-            ${releaseBtn}
           </div>
         </div>
         <button onclick="openOrderModal('${conv?.listing_id || ''}')" class="btn btn-secondary chat-order-link" style="font-size:12px;padding:6px 12px;">View Order</button>
@@ -1012,7 +1009,7 @@
       return;
     }
 
-    const revieweeId = _releaseSellerId;
+    const revieweeId = sellerId;
     const oid        = order.id;
     if (releaseBtn) releaseBtn.outerHTML = `<button id="rateBtn" onclick="openRateModal('${oid}','${revieweeId}')"
       style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid rgba(245,185,71,0.4);background:rgba(245,185,71,0.08);color:var(--warning);transition:all 0.18s;white-space:nowrap;flex-shrink:0;">

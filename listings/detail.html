@@ -421,9 +421,7 @@
 
         async function callDelist(action, label) {
           if (action === 'delete' && !await zConfirm('This listing will be permanently removed. This cannot be undone.', { title: 'Delete listing?', confirmText: 'Delete', confirmDanger: true })) return;
-          const btn = action === 'delist'
-            ? document.getElementById('delistBtn')
-            : document.getElementById('deleteListingBtn');
+          const btn = document.getElementById('deleteListingBtn');
           btn.disabled = true;
           btn.textContent = 'Working…';
           try {

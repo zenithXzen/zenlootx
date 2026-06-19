@@ -555,7 +555,6 @@
       errorEl.style.display = 'none';
       submitBtn.disabled    = false;
       submitBtn.textContent = 'Submit report';
-      document.getElementById('reportModalBody').innerHTML = document.getElementById('reportModalBody').innerHTML; // reset to form
 
       // Re-grab after reset
       document.querySelectorAll('input[name="reportReason"]').forEach(radio => {

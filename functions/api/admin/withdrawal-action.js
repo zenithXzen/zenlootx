@@ -1,52 +1,4 @@
-async function verifyAdmin(token, env) {
-  try {
-    const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
-    });
-    if (!res.ok) return null;
-    const user = await res.json();
-    return user?.app_metadata?.is_admin === true ? user : null;
-  } catch { return null; }
-}
-
-async function logAdminAction(env, adminId, action, targetId, targetType, details = {}) {
-  await fetch(`${env.SUPABASE_URL}/rest/v1/admin_logs`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      apikey: env.SUPABASE_SERVICE_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify({ admin_id: adminId, action, target_id: targetId ? String(targetId) : null, target_type: targetType, details }),
-  }).catch(() => {});
-}
-
-async function notify(env, userId, title, message, link = '/wallet') {
-  await fetch(`${env.SUPABASE_URL}/rest/v1/notifications`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      apikey: env.SUPABASE_SERVICE_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify({ user_id: userId, title, message, type: 'general', link, read: false }),
-  });
-}
-
-function sb(env, path, opts = {}) {
-  return fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      apikey: env.SUPABASE_SERVICE_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-      ...(opts.headers || {}),
-    },
-  });
-}
+import { verifyAdmin, logAdminAction, notify, sb, incrementBalance } from './_shared.js';
 
 // GET ?list=1  →  return all withdrawal_requests
 export async function onRequestGet({ request, env }) {
@@ -82,22 +34,13 @@ export async function onRequestPost({ request, env }) {
     // On approve: nothing to do to balance (it's already deducted).
     // On reject: refund the frozen amount back to the user.
     if (action === 'reject') {
-      const walletRes  = await sb(env, `wallets?user_id=eq.${userId}&select=balance`, { method: 'GET', headers: { Prefer: '' } });
+      const walletRes = await sb(env, `wallets?user_id=eq.${userId}&select=balance`, { method: 'GET', headers: { Prefer: '' } });
       if (!walletRes.ok) return Response.json({ error: 'Failed to read wallet. Please try again.' }, { status: 500 });
       const walletData = await walletRes.json();
       if (!Array.isArray(walletData) || !walletData[0]) {
         return Response.json({ error: 'Wallet not found for this user.' }, { status: 404 });
       }
-      const balance    = Number(walletData[0].balance || 0);
-      const refundRes  = await sb(env, `wallets?user_id=eq.${userId}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ balance: balance + Number(amount) }),
-      });
-      const refundData = await refundRes.json();
-      if (!refundRes.ok || !Array.isArray(refundData) || refundData.length === 0) {
-        return Response.json({ error: 'Failed to refund wallet balance. Please try again.' }, { status: 500 });
-      }
+      await incrementBalance(env, userId, Number(amount));
     }
 
     // Mark the request
@@ -150,9 +93,9 @@ export async function onRequestPost({ request, env }) {
 
     const fmt = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
     if (action === 'approve') {
-      await notify(env, userId, '💸 Withdrawal approved', `Your withdrawal of ${fmt(amount)} has been processed and sent to your account.`);
+      await notify(env, userId, '💸 Withdrawal approved', `Your withdrawal of ${fmt(amount)} has been processed and sent to your account.`, '/wallet');
     } else {
-      await notify(env, userId, 'Withdrawal rejected', `Your withdrawal of ${fmt(amount)} was not approved. Your balance has been refunded.`);
+      await notify(env, userId, 'Withdrawal rejected', `Your withdrawal of ${fmt(amount)} was not approved. Your balance has been refunded.`, '/wallet');
     }
 
     await logAdminAction(env, admin.id, action === 'approve' ? 'withdrawal_approve' : 'withdrawal_reject', id, 'withdrawal', { userId, amount: Number(amount) });

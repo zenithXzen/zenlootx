@@ -420,6 +420,7 @@ async function initNotifBadge(userId) {
     const { count } = await sb
       .from('notifications')
       .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
       .eq('read', false);
     return count || 0;
   }

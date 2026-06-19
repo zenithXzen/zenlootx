@@ -1,52 +1,4 @@
-async function verifyAdmin(token, env) {
-  try {
-    const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
-    });
-    if (!res.ok) return null;
-    const user = await res.json();
-    return user?.app_metadata?.is_admin === true ? user : null;
-  } catch { return null; }
-}
-
-async function logAdminAction(env, adminId, action, targetId, targetType, details = {}) {
-  await fetch(`${env.SUPABASE_URL}/rest/v1/admin_logs`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      apikey: env.SUPABASE_SERVICE_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify({ admin_id: adminId, action, target_id: targetId ? String(targetId) : null, target_type: targetType, details }),
-  }).catch(() => {});
-}
-
-async function notify(env, userId, title, message, link = '/wallet') {
-  await fetch(`${env.SUPABASE_URL}/rest/v1/notifications`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      apikey: env.SUPABASE_SERVICE_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify({ user_id: userId, title, message, type: 'general', link, read: false }),
-  });
-}
-
-function sb(env, path, opts = {}) {
-  return fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-      apikey: env.SUPABASE_SERVICE_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-      ...(opts.headers || {}),
-    },
-  });
-}
+import { verifyAdmin, logAdminAction, notify, sb, incrementBalance } from './_shared.js';
 
 // GET ?list=1  →  return all topup_requests enriched with user info
 export async function onRequestGet({ request, env }) {
@@ -93,26 +45,7 @@ export async function onRequestPost({ request, env }) {
         headers: { Prefer: 'resolution=ignore-duplicates' },
         body: JSON.stringify({ user_id: userId, balance: 0, escrow: 0, total_earned: 0 }),
       });
-      // Increment balance via RPC
-      const rpcRes = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/increment_balance`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-          apikey: env.SUPABASE_SERVICE_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ p_user_id: userId, p_amount: Number(amount) }),
-      });
-      if (!rpcRes.ok) {
-        // Fallback: read current balance then add (never overwrite)
-        const curRes  = await sb(env, `wallets?user_id=eq.${userId}&select=balance`, { method: 'GET', headers: { Prefer: '' } });
-        const curData = await curRes.json();
-        const current = Number(curData?.[0]?.balance || 0);
-        await sb(env, `wallets?user_id=eq.${userId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ balance: current + Number(amount) }),
-        });
-      }
+      await incrementBalance(env, userId, Number(amount));
     }
 
     // Log transaction for both approve and reject
@@ -144,12 +77,12 @@ export async function onRequestPost({ request, env }) {
     const fmt = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
     const isBinanceMethod = bodyMethod === 'binance';
     if (action === 'approve') {
-      await notify(env, userId, '✅ Funds added', `${fmt(amount)} has been added to your ZenLootX wallet.`);
+      await notify(env, userId, '✅ Funds added', `${fmt(amount)} has been added to your ZenLootX wallet.`, '/wallet');
     } else {
       const rejectMsg = isBinanceMethod
         ? `Your Binance (USDT) top-up request was not approved. Please contact support if you believe this is an error.`
         : `Your top-up request of ${fmt(amount)} was not approved.`;
-      await notify(env, userId, 'Top-up rejected', rejectMsg);
+      await notify(env, userId, 'Top-up rejected', rejectMsg, '/wallet');
     }
 
     await logAdminAction(env, admin.id, action === 'approve' ? 'topup_approve' : 'topup_reject', id, 'topup_request', { userId, amount: Number(amount) });

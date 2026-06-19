@@ -1,10 +1,14 @@
 # ZenLootX — Decision Log
 
-> The important choices made building this site, and **why**. The point of this file is so that future-me (and the AI after a `/clear`) understands the reasoning and doesn't accidentally undo a good decision. Newest decisions at the bottom.
+> The important choices made building this site, and **why**. The point of this file is so that future-me (and the AI after a `/clear`) understands the reasoning and doesn't accidentally undo a good decision. Newest decisions at the bottom of each section.
 >
 > Format for each: **what** was decided, **why**, **alternatives** considered, **status**.
+>
+> **A decision's `D-0xx` number is permanent.** Numbers are assigned once, in the order a decision was first written down, and never reused or renumbered — even if a later cleanup reorders or regroups the sections below. Other files (`CLAUDE.md`, `memory.md`) link to decisions by number (e.g. "see decision.md D-022"), so a number always points to the same decision.
 
 ---
+
+## Active & Resolved Decisions
 
 ### D-001 · Domain & registrar
 - **Decision:** Bought `zenlootexchange.com` on **Namecheap**.
@@ -60,7 +64,7 @@
 - **Decision:** Enable **RLS** on Supabase tables (currently on `user_sessions`).
 - **Why:** Since the anon key is public, RLS is the actual wall protecting your data. Without it, anyone with the anon key could read/write the table.
 - **⚠️ Must-do going forward:** Enable RLS on **every** new table (listings, orders, wallet, messages). This is the single most important security habit for this stack.
-- **Status:** ⚠️ Partial — expand to all future tables.
+- **Status:** ⚠️ Mostly done — RLS is confirmed on most core tables (see `memory.md` Current State → Supabase tables list), but `reviews` and `withdrawal_requests` are listed there **without** a confirmed RLS marker. Verify and enable RLS on both before launch.
 
 ### D-011 · Design system
 - **Decision:** Dark premium theme. bg `#0A0E0C`, accent `#19C37D`, Geist font, 12px/8px/999px radii.
@@ -91,7 +95,7 @@
 ### D-016 · Server-side JWT verification only
 - **Decision:** All Cloudflare Functions verify the user's JWT by calling Supabase's `/auth/v1/user` endpoint. Client-side `atob()` decoding of JWTs is never trusted for authorization.
 - **Why:** `atob()` only decodes the payload — it does not verify the signature. A forged JWT (with any user ID) would pass a client-side decode check. Server-side verification with Supabase confirms the token is genuine and unexpired.
-- **Status:** ✅ Done — applied to check-session, track-session, get-sessions, revoke-session.
+- **Status:** ✅ Done — applied to check-session, track-session, get-sessions, revoke-session, and all other functions that need to know who's calling.
 
 ### D-017 · Admin bypass requires secret key
 - **Decision:** The `?admin=on` maintenance bypass in `_middleware.js` requires a matching `ADMIN_BYPASS_SECRET` query parameter. Without it, the bypass returns 401.
@@ -108,7 +112,7 @@
 - **Decision:** `send-code.js` and `send-reset.js` track email sends in an `email_rate_limits` table (email + timestamp). Max 5 emails per address per 10-minute window. Records are not cleaned up by the app — they expire naturally (old rows are ignored by the query window).
 - **Why:** Without rate limiting, an attacker could call the send endpoint in a loop and exhaust the Resend account quota or harass a user with thousands of verification emails.
 - **Alternatives:** IP-based rate limiting in Cloudflare Workers (viable but harder to implement without KV storage); Resend's own rate limits (exist but not granular enough per address).
-- **Status:** ✅ Done — `email_rate_limits` table confirmed created in Supabase.
+- **Status:** ✅ Done — `email_rate_limits` table confirmed created in Supabase. Later reused for verify-code attempts (`vfy::` prefix) and username-lookup IP throttling (`ipck::` prefix).
 
 ### D-020 · XSS protection via sanitize() helper
 - **Decision:** All user-generated content rendered into innerHTML (bios, review comments, usernames in dynamic contexts) is passed through a `sanitize()` function that escapes `& < > " '`.
@@ -116,7 +120,16 @@
 - **Applied to:** `public-profile.html` (bio + review comments), `profile.html` (review comments), `admin.html` (seller bio display).
 - **Status:** ✅ Done.
 
----
+### D-024 · Wallet balance mutations always go through `increment_balance` RPC
+- **Decision:** Every place that changes a wallet's `balance`/`escrow`/`total_earned` must call the `increment_balance` Postgres RPC (or the shared `incrementBalance()` JS wrapper in `functions/api/admin/_shared.js`, which calls that RPC and only falls back to manual read-then-write if the RPC call itself fails) — never a standalone "read current value in JS → add/subtract → PATCH" sequence.
+- **Why:** The manual pattern has a lost-update race: two near-simultaneous mutations (e.g. a withdrawal approval and an auto-release firing close together) can both read the same starting balance and one overwrites the other's change. The RPC does the arithmetic inside Postgres, atomically. This exact bug class was already fixed once for `purchase_listing` (see D-015) — 2026-06-19 extended the same fix to `release-payment.js`, `auto-release-orders.js`, and `resolve-dispute.js`, and centralized the helper so future money code defaults to the safe pattern instead of copy-pasting the unsafe one.
+- **Known exception, not yet fixed:** `functions/api/admin/freeze-user.js`'s balance-deduction block still uses the manual pattern — wasn't in scope for the 2026-06-19 pass, flagged as a follow-up.
+- **Status:** ✅ Active rule going forward — any new code touching wallet balances should use `incrementBalance()`, not manual read-then-write.
+
+### D-025 · Frontend nav/dropdown logic lives only in `nav.js`
+- **Decision:** `initNav(user)` (account dropdown, message/notification/admin badges, frozen-account banner, push-subscription opt-in, heartbeat) has exactly one implementation, in `nav.js`. Every page that shows the logged-in nav loads `nav.js` and calls `initNav(user)` after confirming a session — it does not reimplement any part of this locally.
+- **Why:** `profile.html` and `listings/listings.js` had each grown their own stripped-down copy over time. Both silently drifted from the canonical version — missing the heartbeat, badges, and frozen-banner, and in `profile.html`'s case carrying a stale pre-rotation VAPID push key that the canonical version had already moved past. `listings/listings.js`'s pages (`/listings/genshin`, `/listings/mlbb`, `/listings/valorant`) didn't even load `nav.js` at all, which is why a local copy existed there in the first place.
+- **Status:** ✅ Done for `profile.html` and `listings/listings.js` (2026-06-19). Still duplicated: the tier-badge system, currency/date/status formatters, and `isBanned()`/`timeAgo()` helpers — tracked as a separate follow-up (Phase 5), not yet started.
 
 ### D-023 · Mobile-first design standard ⭐
 - **Decision:** Every UI feature and page must be designed and tested for both Android and iPhone screens, starting at 360px wide. Mobile layout is checked before anything ships.
@@ -124,7 +137,9 @@
 - **Rule:** Any element that overlaps, clips, or disappears on a phone screen is a bug — not acceptable. Always use `@media (max-width: 600px)` breakpoints, `flex-wrap`, and `width:100%` on mobile as needed.
 - **Status:** ✅ Active standard — applies to all future UI work.
 
-## Open / Upcoming Decisions (not yet made)
+---
+
+## Open Questions (not yet decided)
 
 ### D-021 · Mobile app approach (future)
 - **Leaning toward:** Wrap the web app into an installable app (**PWA** via PWABuilder/Bubblewrap) to reuse the web code and cover Android + iPhone + desktop at once.

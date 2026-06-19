@@ -1,19 +1,10 @@
-async function verifyAdmin(token, env) {
-  try {
-    const res  = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY },
-    });
-    if (!res.ok) return false;
-    const user = await res.json();
-    return user?.app_metadata?.is_admin === true;
-  } catch { return false; }
-}
+import { verifyAdmin } from './_shared.js';
 
 export async function onRequestGet({ request, env }) {
   try {
-    const token   = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-    const isAdmin = await verifyAdmin(token, env);
-    if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
+    const admin = await verifyAdmin(token, env);
+    if (!admin) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const url    = new URL(request.url);
     const status = url.searchParams.get('status');

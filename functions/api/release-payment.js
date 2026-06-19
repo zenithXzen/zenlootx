@@ -37,26 +37,40 @@ export async function onRequestPost({ request, env }) {
     const netAmount  = amount - feeAmount;
 
     // Credit seller wallet with net amount (after 5% platform fee)
-    const wRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}&select=balance,total_earned,escrow`, { headers: hdr });
-    const wData = await wRes.json();
-    const wallet = wData[0];
+    // Upsert wallet row in case it doesn't exist yet
+    await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
+      method: 'POST',
+      headers: { ...hdr, Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify({ user_id: order.seller_id, balance: 0, escrow: 0, total_earned: 0 }),
+    });
 
-    if (wallet) {
+    // Increment balance atomically via RPC (avoids lost-update race vs read-then-write)
+    const rpcRes = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/increment_balance`, {
+      method: 'POST', headers: { ...hdr, Prefer: '' },
+      body: JSON.stringify({ p_user_id: order.seller_id, p_amount: netAmount }),
+    });
+    if (!rpcRes.ok) {
+      // Fallback: read current balance then add (never overwrite)
+      const curRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}&select=balance`, { headers: { ...hdr, Prefer: '' } });
+      const curData = await curRes.json();
+      const current = Number(curData?.[0]?.balance || 0);
       await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}`, {
         method: 'PATCH', headers: { ...hdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          balance:      Number(wallet.balance) + netAmount,
-          total_earned: Number(wallet.total_earned) + netAmount,
-          escrow:       Math.max(0, Number(wallet.escrow || 0) - netAmount),
-        }),
-      });
-    } else {
-      // Create wallet for seller if missing
-      await fetch(`${env.SUPABASE_URL}/rest/v1/wallets`, {
-        method: 'POST', headers: { ...hdr, Prefer: 'return=minimal' },
-        body: JSON.stringify({ user_id: order.seller_id, balance: netAmount, total_earned: netAmount, escrow: 0 }),
+        body: JSON.stringify({ balance: current + netAmount }),
       });
     }
+
+    // total_earned / escrow are stats fields, not spendable balance — update separately from balance
+    const statsRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}&select=total_earned,escrow`, { headers: hdr });
+    const statsData = await statsRes.json();
+    const stats = statsData[0] || { total_earned: 0, escrow: 0 };
+    await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${order.seller_id}`, {
+      method: 'PATCH', headers: { ...hdr, Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        total_earned: Number(stats.total_earned || 0) + netAmount,
+        escrow:       Math.max(0, Number(stats.escrow || 0) - netAmount),
+      }),
+    });
 
     // Log platform earnings
     fetch(`${env.SUPABASE_URL}/rest/v1/platform_earnings`, {

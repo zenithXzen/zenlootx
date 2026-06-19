@@ -85,22 +85,17 @@ async function encryptPayload(keys, plaintext) {
   return new Uint8Array([...salt, ...rsBytes, localPub.length, ...localPub, ...ciphertext]);
 }
 
-// ─── Public export ────────────────────────────────────────────────────────────
+// ─── Shared sender ────────────────────────────────────────────────────────────
 
-export async function sendPushToUser(userId, env, { title, body, url = '/notifications' }) {
+async function sendToSubscriptionRows(rows, env, { title, body, url = '/notifications' }) {
   const VAPID_PRIVATE = env.VAPID_PRIVATE_KEY;
   const VAPID_PUBLIC  = env.VAPID_PUBLIC_KEY;
-  if (!VAPID_PRIVATE || !VAPID_PUBLIC) return;
-
-  const res = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${userId}&select=subscription`,
-    { headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY } }
-  );
-  const rows = await res.json().catch(() => []);
-  if (!Array.isArray(rows) || !rows.length) return;
+  if (!VAPID_PRIVATE || !VAPID_PUBLIC) return 0;
+  if (!Array.isArray(rows) || !rows.length) return 0;
 
   const payload = JSON.stringify({ title, body, url });
   const subject = 'mailto:roxaszenkie18@gmail.com';
+  let sent = 0;
 
   for (const row of rows) {
     const sub = typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription;
@@ -113,7 +108,7 @@ export async function sendPushToUser(userId, env, { title, body, url = '/notific
         pushBody = await encryptPayload(sub.keys, payload);
         extraHeaders = { 'Content-Type': 'application/octet-stream', 'Content-Encoding': 'aes128gcm' };
       }
-      await fetch(sub.endpoint, {
+      const res = await fetch(sub.endpoint, {
         method: 'POST',
         headers: {
           Authorization: `vapid t=${jwt},k=${VAPID_PUBLIC}`,
@@ -122,6 +117,31 @@ export async function sendPushToUser(userId, env, { title, body, url = '/notific
         },
         body: pushBody,
       });
+      if (res.status >= 200 && res.status < 300) sent++;
     } catch {}
   }
+  return sent;
+}
+
+// ─── Public exports ───────────────────────────────────────────────────────────
+
+export async function sendPushToUser(userId, env, notification) {
+  const res = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${userId}&select=subscription`,
+    { headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY } }
+  );
+  const rows = await res.json().catch(() => []);
+  await sendToSubscriptionRows(rows, env, notification);
+}
+
+// userId omitted/null → broadcast to every subscriber. Returns { sent, total }.
+export async function sendPushToUsers(userId, env, notification) {
+  let url = `${env.SUPABASE_URL}/rest/v1/push_subscriptions?select=subscription`;
+  if (userId) url += `&user_id=eq.${userId}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
+  });
+  const rows = await res.json().catch(() => []);
+  const sent = await sendToSubscriptionRows(rows, env, notification);
+  return { sent, total: Array.isArray(rows) ? rows.length : 0 };
 }

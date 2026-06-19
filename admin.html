@@ -532,7 +532,7 @@
 
       const revenue       = transactions.filter(t => t.type === 'credit' && t.status === 'completed').reduce((s, t) => s + Number(t.amount || 0), 0);
       const totalTx       = transactions.length;
-      const completedOrds = orders.filter(o => o.status === 'released' || o.escrow_status === 'released').length;
+      const completedOrds = orders.filter(o => o.escrow_status === 'released').length;
       const totalOrds     = orders.length;
       const openDisp      = allDisputes.filter(d => d.status === 'open').length;
       const pendingTopups = allTopups.filter(t => t.status === 'pending').length;
@@ -930,19 +930,21 @@
       btn.disabled    = true;
       btn.textContent = 'Saving…';
 
-      const { error } = await sb
-        .from('reports')
-        .update({ status: 'reviewed' })
-        .eq('id', reportId);
+      const res = await fetch('/api/admin/dismiss-report', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId }),
+      });
 
-      if (!error) {
+      if (res.ok) {
         // Update in-memory so we don't need a full reload
         allReports = allReports.map(r => r.id === reportId ? { ...r, status: 'reviewed' } : r);
         renderShell();
       } else {
         btn.disabled    = false;
         btn.textContent = 'Mark reviewed';
-        toast('Failed: ' + error.message, 'error');
+        const { error } = await res.json().catch(() => ({ error: 'Request failed' }));
+        toast('Failed: ' + error, 'error');
       }
     }
 

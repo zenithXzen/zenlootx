@@ -313,7 +313,7 @@
     const TOTAL_STEPS = 3;
 
     // State collected across steps
-    const formData = {
+    let formData = {
       fullName: '', phone: '', country: '', dob: '',
       idType: '', idFrontFile: null, idBackFile: null, idVerificationFile: null,
       bio: '',
@@ -432,9 +432,6 @@
     }
 
     function renderStep() {
-      // Update progress
-      document.querySelector('.progress-wrap').outerHTML = renderProgress();
-      // Re-insert progress since we replaced it
       const content = document.getElementById('appContent');
       content.innerHTML = renderProgress() + `<div class="form-wrap" id="formWrap"></div>`;
 
@@ -634,10 +631,6 @@
       if (backBtn)   backBtn.addEventListener('click',   () => { currentStep--; renderStep(); });
       if (nextBtn)   nextBtn.addEventListener('click',   () => advanceStep());
       if (submitBtn) submitBtn.addEventListener('click', () => submitApplication());
-
-      if (currentStep === 1) {
-        // nothing extra
-      }
 
       if (currentStep === 2) {
         // File upload listeners
