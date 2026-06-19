@@ -29,8 +29,15 @@ export async function onRequestPost({ request, env }) {
 
     const feeAmount   = Math.round(amount * 5) / 100;
     const netAmount   = amount - feeAmount;
-    const wasReleased = order?.escrow_status === 'released';
     const fmt         = n => `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+
+    // Filing a dispute always overwrites orders.escrow_status to 'disputed', even if the
+    // order had already been released — so by resolution time, escrow_status can no longer
+    // tell us whether the seller was actually paid. Check the transactions ledger instead,
+    // which records the real credit if release-payment.js (or a prior dispute resolution) ran.
+    const txRes  = await sb(env, `transactions?reference=eq.${orderId}&user_id=eq.${sellerId}&type=eq.credit&select=id`, { method: 'GET', headers: { Prefer: '' } });
+    const txData = await txRes.json();
+    const wasReleased = Array.isArray(txData) && txData.length > 0;
 
     if (action === 'refund_buyer') {
       // Buyer always gets back the full price they paid

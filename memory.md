@@ -107,6 +107,17 @@
 
 > Older entries live in **`memory-archive.md`** once this list passes ~10–12 entries. Currently archived: the 2026-06-03 and 2026-06-04 sessions.
 
+### 2026-06-20 (live-site test pass on Phases 1–4 — found and fixed a real money bug)
+Owner ran TEST 051–066 against the live site after the 2026-06-19 cleanup deployed. Results: most passed; 3 issues raised, 1 was a genuine bug, 1 was a wrong test instruction (not a code bug), 1 was a one-line content removal. 3 items deferred to a later UI/mobile redesign pass (not bugs — owner plans to redesign messages.html spacing, login.html error styling, and add horizontal swipe to the 3 listing pages).
+
+**Real bug fixed — dispute resolution didn't claw back seller's balance ([functions/api/admin/resolve-dispute.js](functions/api/admin/resolve-dispute.js#L34)):** Filing a dispute (`file-dispute.js`) always overwrites `orders.escrow_status` to `'disputed'`, even on an already-released order (it only blocks filing on `'disputed'/'refunded'/'cancelled'`, not `'released'`). `resolve-dispute.js` was using `order.escrow_status === 'released'` to decide whether the seller's spendable balance needed clawing back when refunding the buyer — but by resolution time that flag was always `'disputed'`, so it always took the "never released" branch and skipped the clawback. Net effect: buyer got refunded in full AND seller kept the money they'd already been paid — a real double-payout. Fixed by checking the `transactions` ledger for an actual `type='credit'` row for that order+seller (ground truth of whether money moved) instead of trusting `escrow_status`. TEST 056 failed before this fix; needs retest.
+
+**Not a bug — test instruction was wrong:** TEST 052's "click Dismiss" was inaccurate; the actual button on a pending report is labeled **"Mark reviewed"** (`admin.html:884`). The dismiss-report backend code and logging were already correct. Owner couldn't find a "Dismiss" button so never triggered the action, which is also why no `admin_logs` row appeared. Needs retest with the correct button.
+
+**Content removal:** `sell.html` — removed the "Contact support" mailto button from the rejected-application screen, keeping only "Re-apply" (TEST 051).
+
+**Deferred to redesign pass (not fixed, owner's explicit choice):** `messages.html` mobile spacing (buttons/names crowding the screen on phone), `login.html` error message styling, `listings/genshin.html`/`mlbb.html`/`valorant.html` — owner wants horizontal swipe/slide instead of current layout. Phase 3 (admin action tests, TEST 067+) not yet run — owner is testing Phase 3 next, then pausing all further testing to focus on a full UI/mobile redesign pass across features.
+
 ### 2026-06-19 (full codebase cleanup: bug fixes + dead code + duplication consolidation, Phases 1–4)
 Approved plan: `bug fixes + safe deletions + duplication consolidation` (6-part parallel audit → fix). Tests for this session start at **TEST 051**.
 
