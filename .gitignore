@@ -10,3 +10,6 @@ zen_existing/
 .env.local
 .env.*.local
 .dev.vars
+
+.playwright-mcp/
+.wrangler/
