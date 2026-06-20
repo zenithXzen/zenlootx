@@ -130,8 +130,10 @@
       gap: 8px;
       border-radius: 8px;
       border-style: solid;
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 13.5px;
+      font-weight: 500;
+      letter-spacing: -0.005em;
+      line-height: 1.55;
       max-height: 0;
       opacity: 0;
       padding: 0 14px;
@@ -178,17 +180,19 @@
       transform: scale(0.6);
       transition: opacity 0.18s var(--ease-out-quart), transform 0.18s var(--ease-out-quart);
     }
-    .btn-spinner-ring {
+    .btn-spinner-svg {
       width: 100%;
       height: 100%;
-      border-radius: 50%;
-      border: 2px solid rgba(10,14,12,0.25);
-      border-top-color: var(--bg-base);
+      color: var(--bg-base);
+      transform-origin: center;
+    }
+    .btn-submit.is-loading .btn-spinner-svg {
+      animation: btn-spin 0.7s linear infinite;
     }
     .btn-check { color: var(--bg-base); }
     .btn-check path {
-      stroke-dasharray: 1;
-      stroke-dashoffset: 1;
+      stroke-dasharray: 100%;
+      stroke-dashoffset: 100%;
       transition: stroke-dashoffset 0.28s var(--ease-out-quart) 0.08s;
     }
 
@@ -201,9 +205,6 @@
       opacity: 1;
       transform: scale(1);
     }
-    .btn-submit.is-loading .btn-spinner-ring {
-      animation: btn-spin 0.7s linear infinite;
-    }
     .btn-submit.is-success {
       background: var(--accent-hover);
       box-shadow: 0 0 0 4px var(--accent-glow);
@@ -213,7 +214,7 @@
       transform: scale(1);
     }
     .btn-submit.is-success .btn-check path {
-      stroke-dashoffset: 0;
+      stroke-dashoffset: 0%;
     }
 
     /* Success ring — a single outward fade pulse from the button edge, not a bounce */
@@ -253,7 +254,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .btn-submit.is-loading .btn-spinner-ring { animation: none; }
+      .btn-submit.is-loading .btn-spinner-svg { animation: none; }
       .btn-submit::after { animation: none !important; }
       .form.shake { animation: none !important; }
       .btn-check path { transition-duration: 0.01ms !important; }
@@ -350,7 +351,12 @@
 
         <button type="submit" class="btn-submit" id="submitBtn">
           <span class="btn-label">Sign in</span>
-          <span class="btn-spinner" aria-hidden="true"><span class="btn-spinner-ring"></span></span>
+          <span class="btn-spinner" aria-hidden="true">
+            <svg class="btn-spinner-svg" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.5"/>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="16 47"/>
+            </svg>
+          </span>
           <svg class="btn-check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path pathLength="1" d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
