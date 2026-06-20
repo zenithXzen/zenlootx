@@ -107,6 +107,14 @@
 
 > Older entries live in **`memory-archive.md`** once this list passes ~10–12 entries. Currently archived: the 2026-06-03 and 2026-06-04 sessions.
 
+### 2026-06-21 (favicon + navbar logo swap, TEST 093–098 all passed)
+Continued from a session interrupted by a VSCode crash (no work lost — last commit `7b2fe34` was already pushed; this was new work on the `preview-login-anim-fixes` branch, not yet committed).
+
+1. **Real bug fixed: favicon was invisible on light browser themes.** `wallpaper/zx.png` (used as `<link rel="icon">` on all 28 pages) is a wide (554×292) transparent-background crop with a pure-white "Z" — on any light/white browser tab theme the Z vanished, leaving only a faint green sliver visible. Built `wallpaper/zx-icon-square.png`: same unmodified Z+X artwork, composited onto a square rounded-card background using the actual design-system `bg-elevated #1A211C` + `border #232B26`, so it now reads correctly at 16px/32px on any tab color. Swapped the favicon `<link>` (only — not the navbar `<img>`) on all 28 pages.
+2. **Navbar logo swapped to the `wow-logo` mark** (owner's explicit choice, made after I flagged the icon's Z is a thin outline with no actual "X" — weaker than the original `zx.png` mark, owner chose to proceed anyway). Replaced the old two-element navbar (`<img src="zx.png"> + <span>ZenLootX</span>` text) with a single `<img src="wow-logo-transparent.png">` (text now baked into the image) across all 25 pages that have a navbar.
+3. **Made `wow-logo.png`'s background transparent.** Source was a flat opaque near-black canvas (RGB 17,17,15) behind both the icon and the text, which didn't quite match the site's actual `bg-base #0A0E0C`, leaving a faint rectangle edge. Chroma-keyed it out (same distance-threshold technique as the icon-only crop from the prior session) → `wallpaper/wow-logo-transparent.png`, now referenced by all 25 navbar instances. Confirmed via Playwright screenshot: no edge/halo against the real navbar background.
+4. **Note for future sessions:** `wallpaper/zx.png` and `wallpaper/logo.png` (the original Z+X mark) are no longer referenced anywhere in HTML — kept on disk but effectively retired. If the owner ever wants to revert the navbar/favicon, those are the files to restore.
+
 ### 2026-06-20 (preview-branch testing: found a real env-var gap, TEST 091–092)
 Owner couldn't reach the `preview-login-anim-fixes` Cloudflare Pages preview at all ("unable to reach the server") on phone WiFi, phone mobile data, and PC — all three. Spent a while ruling out DNS/firewall/antivirus (all checked clean from the actual Windows host, not just the sandbox) before realizing the message was the **app's own error text**, not a browser network error.
 
