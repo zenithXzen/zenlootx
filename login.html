@@ -447,6 +447,8 @@
       submitBtn.disabled = true;
       setBtnState('loading');
       setBtnLabel('Signing in…');
+      const loadingStarted = performance.now();
+      const MIN_LOADING_MS = 550; // let the spinner complete a visible rotation before swapping to the checkmark
 
       try {
         // Username login — done entirely server-side; email never sent to browser
@@ -536,6 +538,10 @@
 
         // Success — redirect back to original page if set
         const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
+        if (!prefersReducedMotion) {
+          const elapsed = performance.now() - loadingStarted;
+          if (elapsed < MIN_LOADING_MS) await new Promise(r => setTimeout(r, MIN_LOADING_MS - elapsed));
+        }
         setBtnState('success');
         setBtnLabel('Signed in');
         showSuccess('Signed in! Redirecting…');

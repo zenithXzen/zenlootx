@@ -13,6 +13,10 @@ const BGPOS  = app.dataset.bgPos;
 const TAGCLS = app.dataset.tagClass;
 const ICON   = app.dataset.icon;
 
+// Set by navigateToGame() on the page we're leaving, read here before the body
+// is rebuilt below so the loading curtain can be present on the very first paint.
+const navDir = sessionStorage.getItem('zl_nav_dir');
+
 let activeFilter    = 'all';
 let activeSort      = 'newest';
 let minPrice        = '';
@@ -47,6 +51,7 @@ const ATTR_FILTER_DEFS = {
 // ── Build page shell ──
 document.title = `${LABEL} Listings — ZenLootX`;
 document.body.innerHTML = `
+  ${navDir ? `<div id="zlCurtain" style="transform:translateX(0)"></div>` : ''}
   <nav>
     <div class="container">
       <div class="nav-inner">
@@ -189,10 +194,14 @@ document.body.innerHTML = `
   </footer>
 `;
 
-// ── Game-category page transitions (swipe + tab click slide) ──
+// ── Game-category page transitions (swipe + tab click, via a full-screen loading curtain) ──
+// A real cross-document navigation always has an unload→load gap that CSS can't slide past.
+// Instead the curtain covers the screen *before* navigating, so that gap happens underneath
+// it, then wipes away once the destination page's shell has been built.
 const GAME_ORDER  = ['genshin', 'mlbb', 'valorant'];
 const GAME_ROUTES = { genshin: '/listings/genshin', mlbb: '/listings/mlbb', valorant: '/listings/valorant' };
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CURTAIN_COVER_MS = 220;
 
 function navigateToGame(targetGame) {
   if (targetGame === GAME || !GAME_ROUTES[targetGame]) return;
@@ -200,19 +209,25 @@ function navigateToGame(targetGame) {
   const url = GAME_ROUTES[targetGame];
   if (prefersReducedMotion) { window.location.href = url; return; }
   sessionStorage.setItem('zl_nav_dir', direction);
-  document.body.classList.add(direction === 'next' ? 'page-exiting-next' : 'page-exiting-prev');
-  setTimeout(() => { window.location.href = url; }, 180);
+  const curtain = document.createElement('div');
+  curtain.id = 'zlCurtain';
+  curtain.className = direction === 'next' ? 'cover-next' : 'cover-prev';
+  document.body.appendChild(curtain);
+  setTimeout(() => { window.location.href = url; }, CURTAIN_COVER_MS);
 }
 
-// Entrance animation if we just arrived via a tracked swipe/tab transition
-(function playEntrance() {
-  const dir = sessionStorage.getItem('zl_nav_dir');
-  if (!dir) return;
+// If we just arrived via a tracked transition, the curtain is already covering the
+// screen (built into the body template above) — hold one frame, then wipe it away.
+(function revealEntrance() {
+  if (!navDir) return;
   sessionStorage.removeItem('zl_nav_dir');
-  if (prefersReducedMotion) return;
-  const cls = dir === 'next' ? 'page-entering-next' : 'page-entering-prev';
-  document.body.classList.add(cls);
-  setTimeout(() => document.body.classList.remove(cls), 260);
+  const curtain = document.getElementById('zlCurtain');
+  if (!curtain) return;
+  if (prefersReducedMotion) { curtain.remove(); return; }
+  requestAnimationFrame(() => {
+    curtain.classList.add(navDir === 'next' ? 'reveal-next' : 'reveal-prev');
+    setTimeout(() => curtain.remove(), 300);
+  });
 })();
 
 // Tab clicks reuse the same slide instead of an abrupt reload

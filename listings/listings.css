@@ -30,25 +30,29 @@ nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);ba
 
 /* GAME SWITCHER */
 .game-switcher { border-bottom:1px solid var(--border);background:var(--bg-surface);padding:10px 0; }
-.game-switcher-inner { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.game-switcher-inner { display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none; }
+.game-switcher-inner::-webkit-scrollbar { display:none; }
 .game-sw-label { font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-right:4px;flex-shrink:0; }
-.game-sw-btn { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text-dim);border:1px solid var(--border);background:var(--bg-elevated);text-decoration:none;transition:all 0.16s;white-space:nowrap; }
+.game-sw-btn { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text-dim);border:1px solid var(--border);background:var(--bg-elevated);text-decoration:none;transition:all 0.16s;white-space:nowrap;flex-shrink:0; }
 .game-sw-btn:hover { border-color:var(--border-hi);color:var(--text);background:var(--bg-elevated); }
 .game-sw-btn.active { border-color:var(--accent);color:var(--accent);background:var(--accent-glow); }
 .game-sw-icon { font-size:15px; }
 
-/* PAGE TRANSITIONS (switching game category via tab click or swipe) */
-body.page-exiting-next  { animation: zlSlideOutLeft 0.18s cubic-bezier(0.25,1,0.5,1) forwards; }
-body.page-exiting-prev  { animation: zlSlideOutRight 0.18s cubic-bezier(0.25,1,0.5,1) forwards; }
-body.page-entering-next { animation: zlSlideInFromRight 0.22s cubic-bezier(0.25,1,0.5,1); }
-body.page-entering-prev { animation: zlSlideInFromLeft 0.22s cubic-bezier(0.25,1,0.5,1); }
-@keyframes zlSlideOutLeft    { to   { transform:translateX(-28px); opacity:0; } }
-@keyframes zlSlideOutRight   { to   { transform:translateX(28px);  opacity:0; } }
-@keyframes zlSlideInFromRight{ from { transform:translateX(20px);  opacity:0; } to { transform:translateX(0); opacity:1; } }
-@keyframes zlSlideInFromLeft { from { transform:translateX(-20px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+/* PAGE TRANSITIONS — loading curtain (switching game category via tab click or swipe).
+   Real cross-document navigations have an unload→load gap that can't be "slid past" with
+   body-level CSS alone; the curtain covers the screen before navigating so that gap is
+   invisible underneath it, then wipes away once the destination page is ready. */
+#zlCurtain { position:fixed;inset:0;z-index:300;background:var(--bg-base);border-left:3px solid var(--accent);border-right:3px solid var(--accent);box-shadow:0 0 24px var(--accent-glow);pointer-events:none; }
+#zlCurtain.cover-next  { transform:translateX(100%);  animation:zlCurtainCoverNext 0.22s cubic-bezier(0.25,1,0.5,1) forwards; }
+#zlCurtain.cover-prev  { transform:translateX(-100%); animation:zlCurtainCoverPrev 0.22s cubic-bezier(0.25,1,0.5,1) forwards; }
+#zlCurtain.reveal-next { animation:zlCurtainRevealNext 0.26s cubic-bezier(0.25,1,0.5,1) forwards; }
+#zlCurtain.reveal-prev { animation:zlCurtainRevealPrev 0.26s cubic-bezier(0.25,1,0.5,1) forwards; }
+@keyframes zlCurtainCoverNext  { to   { transform:translateX(0); } }
+@keyframes zlCurtainCoverPrev  { to   { transform:translateX(0); } }
+@keyframes zlCurtainRevealNext { from { transform:translateX(0); } to { transform:translateX(-100%); } }
+@keyframes zlCurtainRevealPrev { from { transform:translateX(0); } to { transform:translateX(100%); } }
 @media (prefers-reduced-motion: reduce) {
-  body.page-exiting-next, body.page-exiting-prev,
-  body.page-entering-next, body.page-entering-prev { animation:none !important; }
+  #zlCurtain { display:none !important; }
 }
 
 /* TOOLBAR */
