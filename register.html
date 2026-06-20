@@ -23,6 +23,7 @@
       --text-faint:  #6B776F;
       --danger:      #EF4444;
       --success:     #22C55E;
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -207,6 +208,32 @@
     }
     .code-digit:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
     .code-digit.filled { border-color: var(--border-hi); }
+    .code-digit.pop { animation: code-digit-pop 0.22s var(--ease-out-quart); }
+    .code-digit.success {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      color: var(--accent);
+      animation: code-digit-success 0.32s var(--ease-out-quart);
+    }
+    .code-inputs.shake { animation: code-shake 0.4s ease-in-out; }
+
+    @keyframes code-digit-pop {
+      from { transform: scale(1.15); border-color: var(--accent); }
+      to   { transform: scale(1); border-color: var(--border-hi); }
+    }
+    @keyframes code-digit-success {
+      from { transform: scale(1.1); }
+      to   { transform: scale(1); }
+    }
+    @keyframes code-shake {
+      10%, 90%      { transform: translateX(-1px); }
+      20%, 80%      { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60%      { transform: translateX(4px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .code-digit.pop, .code-digit.success, .code-inputs.shake { animation: none !important; }
+    }
 
     .resend-row {
       display: flex;
@@ -382,6 +409,7 @@
     // ── State ──
     let verifyToken = null;
     let resendCooldown = null;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // ── Step 1 submit ──
     document.getElementById('step1Form').addEventListener('submit', async (e) => {
@@ -503,12 +531,23 @@
 
     // ── Code digit inputs ──
     const digits = Array.from(document.querySelectorAll('.code-digit'));
+    const codeInputsEl = document.getElementById('codeInputs');
     digits.forEach((inp, i) => {
       inp.addEventListener('input', () => {
         inp.value = inp.value.replace(/\D/g, '').slice(-1);
         if (inp.value) {
           inp.classList.add('filled');
-          if (i < digits.length - 1) digits[i + 1].focus();
+          if (!prefersReducedMotion) {
+            inp.classList.remove('pop');
+            void inp.offsetWidth; // restart the pop animation on every keystroke, not just the first
+            inp.classList.add('pop');
+          }
+          if (i < digits.length - 1) {
+            digits[i + 1].focus();
+          } else if (digits.every(d => d.value) && !document.getElementById('verifyBtn').disabled) {
+            // Last digit filled and all 6 present — auto-submit, no need to tap Verify
+            document.getElementById('step2Form').requestSubmit();
+          }
         }
       });
       inp.addEventListener('keydown', (e) => {
@@ -526,6 +565,9 @@
         });
         const next = digits[Math.min(pasted.length, 5)];
         if (next) next.focus();
+        if (pasted.length === 6 && !document.getElementById('verifyBtn').disabled) {
+          document.getElementById('step2Form').requestSubmit();
+        }
       });
     });
 
@@ -560,12 +602,31 @@
           errEl.classList.add('visible');
           btn.disabled = false;
           btn.textContent = 'Verify & create account';
-          digits.forEach(d => { d.value = ''; d.classList.remove('filled'); });
-          digits[0].focus();
+          if (prefersReducedMotion) {
+            digits.forEach(d => { d.value = ''; d.classList.remove('filled'); });
+            digits[0].focus();
+          } else {
+            codeInputsEl.classList.remove('shake');
+            void codeInputsEl.offsetWidth;
+            codeInputsEl.classList.add('shake');
+            setTimeout(() => {
+              codeInputsEl.classList.remove('shake');
+              digits.forEach(d => { d.value = ''; d.classList.remove('filled', 'pop'); });
+              digits[0].focus();
+            }, 400);
+          }
           return;
         }
 
-        // ✅ Verified — create account in Supabase
+        // ✅ Verified — light up each digit in sequence before continuing
+        if (!prefersReducedMotion) {
+          digits.forEach((d, i) => {
+            setTimeout(() => d.classList.add('success'), i * 45);
+          });
+          await new Promise(r => setTimeout(r, digits.length * 45 + 320));
+        }
+
+        // Create account in Supabase
         const password = document.getElementById('password').value;
         const username = document.getElementById('username').value.trim();
 
@@ -647,7 +708,7 @@
           s.textContent = 'New code sent.';
           s.classList.add('visible');
           setTimeout(() => s.classList.remove('visible'), 3000);
-          digits.forEach(d => { d.value = ''; d.classList.remove('filled'); });
+          digits.forEach(d => { d.value = ''; d.classList.remove('filled', 'pop', 'success'); });
           digits[0].focus();
           startResendTimer(60);
         }

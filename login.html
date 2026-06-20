@@ -186,6 +186,11 @@
       border-top-color: var(--bg-base);
     }
     .btn-check { color: var(--bg-base); }
+    .btn-check path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      transition: stroke-dashoffset 0.28s var(--ease-out-quart) 0.08s;
+    }
 
     .btn-submit.is-loading .btn-label,
     .btn-submit.is-success .btn-label {
@@ -207,8 +212,40 @@
       opacity: 1;
       transform: scale(1);
     }
+    .btn-submit.is-success .btn-check path {
+      stroke-dashoffset: 0;
+    }
+
+    /* Success ring — a single outward fade pulse from the button edge, not a bounce */
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .btn-submit.is-success::after {
+      animation: btn-success-ring 0.6s var(--ease-out-quart);
+    }
+
+    /* Reject shake — plays once on invalid credentials, mirrors a wrong-code rejection */
+    .form.shake {
+      animation: form-shake 0.4s ease-in-out;
+    }
 
     @keyframes btn-spin { to { transform: rotate(360deg); } }
+    @keyframes btn-success-ring {
+      0%   { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.12); }
+    }
+    @keyframes form-shake {
+      10%, 90%     { transform: translateX(-1px); }
+      20%, 80%     { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60%     { transform: translateX(4px); }
+    }
 
     body.page-exiting {
       opacity: 0;
@@ -217,6 +254,9 @@
 
     @media (prefers-reduced-motion: reduce) {
       .btn-submit.is-loading .btn-spinner-ring { animation: none; }
+      .btn-submit::after { animation: none !important; }
+      .form.shake { animation: none !important; }
+      .btn-check path { transition-duration: 0.01ms !important; }
       .btn-label, .btn-spinner, .btn-check, body.page-exiting, .alert {
         transition-duration: 0.01ms !important;
       }
@@ -312,7 +352,7 @@
           <span class="btn-label">Sign in</span>
           <span class="btn-spinner" aria-hidden="true"><span class="btn-spinner-ring"></span></span>
           <svg class="btn-check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path pathLength="1" d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
 
@@ -346,6 +386,13 @@
     function setBtnState(state) {
       submitBtn.classList.remove('is-loading', 'is-success');
       if (state) submitBtn.classList.add('is-' + state);
+    }
+    const loginForm = document.getElementById('loginForm');
+    function shakeForm() {
+      if (prefersReducedMotion) return;
+      loginForm.classList.remove('shake');
+      void loginForm.offsetWidth; // restart the animation even if it's already mid-shake
+      loginForm.classList.add('shake');
     }
 
     // Password toggle
@@ -469,6 +516,7 @@
             submitBtn.disabled = false;
             setBtnState('');
             setBtnLabel('Sign in');
+            shakeForm();
             return;
           }
           if (result.error === 'invalid_credentials') {
@@ -502,6 +550,7 @@
           } else {
             showError('Incorrect email or password. Please try again.');
           }
+          shakeForm();
           return;
         }
 
