@@ -189,6 +189,69 @@ document.body.innerHTML = `
   </footer>
 `;
 
+// ── Game-category page transitions (swipe + tab click slide) ──
+const GAME_ORDER  = ['genshin', 'mlbb', 'valorant'];
+const GAME_ROUTES = { genshin: '/listings/genshin', mlbb: '/listings/mlbb', valorant: '/listings/valorant' };
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function navigateToGame(targetGame) {
+  if (targetGame === GAME || !GAME_ROUTES[targetGame]) return;
+  const direction = GAME_ORDER.indexOf(targetGame) > GAME_ORDER.indexOf(GAME) ? 'next' : 'prev';
+  const url = GAME_ROUTES[targetGame];
+  if (prefersReducedMotion) { window.location.href = url; return; }
+  sessionStorage.setItem('zl_nav_dir', direction);
+  document.body.classList.add(direction === 'next' ? 'page-exiting-next' : 'page-exiting-prev');
+  setTimeout(() => { window.location.href = url; }, 180);
+}
+
+// Entrance animation if we just arrived via a tracked swipe/tab transition
+(function playEntrance() {
+  const dir = sessionStorage.getItem('zl_nav_dir');
+  if (!dir) return;
+  sessionStorage.removeItem('zl_nav_dir');
+  if (prefersReducedMotion) return;
+  const cls = dir === 'next' ? 'page-entering-next' : 'page-entering-prev';
+  document.body.classList.add(cls);
+  setTimeout(() => document.body.classList.remove(cls), 260);
+})();
+
+// Tab clicks reuse the same slide instead of an abrupt reload
+document.querySelectorAll('.game-sw-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const targetGame = (btn.getAttribute('href') || '').split('/').pop();
+    if (!GAME_ROUTES[targetGame] || targetGame === GAME) return;
+    e.preventDefault();
+    navigateToGame(targetGame);
+  });
+});
+
+// Swipe gesture over the listings area switches game category
+(function initSwipe() {
+  const swipeZone = document.querySelector('main');
+  if (!swipeZone) return;
+  let startX = 0, startY = 0, tracking = false;
+
+  swipeZone.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+
+  swipeZone.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    const SWIPE_THRESHOLD = 60;
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const currentIdx = GAME_ORDER.indexOf(GAME);
+    const targetIdx  = dx < 0 ? currentIdx + 1 : currentIdx - 1;
+    if (targetIdx < 0 || targetIdx >= GAME_ORDER.length) return;
+    navigateToGame(GAME_ORDER[targetIdx]);
+  }, { passive: true });
+})();
+
 // ── Auth-aware nav (delegates to the shared nav.js initNav once session is confirmed) ──
 async function initNavGate() {
   const { data: { session } } = await sb.auth.getSession();

@@ -37,6 +37,20 @@ nav { position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);ba
 .game-sw-btn.active { border-color:var(--accent);color:var(--accent);background:var(--accent-glow); }
 .game-sw-icon { font-size:15px; }
 
+/* PAGE TRANSITIONS (switching game category via tab click or swipe) */
+body.page-exiting-next  { animation: zlSlideOutLeft 0.18s cubic-bezier(0.25,1,0.5,1) forwards; }
+body.page-exiting-prev  { animation: zlSlideOutRight 0.18s cubic-bezier(0.25,1,0.5,1) forwards; }
+body.page-entering-next { animation: zlSlideInFromRight 0.22s cubic-bezier(0.25,1,0.5,1); }
+body.page-entering-prev { animation: zlSlideInFromLeft 0.22s cubic-bezier(0.25,1,0.5,1); }
+@keyframes zlSlideOutLeft    { to   { transform:translateX(-28px); opacity:0; } }
+@keyframes zlSlideOutRight   { to   { transform:translateX(28px);  opacity:0; } }
+@keyframes zlSlideInFromRight{ from { transform:translateX(20px);  opacity:0; } to { transform:translateX(0); opacity:1; } }
+@keyframes zlSlideInFromLeft { from { transform:translateX(-20px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@media (prefers-reduced-motion: reduce) {
+  body.page-exiting-next, body.page-exiting-prev,
+  body.page-entering-next, body.page-entering-prev { animation:none !important; }
+}
+
 /* TOOLBAR */
 .toolbar { border-bottom:1px solid var(--border);background:var(--bg-surface);padding:14px 0; }
 .toolbar-inner { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap; }
