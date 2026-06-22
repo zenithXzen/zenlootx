@@ -107,6 +107,13 @@
 
 > Older entries live in **`memory-archive.md`** once this list passes ~10–12 entries. Currently archived: the 2026-06-03 and 2026-06-04 sessions.
 
+### 2026-06-22 (login.html card entrance animation, TEST 101)
+Owner asked for login to get the same animation polish as register's OTP step. Login's button already had spinner/checkmark/shake/ring from the 2026-06-20/21 work — the gap was that the card itself just appeared instantly on page load, unlike register's step-indicator giving that page a sense of arrival. Presented 3 options (card entrance, per-field shake, password-icon crossfade); owner picked only the card entrance.
+
+1. Added a one-time `card-enter` keyframe animation to `.card` in `login.html` (opacity 0→1, translateY 8px→0, 0.36s `--ease-out-quart`, `both` fill mode so it doesn't flash unstyled before running). Gated under the existing `prefers-reduced-motion: reduce` block (`.card { animation: none !important; }`).
+2. Verified via Playwright at 390px mobile width: animation fires (`animationName: card-enter`) and settles cleanly to `opacity:1`/no transform; with `reducedMotion: 'reduce'` emulated, `animationName` reports `none` and the card is instantly at full opacity. No changes to `.btn-submit`/`.form` rules — existing button animations untouched.
+3. Scope intentionally limited to `login.html` only — per-field shake and password eye-icon crossfade were declined for now, not forgotten.
+
 ### 2026-06-21 (favicon + navbar logo swap, TEST 093–098 all passed)
 Continued from a session interrupted by a VSCode crash (no work lost — last commit `7b2fe34` was already pushed; this was new work on the `preview-login-anim-fixes` branch, not yet committed).
 

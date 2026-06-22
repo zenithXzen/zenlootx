@@ -65,7 +65,15 @@
       padding: 48px 24px;
     }
 
-    .card { width: 100%; max-width: 420px; }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      animation: card-enter 0.36s var(--ease-out-quart) both;
+    }
+    @keyframes card-enter {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     .card-header { text-align: center; margin-bottom: 32px; }
     .card-header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
@@ -253,6 +261,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .card { animation: none !important; }
       .btn-submit.is-loading .btn-spinner-svg { animation: none; }
       .btn-submit::after { animation: none !important; }
       .form.shake { animation: none !important; }
