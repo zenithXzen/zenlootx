@@ -430,9 +430,12 @@
         if (res.ok && data.requests) { allTopups = data.requests; return; }
       } catch {}
       try {
-        const { data } = await sb.from('topup_requests').select('*').order('created_at', { ascending: false });
+        const { data, error } = await sb.from('topup_requests').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
         allTopups = data || [];
-      } catch {}
+      } catch {
+        toast('Could not load top-up requests.', 'error');
+      }
     }
 
     async function loadWithdrawals() {
@@ -442,9 +445,12 @@
         if (res.ok && data.requests) { allWithdrawals = data.requests; return; }
       } catch {}
       try {
-        const { data } = await sb.from('withdrawal_requests').select('*').order('created_at', { ascending: false });
+        const { data, error } = await sb.from('withdrawal_requests').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
         allWithdrawals = data || [];
-      } catch {}
+      } catch {
+        toast('Could not load withdrawal requests.', 'error');
+      }
     }
 
     async function loadListings() {
@@ -521,7 +527,10 @@
           orders:       ordersRes.data || [],
           userCount:    usersRes.count || 0,
         };
-      } catch { analyticsData = { transactions: [], orders: [], userCount: 0 }; }
+      } catch {
+        analyticsData = { transactions: [], orders: [], userCount: 0 };
+        toast('Could not load analytics data.', 'error');
+      }
     }
 
     function renderAnalytics() {
@@ -1285,13 +1294,19 @@
       }
 
       // Try to update user's is_seller flag via CF function (best-effort)
+      let flagOk = true;
       try {
-        await fetch('/api/admin/review-application', {
+        const res = await fetch('/api/admin/review-application', {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ applicationId: app.id, userId: app.user_id, action, reason }),
         });
-      } catch {}
+        flagOk = res.ok;
+      } catch { flagOk = false; }
+
+      if (!flagOk && action === 'approve') {
+        toast('Application approved, but granting seller access failed — re-open this application and try again.', 'error');
+      }
 
       closeModal();
       await loadApplications();

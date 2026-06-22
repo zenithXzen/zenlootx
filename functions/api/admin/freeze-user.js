@@ -1,4 +1,4 @@
-import { verifyAdmin, logAdminAction } from './_shared.js';
+import { verifyAdmin, logAdminAction, incrementBalance } from './_shared.js';
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -57,17 +57,7 @@ export async function onRequestPost({ request, env }) {
 
     // Optional: deduct from seller balance (e.g. dispute refund penalty)
     if (isFreezing && deductAmount && Number(deductAmount) > 0) {
-      const walletRes  = await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${userId}&select=balance`, {
-        headers: { Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, apikey: env.SUPABASE_SERVICE_KEY },
-      });
-      const walletData = await walletRes.json();
-      const balance    = Number(walletData?.[0]?.balance || 0);
-      const newBalance = Math.max(0, balance - Number(deductAmount));
-      await fetch(`${env.SUPABASE_URL}/rest/v1/wallets?user_id=eq.${userId}`, {
-        method: 'PATCH',
-        headers: { ...hdr },
-        body: JSON.stringify({ balance: newBalance }),
-      });
+      await incrementBalance(env, userId, -Number(deductAmount));
       // Log deduction transaction
       await fetch(`${env.SUPABASE_URL}/rest/v1/transactions`, {
         method: 'POST',

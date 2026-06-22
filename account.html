@@ -1228,12 +1228,6 @@
       };
     });
 
-    async function isBanned(userId) {
-      const { data } = await sb.from('profiles').select('is_banned').eq('id', userId).single();
-      if (data?.is_banned) { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
-      return false;
-    }
-
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
 
@@ -1339,35 +1333,6 @@
       { tier:10, name:'Diamond',  min:500000, trophy:'url(#diamondGrad)' },
     ];
 
-    function getTierIcon(tier, color) {
-      const c = color.startsWith('url') ? 'url(#dg)' : color;
-      const grad = color.startsWith('url') ? `<defs><linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="33%" stop-color="#38bdf8"/><stop offset="66%" stop-color="#34d399"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient></defs>` : '';
-      const f = `fill="${c}"`;
-      switch(tier) {
-        case 1: // Shield — stone, basic protection
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M12 2L4 5.5V11c0 5.2 3.6 9.8 8 11 4.4-1.2 8-5.8 8-11V5.5L12 2z"/></svg>`;
-        case 2: // Medal — iron, first real award
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M9 2h6l1.5 7h-9L9 2z"/><circle ${f} cx="12" cy="16" r="6"/></svg>`;
-        case 3: // Trophy cup — bronze
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M8 3h8v7a4 4 0 01-8 0V3z"/><path ${f} d="M4 5h4v4H5a2 2 0 010-4zM20 5h-4v4h3a2 2 0 000-4z"/><rect ${f} x="10" y="14" width="4" height="3"/><rect ${f} x="7" y="17" width="10" height="2" rx="1"/></svg>`;
-        case 4: // Wide-handle trophy — silver
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M9 2h6v8a3 3 0 01-6 0V2z"/><path ${f} d="M3 4h6v5H4.5A2.5 2.5 0 013 4zM21 4h-6v5h4.5A2.5 2.5 0 0021 4z"/><rect ${f} x="11" y="13" width="2" height="3"/><rect ${f} x="7" y="16" width="10" height="2" rx="1"/></svg>`;
-        case 5: // Star trophy — gold
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M12 2l1.2 3.5H17l-3 2.2 1.1 3.3L12 9l-3.1 2 1.1-3.3L7 5.5h3.8z"/><path ${f} d="M9 10h6v5a3 3 0 01-6 0V10z"/><rect ${f} x="11" y="17" width="2" height="2"/><rect ${f} x="7" y="19" width="10" height="2" rx="1"/></svg>`;
-        case 6: // Crown trophy — platinum
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M7 7l2-5 3 4 3-4 2 5H7z"/><path ${f} d="M7 7h10v6a5 5 0 01-10 0V7z"/><rect ${f} x="10" y="15" width="4" height="2"/><rect ${f} x="7" y="17" width="10" height="2" rx="1"/></svg>`;
-        case 7: // Gem — emerald
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M7.5 3h9l4 5.5H3.5L7.5 3z"/><path ${f} d="M3.5 8.5L12 21l8.5-12.5H3.5z"/></svg>`;
-        case 8: // Crown — sapphire
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M3 19V8l3.5 7L10 5l2 8 2-8 3.5 10L23 8v11H3z"/></svg>`;
-        case 9: // Jeweled crown — ruby
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M2 20V9l4 7.5L9.5 4 12 13l2.5-9L18 16.5 22 9v11H2z"/><circle ${f} cx="6" cy="9" r="1.8"/><circle ${f} cx="12" cy="4.5" r="1.8"/><circle ${f} cx="18" cy="9" r="1.8"/></svg>`;
-        case 10: // Championship star cup — diamond
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M12 1.5l1.5 4H18l-4 3 1.5 4.5L12 10.5 8.5 13 10 8.5 6 5.5h4.5z"/><path ${f} d="M9.5 12h5v4a2.5 2.5 0 01-5 0V12z"/><path ${f} d="M4 14h5.5v3.5H6A2 2 0 014 14zM20 14h-5.5v3.5H18a2 2 0 002-2V14z"/><rect ${f} x="10" y="18" width="4" height="1.5"/><rect ${f} x="7" y="19.5" width="10" height="2" rx="1"/></svg>`;
-        default:
-          return `<svg viewBox="0 0 24 24" fill="none">${grad}<path ${f} d="M7 3h10v2H7zM5 5h14l-1 8H6zm1 9h12l-2 3H8zm2 3h6l-3 2z"/></svg>`;
-      }
-    }
     async function loadTier(userId) {
       try {
         // Sum purchase (escrow) + sale (credit) transactions — excludes withdrawals

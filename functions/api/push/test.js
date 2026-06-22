@@ -6,10 +6,10 @@ function u8(str) {
   const p = '='.repeat((4 - (str.length % 4)) % 4);
   return Uint8Array.from(atob((str + p).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 }
-async function signVapid(endpoint, privB64, pubB64) {
+async function signVapid(endpoint, privB64, pubB64, subject) {
   const aud = new URL(endpoint).origin;
   const encode = obj => b64u(new TextEncoder().encode(JSON.stringify(obj)));
-  const unsigned = `${encode({ typ: 'JWT', alg: 'ES256' })}.${encode({ aud, exp: Math.floor(Date.now() / 1000) + 43200, sub: 'mailto:roxaszenkie18@gmail.com' })}`;
+  const unsigned = `${encode({ typ: 'JWT', alg: 'ES256' })}.${encode({ aud, exp: Math.floor(Date.now() / 1000) + 43200, sub: subject })}`;
   const pub = u8(pubB64);
   const key = await crypto.subtle.importKey('jwk', {
     kty: 'EC', crv: 'P-256', x: b64u(pub.slice(1, 33)), y: b64u(pub.slice(33)), d: privB64, key_ops: ['sign'], ext: true,
@@ -58,6 +58,7 @@ export async function onRequestPost({ request, env }) {
     const VAPID_PRIVATE = env.VAPID_PRIVATE_KEY;
     const VAPID_PUBLIC  = env.VAPID_PUBLIC_KEY;
     if (!VAPID_PRIVATE || !VAPID_PUBLIC) return Response.json({ error: 'VAPID keys missing from Cloudflare env' }, { status: 500 });
+    if (!env.VAPID_SUBJECT) return Response.json({ error: 'VAPID_SUBJECT missing from Cloudflare env' }, { status: 500 });
 
     const subRes = await fetch(
       `${env.SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${user.id}&select=subscription`,
@@ -77,7 +78,7 @@ export async function onRequestPost({ request, env }) {
 
       let fcmStatus = null, fcmBody = null, err = null;
       try {
-        const jwt = await signVapid(sub.endpoint, VAPID_PRIVATE, VAPID_PUBLIC);
+        const jwt = await signVapid(sub.endpoint, VAPID_PRIVATE, VAPID_PUBLIC, env.VAPID_SUBJECT);
         let body = null, extraHeaders = {};
         if (sub.keys?.p256dh && sub.keys?.auth) {
           body = await encrypt(sub.keys, payload);

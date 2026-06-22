@@ -445,16 +445,27 @@
         failedAttempts = 0;
         return;
       }
+      let sent = false;
       try {
-        await fetch('/api/send-reset', {
+        const res = await fetch('/api/send-reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
         });
+        sent = res.ok;
       } catch {}
-      setBtnState('success');
-      showSuccess(`Too many failed attempts. A reset link has been sent to ${email}.`);
-      setBtnLabel('Reset email sent');
+      if (sent) {
+        setBtnState('success');
+        showSuccess(`Too many failed attempts. A reset link has been sent to ${email}.`);
+        setBtnLabel('Reset email sent');
+      } else {
+        setBtnState('');
+        shakeForm();
+        showError('Too many failed attempts, and the reset email could not be sent. Please try again in a moment.');
+        setBtnLabel('Sign in');
+        submitBtn.disabled = false;
+        locked = false;
+      }
     }
 
     async function loginByUsername(username, password) {

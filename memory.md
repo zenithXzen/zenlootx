@@ -8,6 +8,43 @@
 
 ---
 
+## 🗒️ Change Log
+
+### 2026-06-22 — Cleanup security batch (items 1–5 from "Known cleanups / risks")
+Branch `cleanup-security-batch`. Worked through the 5-item backlog top to bottom.
+
+- **Item 4 — `freeze-user.js` race condition (fixed):** balance deduction now goes through `incrementBalance(env, userId, -amount)` (the atomic RPC helper from `_shared.js`, same pattern as `resolve-dispute.js`) instead of read-balance-then-PATCH. Removes a lost-update race if another mutation hits the same wallet at the same time.
+- **Item 3 — VAPID subject hardcoded to personal Gmail (fixed in code, needs your action):** `push-helper.js` and `push/test.js` now read `env.VAPID_SUBJECT` instead of a hardcoded `mailto:roxaszenkie18@gmail.com`. **You must add `VAPID_SUBJECT` to Cloudflare env vars (Production AND Preview tabs) or push notifications will silently stop working** — same Preview-doesn't-inherit-Production gap that's bitten this project before.
+- **Item 2 — silent/misleading catch blocks (fixed, targeted):** Only fixed cases where a user takes an action and gets no/wrong feedback (skipped purely cosmetic background fetches, per your call).
+  - `login.html` — lockout "reset email sent" message no longer shows on failure; now shows a real error if the send fails.
+  - `forgot-password.html` — both the main submit and the resend button now show an error if the email fails to send (previously: silent main-submit failure, and resend bug existed beyond what was originally scoped — fixed both, same root cause).
+  - `register.html` — resend-code button now shows an error instead of leaving the button permanently disabled with no explanation.
+  - `admin.html` — 4 real fixes: top-up list load, withdrawal list load, analytics load, and seller-application approve/deny now all `toast()` a visible error on failure (the approve/deny one matters most — admin could previously believe a seller was approved when the request had actually failed).
+- **Item 5 — duplicated helpers (consolidated):** `timeAgo()`, `isBanned()`, `getTierIcon()` now live once in `nav.js`; removed from `disputes.html`, `notifications.html`, `seller-dashboard.html`, `account.html`, `create-listing.html`, `profile.html`, `public-profile.html`. Bonus fix: `public-profile.html`'s old local `getTierIcon` was buggy — only rendered correct icons for tier 1 and tier 10, everything else fell through to a generic icon. Now uses the full correct version everywhere. Currency-formatter consolidation was investigated and **skipped on purpose** — turned out not to be true duplicates (different decimal precision by design, some copies are backend-only).
+- **Item 1 — RLS on `reviews` / `withdrawal_requests`:** ✅ confirmed — RLS is enabled on both. Checking the actual policies surfaced a real bug (not just a missing-RLS gap): `reviews`' two `INSERT` policies were OR'd together (Postgres default for multiple `PERMISSIVE` policies), and one of them never checked `reviewer_id` at all — meaning anyone logged in could insert a fake review impersonating any other user, for any order, without even having participated in it. Confirmed exploitable directly via the Supabase anon key (insert happens client-side in `messages.html:978`, no server-side check backing it up). Recorded as decision.md D-027. Fix: combined the 2 broken policies into 1 that requires ownership + no-duplicate + order actually completed + reviewer was a real participant. SQL handed to Zen to run himself.
+- Verified via browser: no JS errors on any touched page, all the moved functions resolve correctly with no leftover references to the old local copies. Full visual check of tier badges on a real logged-in account still needs to be eyeballed by you — no test login available in this session.
+
+**Action items — both done (2026-06-22):**
+1. ✅ `VAPID_SUBJECT` env var added in Cloudflare, Production + Preview (caught a formatting bug along the way: value needs the `mailto:` prefix, e.g. `mailto:admin@zenlootexchange.com`, not just the bare email — Cloudflare's env var page now uses a "Choose Environment" dropdown rather than separate tabs, in case this comes up again on another var).
+2. ✅ `reviews` policy fix SQL run in Supabase.
+
+Both are live now — TEST 103 and TEST 111 are ready to run.
+
+**Tests (continuing from TEST 101, which lives on the not-yet-merged `preview-login-anim-fixes` branch — using 102 to avoid a collision when that merges):**
+
+- **TEST 102 — freeze-user balance deduction:** `/admin` → Users tab → pick a test user with a wallet balance → Freeze + deduct some amount → confirm the wallet balance in their `/account` (or admin user view) drops by exactly that amount, no more/less. ✅/❌
+- **TEST 103 — VAPID_SUBJECT (do this AFTER adding the env var):** `/admin` → trigger any push-notification action (e.g. release a payment, open a dispute) on an account that has push enabled → confirm the notification arrives. If you haven't added `VAPID_SUBJECT` to Cloudflare yet, skip this test — it will fail until that's done. ✅/❌
+- **TEST 104 — login lockout reset-email feedback:** `/login` → enter a real account's username with the WRONG password 5 times in a row to trigger lockout → confirm you see either "reset link sent to [email]" (if it actually sent) — check your inbox to confirm it really arrived — or a clear error message, never a success message with no email arriving. ✅/❌
+- **TEST 105 — forgot-password feedback:** `/forgot-password` → enter an email → confirm success screen only appears if the email actually arrives in your inbox; then click "resend" and confirm it either resends (timer starts) or shows a visible error, never silently does nothing. ✅/❌
+- **TEST 106 — register resend-code feedback:** `/register` → sign up far enough to reach the 6-digit code screen → click "resend code" → confirm it either resends (new code arrives, timer restarts) or shows a visible error instead of leaving the button stuck disabled. ✅/❌
+- **TEST 107 — admin approve/deny feedback:** `/admin` → Applications tab → approve or deny a pending seller application → confirm you get a clear success or error toast (not just a closing modal with no info). ✅/❌
+- **TEST 108 — admin top-up/withdrawal/analytics load feedback:** `/admin` → open Top-ups tab, Withdrawals tab, and Analytics tab → each should either load data normally, or — if you simulate a failure (e.g. by going offline briefly) — show a toast error instead of a blank silent screen. ✅/❌
+- **TEST 109 — tier badge rendering after helper consolidation:** Visit `/account`, `/profile`, and a `/public-profile?id=...` for a few different real accounts across different tiers (Iron through Diamond) → confirm each tier shows its correct distinct icon, especially tiers 2–9 on public-profile (these were the ones with the bug — they used to all show a generic fallback icon instead of their real tier icon). ✅/❌
+- **TEST 110 — timeAgo / isBanned still work:** Visit `/disputes`, `/notifications`, `/seller-dashboard` and confirm timestamps still show as "Just now / Xm ago / Xh ago / Xd ago" correctly; and confirm a banned test account still gets redirected to `/banned` when visiting `/account`, `/profile`, or `/create-listing`. ✅/❌
+- **TEST 111 — reviews policy fix still allows real reviews (do this AFTER running the SQL fix):** Find a real conversation with `escrow_status = 'released'` in `/messages` → click "Rate them" → submit a star rating → confirm it saves successfully (no RLS error) and shows "✓ Reviewed". Then try to rate the same order again — confirm it's blocked (already showing "✓ Reviewed", can't double-submit). ✅/❌
+
+---
+
 ## 📍 Current State (snapshot — last updated 2026-06-18)
 
 **Live stack**
@@ -58,10 +95,10 @@
 - `notifications` (RLS ✅, realtime enabled)
 - `seller_applications` (RLS ✅)
 - `disputes` (RLS ✅)
-- `reviews` — ⚠️ RLS status not confirmed in this file, verify in Supabase before launch
+- `reviews` (RLS ✅, confirmed 2026-06-22) — INSERT policy rewritten to close an impersonation/fake-review bug, see decision.md D-027
 - `email_rate_limits` (RLS ✅) — also used for verify-code attempt tracking (prefix `vfy::`) and per-IP username-lookup throttling (prefix `ipck::`)
 - `push_subscriptions` (RLS ✅, service key only)
-- `withdrawal_requests` — ⚠️ RLS status not confirmed in this file, verify in Supabase before launch
+- `withdrawal_requests` (RLS ✅, confirmed 2026-06-22) — policies checked: admin-or-owner read, owner-only insert, no update/delete via anon key (status changes go through service key) — correct as-is
 - `platform_earnings` (RLS ✅, admin only) — logs every completed sale: gross_amount, fee_percent, fee_amount, net_amount per order
 - `topup_requests` (RLS ✅) — user top-up requests, pending/approved/rejected
 - `admin_logs` (RLS ✅, admin only) — audit log for all 9 admin actions
@@ -78,6 +115,7 @@
 **Cloudflare env vars set**
 `RESEND_API_KEY` · `HMAC_SECRET` · `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_KEY` · `ADMIN_BYPASS_SECRET` · `VAPID_PUBLIC_KEY` · `VAPID_PRIVATE_KEY`
 ⚠️ VAPID keys rotated 2026-06-09 (old private key was accidentally committed). New values are in Cloudflare env vars only — never store key values in this file.
+⚠️ **`VAPID_SUBJECT` NOT yet set (needed as of 2026-06-22) — code now reads it instead of a hardcoded email; push notifications fail silently until you add it to BOTH Production and Preview.**
 
 **Security status**
 - C1–C4 (Critical), H1–H7 (High), M1 (email regex), M3 (listings pagination): all fixed ✅ — see decision.md D-010, D-015 through D-020.

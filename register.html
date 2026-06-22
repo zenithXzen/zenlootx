@@ -694,7 +694,9 @@
 
     document.getElementById('resendBtn').addEventListener('click', async () => {
       const email = document.getElementById('emailDisplay').textContent;
-      document.getElementById('resendBtn').disabled = true;
+      const btn   = document.getElementById('resendBtn');
+      const errEl = document.getElementById('step2Error');
+      btn.disabled = true;
       try {
         const res  = await fetch('/api/send-code', {
           method: 'POST',
@@ -711,8 +713,16 @@
           digits.forEach(d => { d.value = ''; d.classList.remove('filled', 'pop', 'success'); });
           digits[0].focus();
           startResendTimer(60);
+        } else {
+          errEl.textContent = data.error || 'Could not resend the code. Please try again.';
+          errEl.classList.add('visible');
+          btn.disabled = false;
         }
-      } catch {}
+      } catch {
+        errEl.textContent = 'Network error. Could not resend the code.';
+        errEl.classList.add('visible');
+        btn.disabled = false;
+      }
     });
 
     document.getElementById('backToStep1').addEventListener('click', (e) => {

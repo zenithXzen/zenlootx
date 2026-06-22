@@ -90,11 +90,11 @@ async function encryptPayload(keys, plaintext) {
 async function sendToSubscriptionRows(rows, env, { title, body, url = '/notifications' }) {
   const VAPID_PRIVATE = env.VAPID_PRIVATE_KEY;
   const VAPID_PUBLIC  = env.VAPID_PUBLIC_KEY;
-  if (!VAPID_PRIVATE || !VAPID_PUBLIC) return 0;
+  if (!VAPID_PRIVATE || !VAPID_PUBLIC || !env.VAPID_SUBJECT) return 0;
   if (!Array.isArray(rows) || !rows.length) return 0;
 
   const payload = JSON.stringify({ title, body, url });
-  const subject = 'mailto:roxaszenkie18@gmail.com';
+  const subject = env.VAPID_SUBJECT;
   let sent = 0;
 
   for (const row of rows) {

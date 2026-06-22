@@ -432,12 +432,6 @@
       valorant: 'background:rgba(239,68,68,0.12);color:#F87171;',
     };
 
-    async function isBanned(userId) {
-      const { data } = await sb.from('profiles').select('is_banned').eq('id', userId).single();
-      if (data?.is_banned) { await sb.auth.signOut(); window.location.href = '/banned'; return true; }
-      return false;
-    }
-
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = '/login?redirect=/create-listing'; return; }
