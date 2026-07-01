@@ -24,9 +24,11 @@
 - **A11y:** `aria-expanded`/`aria-controls`, `role="region"`, 44px+ tap targets (measured 66px), answer text uses `text-dim` (#9BA8A0, ~7.3:1 AA pass — avoids the `text-faint` contrast fail flagged in the impeccable critique), full `prefers-reduced-motion` fallback.
 - Verified functionally in headless browser (open height 98px, aria toggle, single-open, icon rotate+accent all confirmed). Screenshots came back blank due to browser DPR 0.667 artifact — content confirmed via DOM inspection.
 
-**Tests 171–182 all PASSED (2026-07-01). Last test number used: TEST 182.**
+**Tests 171–185 all PASSED. Last test number used: TEST 185.**
 
 **FAQ copy refined (commit `54f21e1`):** owner hand-edited 3 answers (introduced grammar slips); corrected preserving intent — escrow "payment is released automatically after 72 hours", dispute "Our team reviews... and makes a fair call", seller trust "a seller's actual track record".
+
+**FAQ redesigned to contained panel (via /impeccable, NOT yet pushed):** Rows now housed in ONE bg-surface card (1px border, 14px radius, overflow hidden, 720px max) instead of floating bordered rows. Active/open row lifts with a 5% accent tint + question turns accent green (verified 7.3:1 contrast); subtle row hover; chevron rotate unchanged. Scroll entrance now reveals the whole panel as one object (was per-item stagger) — JS observes `.faq` container, `data-reveal` gated. Verified desktop + 390px mobile.
 
 **"How ZenLootX works" redesigned (journey line, NOT yet pushed):** Replaced 3 identical centered number-circles with a connected timeline — numbered nodes on a horizontal accent connector line (draws in on scroll via `scaleX`). (SVG step icons were added then removed at owner request — nodes + line only.) Mobile becomes a vertical timeline (nodes down the left, line vertical, text to the right). Renamed `.steps-grid` → `.steps`; reveal gated by `data-reveal` (no-JS/reduced-motion safe, stays visible). Fixed em dash in step 2 copy. Verified desktop + 390px mobile via browser measurement.
 

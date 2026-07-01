@@ -440,12 +440,19 @@
     .trust-desc  { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
 
     /* FAQ */
+    /* Contained panel: all rows housed in one refined surface */
     .faq {
       max-width: 720px;
       margin: 0 auto;
-      border-top: 1px solid var(--border);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
     }
     .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-item:last-child { border-bottom: none; }
+    /* active row: subtle lift via accent tint */
+    .faq-item.open { background: rgba(25,195,125,0.05); }
     .faq-q {
       width: 100%;
       display: flex;
@@ -453,7 +460,7 @@
       justify-content: space-between;
       gap: 16px;
       min-height: 44px;
-      padding: 22px 4px;
+      padding: 20px 24px;
       background: none;
       border: none;
       color: var(--text);
@@ -463,13 +470,14 @@
       line-height: 1.4;
       text-align: left;
       cursor: pointer;
-      transition: color .18s ease;
+      transition: color .18s ease, background .18s ease;
     }
-    .faq-q:hover { color: var(--accent-hover); }
+    .faq-q:hover { background: rgba(255,255,255,0.02); }
+    .faq-item.open .faq-q { color: var(--accent); }
     .faq-q:focus-visible {
       outline: 2px solid var(--accent);
-      outline-offset: 3px;
-      border-radius: 6px;
+      outline-offset: -2px;
+      border-radius: 4px;
     }
     .faq-icon {
       flex: none;
@@ -497,7 +505,7 @@
       line-height: 1.7;
       color: var(--text-dim);
       max-width: 62ch;
-      padding: 0 4px 24px;
+      padding: 0 24px 22px;
     }
     .faq-a a {
       color: var(--accent);
@@ -511,16 +519,16 @@
       outline-offset: 2px;
       border-radius: 3px;
     }
-    /* Subtle scroll entrance — only applied when JS enables it (data-reveal) */
-    .faq[data-reveal] .faq-item {
+    /* Scroll entrance — reveal the whole panel as one object (JS-gated, visible by default) */
+    .faq[data-reveal] {
       opacity: 0;
-      transform: translateY(12px);
-      transition: opacity .5s cubic-bezier(0.22, 1, 0.36, 1), transform .5s cubic-bezier(0.22, 1, 0.36, 1);
+      transform: translateY(16px);
+      transition: opacity .6s cubic-bezier(0.22, 1, 0.36, 1), transform .6s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .faq[data-reveal] .faq-item.in-view { opacity: 1; transform: none; }
+    .faq[data-reveal].in-view { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) {
       .faq-a, .faq-a-inner, .faq-icon { transition: none; }
-      .faq[data-reveal] .faq-item { transition: none; }
+      .faq[data-reveal] { transition: none; }
     }
 
     /* CTA BANNER */
@@ -1333,21 +1341,20 @@
         });
       });
 
-      // Subtle scroll entrance — enhances an already-visible default.
-      // Only enabled (data-reveal) when motion is allowed; otherwise items stay visible.
+      // Scroll entrance — reveal the whole panel as one object.
+      // Only enabled (data-reveal) when motion is allowed; otherwise the panel stays visible.
       const faq = document.querySelector('.faq');
       if (faq && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         faq.setAttribute('data-reveal', '');
         const obs = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
-              const i = [...items].indexOf(entry.target);
-              setTimeout(() => entry.target.classList.add('in-view'), i * 80);
-              obs.unobserve(entry.target);
+              faq.classList.add('in-view');
+              obs.unobserve(faq);
             }
           });
-        }, { threshold: 0.1 });
-        items.forEach(it => obs.observe(it));
+        }, { threshold: 0.15 });
+        obs.observe(faq);
       }
     }());
 
