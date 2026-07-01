@@ -243,27 +243,52 @@
     /* Stats strip below hero */
     .hero-stats {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
-      gap: 56px;
-      padding: 48px 24px;
+      gap: 14px;
+      padding: 40px 24px;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
     }
-    .hero-stats > div { text-align: center; }
+    .hero-stats > div {
+      text-align: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+      flex: 1;
+      min-width: 200px;
+      transition: border-color 0.18s, opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1);
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    .hero-stats > div:hover { border-color: var(--border-hi); }
+    .hero-stats > div.in-view { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-stats > div { opacity: 1; transform: none; transition: border-color 0.18s; }
+    }
+    .stat-icon {
+      width: 44px; height: 44px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(25,195,125,0.2);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+      margin: 0 auto 16px;
+    }
     .stat-value {
       font-family: 'Geist', sans-serif;
-      font-size: 26px;
+      font-size: 20px;
       font-weight: 700;
     }
-    .stat-label { font-size: 13px; color: var(--text-faint); margin-top: 3px; }
+    .stat-label { font-size: 13px; color: var(--text-faint); margin-top: 6px; line-height: 1.5; }
 
     @media (max-width: 600px) {
       .hero-h1 { font-size: clamp(30px, 9vw, 44px); }
       .hero-rotating-line { height: 1.2em; }
-      .hero-stats { gap: 28px; padding: 36px 20px; }
-      .hero-stats > div { width: 100%; }
+      .hero-stats { gap: 12px; padding: 24px 20px; }
+      .hero-stats > div { width: 100%; flex: none; min-width: 0; }
     }
 
     /* SECTION BASE */
@@ -694,14 +719,23 @@
 
   <div class="hero-stats">
     <div>
+      <div class="stat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
       <div class="stat-value">Escrow</div>
       <div class="stat-label">Payment held until you confirm</div>
     </div>
     <div>
+      <div class="stat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
       <div class="stat-value">Disputes</div>
       <div class="stat-label">Human review, fair resolution</div>
     </div>
     <div>
+      <div class="stat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
       <div class="stat-value">Verified Sellers</div>
       <div class="stat-label">ID-checked before they can sell</div>
     </div>
@@ -1000,6 +1034,24 @@
           el.classList.add('enter');
         }, 330);
       }, 3500);
+    }());
+
+    // ─── Stats scroll entrance ────────────────────────────────────────
+    (function () {
+      const cards = document.querySelectorAll('.hero-stats > div');
+      if (!cards.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        cards.forEach(c => c.classList.add('in-view'));
+        return;
+      }
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const i = [...cards].indexOf(entry.target);
+          setTimeout(() => entry.target.classList.add('in-view'), i * 130);
+          obs.unobserve(entry.target);
+        });
+      }, { threshold: 0.15 });
+      cards.forEach(c => obs.observe(c));
     }());
   </script>
 
