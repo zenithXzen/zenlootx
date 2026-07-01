@@ -505,9 +505,21 @@
   async function loadDisputes(userId) {
     const { data: disputes } = await sb
       .from('disputes')
-      .select('id,order_id,buyer_id,seller_id,reason,status,created_at,orders(amount,listings(title,game))')
+      .select('id,order_id,buyer_id,seller_id,reason,status,created_at')
       .eq('filed_by', userId)
       .order('created_at', { ascending: false });
+
+    if (disputes?.length) {
+      const orderIds = [...new Set(disputes.map(d => d.order_id).filter(Boolean))];
+      const { data: ords } = await sb.from('orders').select('id,amount,listing_id').in('id', orderIds);
+      const listingIds = [...new Set((ords || []).map(o => o.listing_id).filter(Boolean))];
+      const { data: lst } = listingIds.length
+        ? await sb.from('listings').select('id,title,game').in('id', listingIds)
+        : { data: [] };
+      const listingMap = Object.fromEntries((lst || []).map(l => [l.id, l]));
+      const orderMap   = Object.fromEntries((ords || []).map(o => [o.id, { amount: o.amount, listings: listingMap[o.listing_id] || null }]));
+      disputes.forEach(d => { d.orders = orderMap[d.order_id] || null; });
+    }
 
     const list  = document.getElementById('disputeList');
     const count = document.getElementById('disputeCount');
