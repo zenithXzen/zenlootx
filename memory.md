@@ -10,6 +10,50 @@
 
 ## 🗒️ Change Log
 
+### 2026-07-01 (late) — Wallpaper path rename + homepage FAQ section
+
+**Wallpaper path rename (pushed to master, commit `52a72d0`)**
+- Updated all references: `/wallpaper/mlbb.jpg` → `/wallpaper/ML.jpg`, `/wallpaper/valorant.jpeg` → `/wallpaper/VAL.jpg`
+- Files: `listings/mlbb.html`, `listings/valorant.html`, `create-listing.html` (4 refs total)
+- ⚠️ At time of writing, live site still served OLD paths — Cloudflare Pages deploy for this commit had not gone live yet (origin `cf-cache-status: DYNAMIC`, so not an edge-cache issue; images `ML.jpg`/`VAL.jpg` already return 200). Tests 171–173 were pending that deploy.
+
+**Homepage FAQ section (via `/impeccable`, NOT yet pushed)**
+- Replaced the "Why ZenLootX" trust-grid (3 cards) in `index.html` with a **Frequently Asked Questions accordion**. Section id changed `sell` → `faq` (nothing linked to `#sell`).
+- 6 real, truthful Q&As: escrow protection, dispute handling, seller trust (ID-verified + earned ratings), supported games, how to start selling, fees (**buying is free; sellers pay a 5% fee deducted from each completed sale** — confirmed by owner 2026-07-01).
+- **Animation:** expand/collapse via `grid-template-rows: 0fr → 1fr` (animates real content height, layout-safe), chevron rotates 180° + turns accent green, answer fades in. 280ms ease-out. Single-open accordion. Subtle scroll-in stagger reusing existing IntersectionObserver pattern.
+- **A11y:** `aria-expanded`/`aria-controls`, `role="region"`, 44px+ tap targets (measured 66px), answer text uses `text-dim` (#9BA8A0, ~7.3:1 AA pass — avoids the `text-faint` contrast fail flagged in the impeccable critique), full `prefers-reduced-motion` fallback.
+- Verified functionally in headless browser (open height 98px, aria toggle, single-open, icon rotate+accent all confirmed). Screenshots came back blank due to browser DPR 0.667 artifact — content confirmed via DOM inspection.
+
+**Last test number used: TEST 176.**
+
+### 2026-07-01 — Homepage hero + slideshow overhaul (all tests passed, merged to master)
+
+**Hero section — gaming theme**
+- Added dot-grid ambient background (`radial-gradient` dot pattern + green glow ellipse via `::before`)
+- HUD corner brackets (4 `.hud-corner` divs with partial accent-color borders)
+- Stagger entrance: subtitle fades up 0.15s delay, CTA 0.3s delay (`heroFadeUp` keyframe)
+- Primary button hover glow: `box-shadow: 0 0 28px rgba(25,195,125,0.28)`
+- Rotating headline words: "For all gamers · Genshin Impact · Mobile Legends · Valorant" — clean slide animation (glitch rotation rejected by owner), each with trailing dot, 2.5s interval
+
+**Stats strip (below hero)**
+- Upgraded from plain text to cards: `bg-surface` background, 1px border, 12px radius, 28px/24px padding
+- Added SVG icons in a 44×44 accent-glow pill for each stat (Escrow / Disputes / Verified Sellers)
+- `IntersectionObserver` scroll-triggered stagger entrance — fires on both scroll-down AND scroll-up (removes `in-view` class on exit, re-adds with stagger on re-entry). Respects `prefers-reduced-motion`.
+
+**Slideshow**
+- Extracted image layer into separate `.slide-img` div (enables Ken Burns transform without affecting content layer)
+- Top-fade gradient overlay so characters emerge from darkness instead of pressing against the top border
+- Equal 48px top/bottom padding on the slideshow section — creates visual centering in its own band
+- MLBB image swapped from `mlbb.jpg` → `ML.jpg`; `background-position: center 0%` (shows character face)
+- Valorant image swapped from `valorant.jpeg` → `VAL.jpg`; `background-position: center 60%`
+- Both new wallpaper assets committed to git (were untracked → black screen on deployed site)
+- **Touch swipe (mobile):** `touchstart`/`touchend` with 40px threshold — swipe left/right to change slide
+- **Mouse drag (desktop):** `mousedown`/`mouseup` with 40px threshold — click-drag left/right to change slide; `.slideshow { cursor: grab }` signals draggability
+
+**Tests:** 116–129 all passed. Last test number used: **TEST 129**.
+
+---
+
 ### 2026-06-24 — Two more fixes on `cleanup-security-batch`, UNCOMMITTED, tests not yet run
 Continuing the same branch after `044fb6c` (which already landed items 1–5 below). Two more fixes made this session, sitting uncommitted in the working tree:
 
@@ -59,7 +103,7 @@ Both are live now — TEST 103 and TEST 111 are ready to run.
 
 ---
 
-## 📍 Current State (snapshot — last updated 2026-06-18)
+## 📍 Current State (snapshot — last updated 2026-07-01)
 
 **Live stack**
 - Frontend: Static HTML/CSS/JS (Vite) — Geist font, dark theme (accent `#19C37D`)

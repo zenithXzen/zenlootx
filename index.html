@@ -399,6 +399,78 @@
     .trust-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
     .trust-desc  { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
 
+    /* FAQ */
+    .faq {
+      max-width: 720px;
+      margin: 0 auto;
+      border-top: 1px solid var(--border);
+    }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 44px;
+      padding: 22px 4px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.4;
+      text-align: left;
+      cursor: pointer;
+      transition: color .18s ease;
+    }
+    .faq-q:hover { color: var(--accent-hover); }
+    .faq-q:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+    .faq-icon {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      color: var(--text-faint);
+      transition: transform .26s cubic-bezier(0.22, 1, 0.36, 1), color .18s ease;
+    }
+    .faq-item.open .faq-icon { transform: rotate(180deg); color: var(--accent); }
+    /* Expand/collapse: animate real content height via grid-template-rows */
+    .faq-a {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows .28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .faq-item.open .faq-a { grid-template-rows: 1fr; }
+    .faq-a-inner {
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+    .faq-item.open .faq-a-inner { opacity: 1; }
+    .faq-a p {
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: var(--text-dim);
+      max-width: 62ch;
+      padding: 0 4px 24px;
+    }
+    /* Subtle scroll entrance — only applied when JS enables it (data-reveal) */
+    .faq[data-reveal] .faq-item {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .5s cubic-bezier(0.22, 1, 0.36, 1), transform .5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .faq[data-reveal] .faq-item.in-view { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .faq-a, .faq-a-inner, .faq-icon { transition: none; }
+      .faq[data-reveal] .faq-item { transition: none; }
+    }
+
     /* CTA BANNER */
     .cta-banner {
       background: var(--bg-surface);
@@ -843,29 +915,75 @@
   </section>
 
 
-  <!-- WHY ZENLOOTX -->
-  <section class="section" style="padding-top: 0;" id="sell">
+  <!-- FAQ -->
+  <section class="section" style="padding-top: 0;" id="faq">
     <div class="container">
       <div style="text-align:center;max-width:520px;margin:0 auto 40px;">
-        <h2 class="section-title">Why ZenLootX</h2>
-        <p class="section-sub">We built the infrastructure so you can trade without worry.</p>
+        <h2 class="section-title">Frequently asked questions</h2>
+        <p class="section-sub">Everything you need to know before your first trade.</p>
       </div>
-      <div class="trust-grid">
-        <div class="trust-card">
-          <div class="trust-icon">🔒</div>
-          <div class="trust-title">Escrow protection</div>
-          <div class="trust-desc">Money never goes straight to the seller. It's held until you confirm the account or items are exactly as described.</div>
+      <div class="faq">
+
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-1" id="faq-btn-1">
+            <span>How does escrow protect my payment?</span>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-a" id="faq-a-1" role="region" aria-labelledby="faq-btn-1">
+            <div class="faq-a-inner"><p>Your payment doesn't go straight to the seller. We hold it until you've logged into the account and checked that everything matches the listing. Once you confirm, the seller gets paid. If you go quiet, it releases automatically after 72 hours.</p></div>
+          </div>
         </div>
-        <div class="trust-card">
-          <div class="trust-icon">⚖</div>
-          <div class="trust-title">Dispute resolution</div>
-          <div class="trust-desc">If something goes wrong, open a dispute. Our team reviews both sides and makes a fair decision — refund or release.</div>
+
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-2" id="faq-btn-2">
+            <span>What if the account isn't what was described?</span>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-a" id="faq-a-2" role="region" aria-labelledby="faq-btn-2">
+            <div class="faq-a-inner"><p>Don't confirm the order. Open a dispute instead. We look at the evidence from both sides and make a fair call: a full refund to you, or payment released to the seller. Your money stays protected the whole time.</p></div>
+          </div>
         </div>
-        <div class="trust-card">
-          <div class="trust-icon">★</div>
-          <div class="trust-title">Real seller ratings</div>
-          <div class="trust-desc">Every completed order produces a review. Ratings are earned from real transactions — not self-reported or bought.</div>
+
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-3" id="faq-btn-3">
+            <span>How do I know a seller can be trusted?</span>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-a" id="faq-a-3" role="region" aria-labelledby="faq-btn-3">
+            <div class="faq-a-inner"><p>Every seller verifies their ID before they can list anything. Ratings come only from real, completed sales, so they can't be faked or bought. What you see is how a seller has actually treated other buyers.</p></div>
+          </div>
         </div>
+
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-4" id="faq-btn-4">
+            <span>Which games can I trade accounts for?</span>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-a" id="faq-a-4" role="region" aria-labelledby="faq-btn-4">
+            <div class="faq-a-inner"><p>Genshin Impact, Mobile Legends, and Valorant for now. We add more games when enough buyers and sellers ask for them.</p></div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-5" id="faq-btn-5">
+            <span>How do I start selling?</span>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-a" id="faq-a-5" role="region" aria-labelledby="faq-btn-5">
+            <div class="faq-a-inner"><p>Sign up as a seller and verify your ID. After you're approved, listing takes a few minutes: set your price, add the details and some screenshots, and it goes live for buyers to find.</p></div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-6" id="faq-btn-6">
+            <span>Are there any fees?</span>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-a" id="faq-a-6" role="region" aria-labelledby="faq-btn-6">
+            <div class="faq-a-inner"><p>Buying is free. Sellers pay a 5% fee on each completed sale, taken out of the sale amount. It covers escrow and dispute support. Browsing and listing don't cost anything.</p></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -1104,6 +1222,45 @@
         });
       }, { threshold: 0.15 });
       cards.forEach(c => obs.observe(c));
+    }());
+
+    // ─── FAQ accordion ────────────────────────────────────────────────
+    (function () {
+      const items = document.querySelectorAll('.faq-item');
+      if (!items.length) return;
+
+      items.forEach(item => {
+        const btn = item.querySelector('.faq-q');
+        btn.addEventListener('click', () => {
+          const willOpen = !item.classList.contains('open');
+          // Single-open accordion: close every item, then open the clicked one
+          items.forEach(other => {
+            other.classList.remove('open');
+            other.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+          });
+          if (willOpen) {
+            item.classList.add('open');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
+
+      // Subtle scroll entrance — enhances an already-visible default.
+      // Only enabled (data-reveal) when motion is allowed; otherwise items stay visible.
+      const faq = document.querySelector('.faq');
+      if (faq && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        faq.setAttribute('data-reveal', '');
+        const obs = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const i = [...items].indexOf(entry.target);
+              setTimeout(() => entry.target.classList.add('in-view'), i * 80);
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1 });
+        items.forEach(it => obs.observe(it));
+      }
     }());
   </script>
 
