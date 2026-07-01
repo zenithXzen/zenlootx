@@ -24,7 +24,7 @@
 - **A11y:** `aria-expanded`/`aria-controls`, `role="region"`, 44px+ tap targets (measured 66px), answer text uses `text-dim` (#9BA8A0, ~7.3:1 AA pass — avoids the `text-faint` contrast fail flagged in the impeccable critique), full `prefers-reduced-motion` fallback.
 - Verified functionally in headless browser (open height 98px, aria toggle, single-open, icon rotate+accent all confirmed). Screenshots came back blank due to browser DPR 0.667 artifact — content confirmed via DOM inspection.
 
-**Last test number used: TEST 176.**
+**Tests 171–176 all PASSED (2026-07-01). Last test number used: TEST 176.**
 
 ### 2026-07-01 — Homepage hero + slideshow overhaul (all tests passed, merged to master)
 
