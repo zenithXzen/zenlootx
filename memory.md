@@ -10,6 +10,23 @@
 
 ## 🗒️ Change Log
 
+### 2026-07-02 — SESSION CLOSE: homepage FAQ + how-it-works + footer overhaul (ALL PUSHED & LIVE)
+Owner headed to work; checkpoint. **Everything below this session is committed and live on zenlootexchange.com** (ignore the "NOT yet pushed" notes inside the older sub-entries — they were true when written, all shipped since). Latest commit: `ded0729`.
+
+Shipped this session, in order:
+1. Wallpaper path rename (`mlbb.jpg`→`ML.jpg`, `valorant.jpeg`→`VAL.jpg`) — `52a72d0`
+2. "Why ZenLootX" → FAQ accordion (animated, a11y, humanized copy) — `5520cb7`
+3. FAQ copy refined (owner edits + grammar fixes) — `54f21e1`
+4. Legitimacy FAQ "Can I trust ZenLootX?" + hosted DTI cert (`/FAQ/DTI.pdf`) — `230f4f9`
+5. "How ZenLootX works" → connected journey line (icons later removed), FAQ 2031 removal — `f7e5c65`
+6. FAQ → contained-panel redesign (via /impeccable) — `dfb97e5`
+7. Footer redesign: contrast fixes + real DTI trust badge, removed fake "All systems operational" — `95839c0`
+8. Footer socials (Facebook + Discord) + mobile 2×2 layout — `ded0729`
+
+**Tests 171–185 PASSED. Tests 186–194 issued but NOT yet confirmed by owner** (FAQ panel 186–188, footer contrast/DTI 189–191, footer socials/2×2 192–194). Next session: ask for those results. Last test number used: **TEST 194**.
+
+Reference facts locked this session: DTI business name **ZENLOOTX ONLINE SHOP**, Business Name **No. 8247950**, owner **Zenkie Villaroman Roxas** (name NOT shown in site text, only in the linked cert). Fee = **buyer free, seller pays 5%** per completed sale. Socials: FB `https://www.facebook.com/share/1C7g35mnH1/`, Discord `https://discord.gg/zWKgscXVzb`.
+
 ### 2026-07-01 (late) — Wallpaper path rename + homepage FAQ section
 
 **Wallpaper path rename (pushed to master, commit `52a72d0`)**
