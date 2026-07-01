@@ -503,13 +503,25 @@
     .slide {
       position: absolute;
       inset: 0;
-      background-size: cover;
-      background-position: center;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.35s ease;
     }
     .slide.active { opacity: 1; pointer-events: auto; }
+
+    /* Separate image layer so Ken Burns doesn't scale text */
+    .slide-img {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.06);
+      transition: transform 0.4s ease;
+    }
+    .slide.active .slide-img {
+      transform: scale(1);
+      transition: transform 9s ease-out;
+    }
 
     .slide-overlay {
       position: absolute;
@@ -527,6 +539,20 @@
       bottom: 48px;
       left: 48px;
       max-width: 420px;
+    }
+
+    @media (max-width: 640px) {
+      .slideshow { height: 500px; }
+      .slide-overlay {
+        background: linear-gradient(
+          to top,
+          rgba(10,14,12,0.95) 0%,
+          rgba(10,14,12,0.5) 45%,
+          rgba(10,14,12,0.1) 100%
+        );
+      }
+      .slide-content { left: 20px; bottom: 32px; }
+      .slide-title { font-size: 26px; }
     }
 
     .slide-content .game-tag { margin-bottom: 12px; }
@@ -749,7 +775,8 @@
     <div class="container">
       <div class="slideshow" id="slideshow">
 
-        <div class="slide active" style="background-image: url('/wallpaper/AETHER AND LUMINE.jpg'); background-position: center 30%;">
+        <div class="slide active">
+          <div class="slide-img" style="background-image: url('/wallpaper/AETHER AND LUMINE.jpg'); background-position: center 40%;"></div>
           <div class="slide-overlay"></div>
           <div class="slide-content">
             <span class="game-tag tag-genshin">Genshin Impact</span>
@@ -759,7 +786,8 @@
           </div>
         </div>
 
-        <div class="slide" style="background-image: url('/wallpaper/mlbb.jpg'); background-position: center 10%;">
+        <div class="slide">
+          <div class="slide-img" style="background-image: url('/wallpaper/mlbb.jpg'); background-position: center 45%;"></div>
           <div class="slide-overlay"></div>
           <div class="slide-content">
             <span class="game-tag tag-mlbb">MLBB</span>
@@ -769,7 +797,8 @@
           </div>
         </div>
 
-        <div class="slide" style="background-image: url('/wallpaper/valorant.jpeg')">
+        <div class="slide">
+          <div class="slide-img" style="background-image: url('/wallpaper/valorant.jpeg'); background-position: center 40%;"></div>
           <div class="slide-overlay"></div>
           <div class="slide-content">
             <span class="game-tag tag-valorant">Valorant</span>
