@@ -138,7 +138,7 @@
       flex-direction: column;
       align-items: center;
       gap: 24px;
-      max-width: 760px;
+      max-width: 920px;
     }
 
     .hero-badge {
@@ -633,9 +633,9 @@
     <div class="hero-content">
       <div class="hero-inner">
         <h1 class="hero-h1">
-          A trustworthy marketplace for
+          A trustworthy marketplace
           <span class="hero-rotating-line">
-            <span class="hero-word enter" id="heroWord">Genshin Impact</span>
+            <span class="hero-word enter" id="heroWord">for Genshin Impact.</span>
           </span>
         </h1>
 
@@ -943,7 +943,7 @@
 
     // ─── Hero rotating text ───────────────────────────────────────────
     (function () {
-      const words = ['Genshin Impact', 'Mobile Legends', 'Valorant'];
+      const words = ['for Genshin Impact.', 'for Mobile Legends.', 'for Valorant.', 'for all gamers.'];
       const el = document.getElementById('heroWord');
       if (!el) return;
       // Respect reduced motion — just stay on first word
@@ -959,7 +959,7 @@
           void el.offsetWidth; // force reflow so animation restarts
           el.classList.add('enter');
         }, 330);
-      }, 2500);
+      }, 3500);
     }());
   </script>
 
