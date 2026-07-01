@@ -572,32 +572,54 @@
     /* FOOTER */
     footer {
       border-top: 1px solid var(--border);
-      padding: 52px 0 32px;
+      padding: 64px 0 32px;
     }
     .footer-top {
       display: grid;
       grid-template-columns: 1.6fr 1fr 1fr 1fr;
       gap: 48px;
-      margin-bottom: 48px;
+      margin-bottom: 44px;
     }
     .footer-brand-desc {
       font-size: 14px;
       color: var(--text-dim);
-      margin-top: 12px;
+      margin-top: 14px;
       line-height: 1.65;
+      max-width: 30ch;
     }
+    /* real, verifiable DTI trust badge (replaced the fake status indicator) */
+    .footer-dti {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 8px 14px;
+      border: 1px solid var(--border-hi);
+      border-radius: 999px;
+      background: var(--bg-surface);
+      font-size: 12.5px;
+      color: var(--text-dim);
+      transition: border-color .18s ease, color .18s ease;
+    }
+    .footer-dti:hover { border-color: rgba(25,195,125,0.45); color: var(--text); }
+    .footer-dti:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .footer-dti svg { width: 15px; height: 15px; color: var(--accent); flex: none; }
+    .footer-dti strong { color: var(--text); font-weight: 600; }
     .footer-col h4 {
       font-size: 12px;
       font-weight: 600;
-      color: var(--text-faint);
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.09em;
+      letter-spacing: 0.08em;
       margin-bottom: 16px;
     }
     .footer-col ul { list-style: none; }
-    .footer-col li + li { margin-top: 10px; }
+    .footer-col li + li { margin-top: 11px; }
     .footer-col a { font-size: 14px; color: var(--text-dim); transition: color 0.16s; }
-    .footer-col a:hover { color: var(--text); }
+    .footer-col a:hover { color: var(--accent-hover); }
 
     .footer-bottom {
       display: flex;
@@ -606,22 +628,10 @@
       padding-top: 24px;
       border-top: 1px solid var(--border);
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 6px 16px;
     }
-    .footer-bottom p { font-size: 13px; color: var(--text-faint); }
-    .status-online {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--text-faint);
-    }
-    .status-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--success);
-      flex-shrink: 0;
-    }
+    .footer-bottom p { font-size: 13px; color: var(--text-dim); }
+    .footer-legal { font-size: 12px; color: var(--text-dim); letter-spacing: 0.02em; }
 
     /* SLIDESHOW */
     .slideshow {
@@ -1105,6 +1115,10 @@
         <div>
           <div class="logo">Zen<span class="green">Loot</span>X</div>
           <p class="footer-brand-desc">A calm, trustworthy marketplace for gaming accounts and items. Built on escrow.</p>
+          <a class="footer-dti" href="/FAQ/DTI.pdf" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            DTI-registered&nbsp;&middot;&nbsp;No.&nbsp;<strong>8247950</strong>
+          </a>
         </div>
         <div class="footer-col">
           <h4>Marketplace</h4>
@@ -1135,14 +1149,8 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <div>
-          <p>© 2026 ZenLootX. All rights reserved.</p>
-          <p style="font-size:11px;color:var(--text-faint);margin-top:3px;">ZENLOOTX ONLINE SHOP · DTI Reg. No. 8247950</p>
-        </div>
-        <span class="status-online">
-          <span class="status-dot"></span>
-          All systems operational
-        </span>
+        <p>© 2026 ZenLootX. All rights reserved.</p>
+        <p class="footer-legal">Operated by ZENLOOTX ONLINE SHOP</p>
       </div>
     </div>
   </footer>
