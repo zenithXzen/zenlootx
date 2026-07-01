@@ -10,6 +10,20 @@
 
 ## 🗒️ Change Log
 
+### 2026-06-24 — Two more fixes on `cleanup-security-batch`, UNCOMMITTED, tests not yet run
+Continuing the same branch after `044fb6c` (which already landed items 1–5 below). Two more fixes made this session, sitting uncommitted in the working tree:
+
+- **`orders.html` — disputes tab 400 error fixed.** The query joined `orders(amount,listings(title,game))` directly off `disputes`, but no such FK relationship exists in the schema (root cause of the "Supabase disputes API returning 400 Bad Request" issue seen earlier tonight). Now fetches disputes, then orders, then listings as separate queries and stitches them together in JS.
+- **`admin.html` — freeze+deduct UI wired up.** Backend (`freeze-user.js`) already accepted `deductAmount`/`deductReason` from the earlier security batch (verified via grep — `incrementBalance` already in use, not the old read-then-PATCH race), but the admin modal never had inputs for them. Added a ₱ amount field + reason field under "Freeze account" in the consequence modal, wired through to the existing API. Bonus: fixed two empty-state messages (`emptyState('💳','No ${topupFilter}...'` etc.) that used plain strings instead of template literals — `${topupFilter}` was rendering as literal text instead of being substituted.
+
+**Tests issued, not yet run by owner (continuing from TEST 111):**
+- TEST 112 — disputes tab loads without 400 error, shows amount/title/game
+- TEST 113 — freeze + deduct amount/reason → balance drops by exact amount, reason shows in history
+- TEST 114 — freeze with blank ₱ amount → balance untouched
+- TEST 115 — admin empty-state text renders the actual filter name, not literal `${...}`
+
+**Next session: ask owner for TEST 112–115 results before committing.** Do not commit until tests come back (or owner explicitly says skip testing).
+
 ### 2026-06-22 — Cleanup security batch (items 1–5 from "Known cleanups / risks")
 Branch `cleanup-security-batch`. Worked through the 5-item backlog top to bottom.
 
