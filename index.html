@@ -1045,10 +1045,12 @@
       }
       const obs = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-          if (!entry.isIntersecting) return;
-          const i = [...cards].indexOf(entry.target);
-          setTimeout(() => entry.target.classList.add('in-view'), i * 130);
-          obs.unobserve(entry.target);
+          if (entry.isIntersecting) {
+            const i = [...cards].indexOf(entry.target);
+            setTimeout(() => entry.target.classList.add('in-view'), i * 130);
+          } else {
+            entry.target.classList.remove('in-view');
+          }
         });
       }, { threshold: 0.15 });
       cards.forEach(c => obs.observe(c));
