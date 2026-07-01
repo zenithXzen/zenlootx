@@ -24,9 +24,11 @@
 - **A11y:** `aria-expanded`/`aria-controls`, `role="region"`, 44px+ tap targets (measured 66px), answer text uses `text-dim` (#9BA8A0, ~7.3:1 AA pass — avoids the `text-faint` contrast fail flagged in the impeccable critique), full `prefers-reduced-motion` fallback.
 - Verified functionally in headless browser (open height 98px, aria toggle, single-open, icon rotate+accent all confirmed). Screenshots came back blank due to browser DPR 0.667 artifact — content confirmed via DOM inspection.
 
-**Tests 171–179 all PASSED (2026-07-01). Last test number used: TEST 179.**
+**Tests 171–182 all PASSED (2026-07-01). Last test number used: TEST 182.**
 
 **FAQ copy refined (commit `54f21e1`):** owner hand-edited 3 answers (introduced grammar slips); corrected preserving intent — escrow "payment is released automatically after 72 hours", dispute "Our team reviews... and makes a fair call", seller trust "a seller's actual track record".
+
+**"How ZenLootX works" redesigned (journey line, NOT yet pushed):** Replaced 3 identical centered number-circles with a connected timeline — numbered nodes on a horizontal accent connector line (draws in on scroll via `scaleX`). (SVG step icons were added then removed at owner request — nodes + line only.) Mobile becomes a vertical timeline (nodes down the left, line vertical, text to the right). Renamed `.steps-grid` → `.steps`; reveal gated by `data-reveal` (no-JS/reduced-motion safe, stays visible). Fixed em dash in step 2 copy. Verified desktop + 390px mobile via browser measurement.
 
 **FAQ "Is ZenLootX legit?" item added (top of accordion, NOT yet pushed):** New first Q "Can I trust ZenLootX? Are they legit?". Answer cites real DTI registration — **ZENLOOTX ONLINE SHOP, DTI Business Name No. 8247950, national scope, valid to 2031**. Links: certificate at `/FAQ/DTI.pdf` (owner chose to publish it — note: PDF shows owner's full legal name; consistent with public DTI registry) + DTI official exact-name search `https://bnrs.dti.gov.ph/search`. Owner's name NOT printed in visible text (business name only). Added `.faq-a a` accent link styling. **DTI.pdf (FAQ/ folder) must be committed for the link to resolve live.**
 

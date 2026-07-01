@@ -359,27 +359,67 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .steps-grid {
+    /* Journey line: 3 connected steps */
+    .steps {
+      position: relative;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 40px;
     }
+    /* connector line runs behind the nodes (visible by default; JS gates the draw-in) */
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 16.66%;
+      right: 16.66%;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(25,195,125,0.10), rgba(25,195,125,0.55), rgba(25,195,125,0.10));
+    }
+    .steps[data-reveal]::before {
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform .9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .steps[data-reveal].in-view::before { transform: scaleX(1); }
 
-    .step { text-align: center; }
-    .step-num {
-      width: 46px; height: 46px;
+    .step { position: relative; z-index: 1; text-align: center; }
+    .steps[data-reveal] .step {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity .55s cubic-bezier(0.22, 1, 0.36, 1), transform .55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .steps[data-reveal].in-view .step { opacity: 1; transform: none; }
+    .steps[data-reveal].in-view .step:nth-child(1) { transition-delay: .15s; }
+    .steps[data-reveal].in-view .step:nth-child(2) { transition-delay: .30s; }
+    .steps[data-reveal].in-view .step:nth-child(3) { transition-delay: .45s; }
+
+    .step-node {
+      width: 56px; height: 56px;
+      margin: 0 auto 18px;
       border-radius: 50%;
-      background: var(--accent-glow);
-      border: 1px solid rgba(25,195,125,0.25);
+      background: var(--bg-elevated);
+      border: 1px solid rgba(25,195,125,0.35);
+      /* ring in the section bg cleanly breaks the line at each node, plus a soft glow */
+      box-shadow: 0 0 0 6px var(--bg-surface), 0 0 22px rgba(25,195,125,0.12);
       color: var(--accent);
       font-family: 'Geist', sans-serif;
-      font-size: 18px;
+      font-size: 21px;
       font-weight: 700;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px;
     }
-    .step h3 { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
-    .step p  { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
+    .step-head {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .step-head h3 { font-size: 18px; font-weight: 600; }
+    .step p { font-size: 14px; color: var(--text-dim); line-height: 1.65; max-width: 34ch; margin: 0 auto; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .steps[data-reveal]::before { transform: none; transition: none; }
+      .steps[data-reveal] .step { opacity: 1; transform: none; transition: none; }
+    }
 
 
     /* TRUST */
@@ -760,7 +800,27 @@
     /* RESPONSIVE */
     @media (max-width: 900px) {
       .games-grid, .listings-grid, .trust-grid { grid-template-columns: 1fr 1fr; }
-      .steps-grid { grid-template-columns: 1fr; gap: 32px; }
+      /* vertical timeline */
+      .steps { grid-template-columns: 1fr; gap: 0; }
+      .steps::before {
+        top: 8px; bottom: 8px; left: 27px; right: auto;
+        width: 2px; height: auto;
+        background: linear-gradient(180deg, rgba(25,195,125,0.10), rgba(25,195,125,0.55), rgba(25,195,125,0.10));
+      }
+      .steps[data-reveal]::before { transform: scaleY(0); transform-origin: top center; }
+      .steps[data-reveal].in-view::before { transform: scaleY(1); }
+      .step {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        column-gap: 16px;
+        align-items: start;
+        text-align: left;
+        padding-bottom: 30px;
+      }
+      .step:last-child { padding-bottom: 0; }
+      .step-node { grid-column: 1; grid-row: 1; margin: 0; }
+      .step-head { grid-column: 2; grid-row: 1; margin-top: 14px; margin-bottom: 6px; }
+      .step p { grid-column: 2; grid-row: 2; max-width: none; margin: 0; }
       .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
     }
 
@@ -905,20 +965,26 @@
           <h2 class="section-title">How ZenLootX works</h2>
           <p class="section-sub">Three steps. Your money is safe the whole way.</p>
         </div>
-        <div class="steps-grid">
+        <div class="steps">
           <div class="step">
-            <div class="step-num">1</div>
-            <h3>Find a listing</h3>
+            <div class="step-node">1</div>
+            <div class="step-head">
+              <h3>Find a listing</h3>
+            </div>
             <p>Browse verified listings. Filter by game, type, price, and seller rating. Every listing shows exactly what you're getting.</p>
           </div>
           <div class="step">
-            <div class="step-num">2</div>
-            <h3>Pay into escrow</h3>
-            <p>Your payment is held by ZenLootX — not released to the seller until you confirm everything is as described.</p>
+            <div class="step-node">2</div>
+            <div class="step-head">
+              <h3>Pay into escrow</h3>
+            </div>
+            <p>Your payment is held by ZenLootX and only released to the seller once you confirm everything is as described.</p>
           </div>
           <div class="step">
-            <div class="step-num">3</div>
-            <h3>Confirm &amp; done</h3>
+            <div class="step-node">3</div>
+            <div class="step-head">
+              <h3>Confirm &amp; done</h3>
+            </div>
             <p>Once you verify the account or items, approve the release. The seller gets paid. Leave a review and you're done.</p>
           </div>
         </div>
@@ -942,7 +1008,7 @@
             <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
           <div class="faq-a" id="faq-a-legit" role="region" aria-labelledby="faq-btn-legit">
-            <div class="faq-a-inner"><p>Fair question, and you should ask it before trusting anyone with your money. Yes: ZenLootX is a real business, registered with the Philippine Department of Trade and Industry (DTI) as ZENLOOTX ONLINE SHOP with nationwide scope, under Business Name No. 8247950 (valid through 2031).<br><br>You don't have to take our word for it. You can <a href="/FAQ/DTI.pdf" target="_blank" rel="noopener">view our DTI certificate</a>, or check it yourself: go to the <a href="https://bnrs.dti.gov.ph/search" target="_blank" rel="noopener">DTI's official Business Name Search</a> and type the exact name ZENLOOTX ONLINE SHOP. A valid registration will come up.<br><br>Registration is one layer of safety. The bigger one is escrow: your payment is held until you confirm the account is real, so a bad deal can't just take your money and disappear.</p></div>
+            <div class="faq-a-inner"><p>Fair question, and you should ask it before trusting anyone with your money. Yes: ZenLootX is a real business, registered with the Philippine Department of Trade and Industry (DTI) as ZENLOOTX ONLINE SHOP with nationwide scope, under Business Name No. 8247950.<br><br>You don't have to take our word for it. You can <a href="/FAQ/DTI.pdf" target="_blank" rel="noopener">view our DTI certificate</a>, or check it yourself: go to the <a href="https://bnrs.dti.gov.ph/search" target="_blank" rel="noopener">DTI's official Business Name Search</a> and type the exact name ZENLOOTX ONLINE SHOP. A valid registration will come up.<br><br>Registration is one layer of safety. The bigger one is escrow: your payment is held until you confirm the account is real, so a bad deal can't just take your money and disappear.</p></div>
           </div>
         </div>
 
@@ -1283,6 +1349,24 @@
         }, { threshold: 0.1 });
         items.forEach(it => obs.observe(it));
       }
+    }());
+
+    // ─── How-it-works journey line ────────────────────────────────────
+    // Draws the connector line + staggers the steps when the section scrolls in.
+    // Stays fully visible if JS is off or reduced-motion is on (data-reveal gate).
+    (function () {
+      const steps = document.querySelector('.steps');
+      if (!steps || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      steps.setAttribute('data-reveal', '');
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            steps.classList.add('in-view');
+            obs.unobserve(steps);
+          }
+        });
+      }, { threshold: 0.25 });
+      obs.observe(steps);
     }());
   </script>
 
