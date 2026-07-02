@@ -94,9 +94,12 @@ async function initNav(user) {
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="user-dropdown" id="userDropdown" style="display:none;position:fixed;top:0;right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:210px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:9999;">
-        <div style="padding:12px 16px;font-size:12px;color:var(--text-faint);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</div>
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</div>
+          <div id="ddWalletGlance" class="dd-mobile-only" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
+        </div>
 
-        <a href="/profile" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
+        <a href="/profile" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
           My Profile
         </a>
@@ -111,18 +114,18 @@ async function initNav(user) {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>
           Orders
         </a>
-        <a href="/messages" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
+        <a href="/messages" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"/></svg>
           Messages
         </a>
-        <a href="/wallet" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
+        <a href="/wallet" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/></svg>
           Wallet
         </a>
 
         <div style="height:1px;background:var(--border);margin:4px 0;"></div>
 
-        <a href="/listings/genshin" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
+        <a href="/listings/genshin" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
           View listings
         </a>
@@ -131,11 +134,11 @@ async function initNav(user) {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
           Seller Dashboard
         </a>
-        <a href="/create-listing" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
+        <a href="/create-listing" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L9.568 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/></svg>
           List an item
         </a>` : `
-        <a href="/sell" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
+        <a href="/sell" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"/></svg>
           Become a seller
         </a>`}
@@ -215,6 +218,9 @@ async function initNav(user) {
       if (nav) nav.insertAdjacentElement('afterend', banner);
     });
   }
+
+  // Bottom island tab bar — mobile only; desktop keeps the full dropdown
+  initBottomIsland(user);
 
   // Push notifications — register service worker and subscribe if not already subscribed
   initPushSubscription(user).catch(() => {});
@@ -328,8 +334,11 @@ async function initMsgBadge(userId) {
     document.querySelectorAll('a[href="/messages"]').forEach(link => {
       const badge = document.createElement('span');
       badge.className = 'nav-msg-badge';
-      badge.textContent = count;
-      badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:999px;background:var(--accent);color:var(--bg-base);font-size:10px;font-weight:700;padding:0 4px;margin-left:5px;line-height:1;';
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.cssText = link.id === 'islandMsgBtn'
+        // Pinned to the island tab's icon corner
+        ? 'position:absolute;top:3px;left:calc(50% + 4px);display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:999px;background:var(--accent);color:var(--bg-base);font-size:9px;font-weight:700;padding:0 4px;line-height:1;border:2px solid #121814;'
+        : 'display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:999px;background:var(--accent);color:var(--bg-base);font-size:10px;font-weight:700;padding:0 4px;margin-left:5px;line-height:1;';
       link.appendChild(badge);
     });
   }
@@ -504,18 +513,101 @@ async function initNotifBadge(userId) {
     });
 }
 
+// ─── Bottom island tab bar (mobile only) ─────────────────────────
+function initBottomIsland(user) {
+  if (document.getElementById('zlxIsland')) return;
+  const path = window.location.pathname;
+  // Skip focused/desktop-oriented pages
+  if (path.startsWith('/admin') || path.startsWith('/banned')) return;
+
+  const canSell   = user.app_metadata?.is_seller === true || user.app_metadata?.is_admin === true;
+  const sellHref  = canSell ? '/create-listing' : '/sell';
+
+  // Remember the last browsed game so the Browse tab returns there
+  const gameMatch = path.match(/^\/listings\/(genshin|mlbb|valorant)/);
+  if (gameMatch) localStorage.setItem('zlx-last-game', gameMatch[1]);
+  const browseHref = '/listings/' + (localStorage.getItem('zlx-last-game') || 'genshin');
+
+  const isActive = {
+    wallet:   path.startsWith('/wallet'),
+    browse:   path.startsWith('/listings'),
+    sell:     path.startsWith('/create-listing') || path.startsWith('/sell'),
+    messages: path.startsWith('/messages'),
+    profile:  path.startsWith('/profile'),
+  };
+
+  // Media-query rules: island + body padding on mobile, dropdown slimming,
+  // hidden entirely on desktop where the full dropdown remains the nav.
+  if (!document.getElementById('zlxIslandStyle')) {
+    const style = document.createElement('style');
+    style.id = 'zlxIslandStyle';
+    style.textContent = `
+      @media (min-width: 768px) {
+        #zlxIsland { display: none !important; }
+        .dd-mobile-only { display: none !important; }
+      }
+      @media (max-width: 767px) {
+        body { padding-bottom: 96px !important; }
+        .dd-desktop-only { display: none !important; }
+      }
+      #zlxIsland { transition: transform 0.25s ease; }
+      #zlxIsland.zlx-island-hidden { transform: translateY(130px); }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const tab = (href, id, svg, active) => `
+    <a href="${href}" ${id ? `id="${id}"` : ''} style="position:relative;flex:1;display:flex;align-items:center;justify-content:center;height:46px;border-radius:999px;color:${active ? 'var(--accent)' : 'var(--text-faint)'};${active ? 'background:var(--accent-glow);' : ''}text-decoration:none;">${svg}</a>`;
+
+  const svgWallet   = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path stroke-linecap="round" stroke-linejoin="round" d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>';
+  const svgBrowse   = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"/></svg>';
+  const svgPlus     = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>';
+  const svgMsg      = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"/></svg>';
+  const svgProfile  = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>';
+
+  const island = document.createElement('div');
+  island.id = 'zlxIsland';
+  island.style.cssText = 'position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:14px;right:14px;z-index:900;background:rgba(18,24,20,0.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--border-hi);border-radius:999px;display:flex;align-items:center;gap:4px;padding:7px 10px;box-shadow:0 12px 40px rgba(0,0,0,0.6),0 2px 8px rgba(0,0,0,0.4);';
+  island.innerHTML =
+    tab('/wallet', 'islandWalletBtn', svgWallet, isActive.wallet) +
+    tab(browseHref, 'islandBrowseBtn', svgBrowse, isActive.browse) +
+    `<a href="${sellHref}" aria-label="Sell" style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--bg-base);margin-top:-18px;box-shadow:0 6px 20px rgba(25,195,125,0.4);border:3px solid var(--bg-base);flex-shrink:0;text-decoration:none;">${svgPlus}</a>` +
+    tab('/messages', 'islandMsgBtn', svgMsg, isActive.messages) +
+    tab('/profile', 'islandProfileBtn', svgProfile, isActive.profile);
+  document.body.appendChild(island);
+
+  // Slide away while scrolling down, back on scroll up
+  let lastY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (y > lastY + 8 && y > 120) island.classList.add('zlx-island-hidden');
+    else if (y < lastY - 8)       island.classList.remove('zlx-island-hidden');
+    lastY = y;
+  }, { passive: true });
+
+  // Get out of the way when the keyboard is up (typing in inputs)
+  document.addEventListener('focusin', e => {
+    if (e.target.matches('input, textarea, select')) island.classList.add('zlx-island-hidden');
+  });
+  document.addEventListener('focusout', () => island.classList.remove('zlx-island-hidden'));
+}
+
 async function initWalletBalance(userId) {
   const fmt = v => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(v || 0);
 
   function setBal(amount) {
     document.querySelectorAll('.nav-wallet-bal').forEach(el => el.remove());
     document.querySelectorAll('a[href="/wallet"]').forEach(link => {
+      if (link.closest('#zlxIsland')) return; // island tab stays icon-only
       const bal = document.createElement('span');
       bal.className = 'nav-wallet-bal';
       bal.innerHTML = `<span style="color:var(--text-faint);font-weight:400;margin-right:6px;">·</span>${fmt(amount)}`;
       bal.style.cssText = 'margin-left:auto;padding-left:12px;color:var(--accent);font-size:13px;font-weight:600;white-space:nowrap;';
       link.appendChild(bal);
     });
+    // Mobile dropdown header glance (Wallet row is hidden there)
+    const glance = document.getElementById('ddWalletGlance');
+    if (glance) glance.innerHTML = `Wallet <span style="color:var(--text-faint);">·</span> <span style="color:var(--accent);font-weight:600;">${fmt(amount)}</span>`;
   }
 
   const { data: wallet } = await sb
