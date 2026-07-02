@@ -517,8 +517,8 @@ async function initNotifBadge(userId) {
 function initBottomIsland(user) {
   if (document.getElementById('zlxIsland')) return;
   const path = window.location.pathname;
-  // Skip focused/desktop-oriented pages
-  if (path.startsWith('/admin') || path.startsWith('/banned')) return;
+  // Skip focused/desktop-oriented pages, and messages (island overlaps the chat input)
+  if (path.startsWith('/admin') || path.startsWith('/banned') || path.startsWith('/messages')) return;
 
   const canSell   = user.app_metadata?.is_seller === true || user.app_metadata?.is_admin === true;
   const sellHref  = canSell ? '/create-listing' : '/sell';
