@@ -453,7 +453,7 @@
             </div>
             <div class="profile-since" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <span>Member since ${joined}</span>
-              ${profile.last_active_at ? `<span style="font-size:12px;">${lastActiveLabel(profile.last_active_at)}</span>` : ''}
+              ${profile.last_active_at && (Date.now() - new Date(profile.last_active_at).getTime()) < 180000 ? `<span style="font-size:12px;color:var(--success);font-weight:600;">● Online</span>` : ''}
             </div>
             ${isBanned && profile.ban_reason ? `<div style="font-size:12px;color:#F87171;margin-bottom:8px;">Ban reason: ${profile.ban_reason}</div>` : ''}
             <div class="profile-stats">
