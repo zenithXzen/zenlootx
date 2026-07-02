@@ -313,17 +313,17 @@
               ${thumbs ? `<div class="thumb-row" id="thumbRow">${thumbs}</div>` : ''}
             </div>
 
-            ${l.description ? `
-              <div class="description-card">
-                <h3>Description</h3>
-                <p style="white-space:pre-wrap">${esc(l.description)}</p>
-              </div>
-            ` : ''}
-
             ${attrRows ? `
               <div class="detail-info-card">
                 <h3>Details</h3>
                 ${attrRows}
+              </div>
+            ` : ''}
+
+            ${l.description ? `
+              <div class="description-card">
+                <h3>Description</h3>
+                <p style="white-space:pre-wrap">${esc(l.description)}</p>
               </div>
             ` : ''}
           </div>
