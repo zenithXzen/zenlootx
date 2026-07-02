@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /wallet
+Disallow: /orders
+Disallow: /messages
+Disallow: /notifications
+Disallow: /admin
+Disallow: /profile
+Disallow: /seller-dashboard
+Disallow: /create-listing
+Disallow: /disputes
+Disallow: /welcome
+Disallow: /banned
+Disallow: /api/
+
+Sitemap: https://zenlootexchange.com/sitemap.xml

@@ -10,6 +10,36 @@
 
 ## 🗒️ Change Log
 
+### 2026-07-02 (later) — "Open the storefront": guest browsing + SEO (⚠️ NEEDS OWNER SQL TO GO FULLY LIVE)
+Big session (via Claude Code remote): nav/dropdown overhaul earlier in the day (bell + unread badge, mobile bottom island tab bar, identity-card dropdown with tier chip + wallet card, /welcome post-registration onboarding with one-time metadata flag) — all pushed. Then this feature:
+
+**Guest browsing (code pushed, works after SQL below):**
+- `listings/listings.js` initNavGate: no longer redirects guests to /login — guests browse; Sign-in button carries `?redirect=` back. Seller lookups switched `profiles` → `profiles_public` view (2 places). v20.
+- `listings/detail.html`: same guest-friendly init; `loadSeller` → `profiles_public`. Buy/report/seller-controls already session-gated.
+- `public-profile.html`: added explicit login gate WITH `?redirect=` (page needs profile columns the public view doesn't expose — guest-opening it is a future follow-up).
+
+**⚠️ OWNER MUST RUN in Supabase SQL editor (until then, guests see empty listings — no breakage for logged-in users):**
+```sql
+create policy "anon_read_active_listings" on public.listings
+  for select to anon using (status = 'active');
+
+create or replace view public.profiles_public
+  with (security_invoker = off) as
+  select id, username, avatar_url, avg_rating, review_count, created_at
+  from public.profiles;
+revoke all on public.profiles_public from anon, authenticated;
+grant select on public.profiles_public to anon, authenticated;
+```
+Do NOT add an anon policy directly on `profiles` (would expose last_active/ban fields/is_admin — RLS is row-level, not column-level; that's what the view is for).
+
+**SEO (pushed):**
+- OG/Twitter/canonical meta on index + 3 game pages (genshin og:image uses `%20`-encoded AETHER AND LUMINE.jpg). New `robots.txt` (disallows account/wallet/orders/etc.) + `sitemap.xml` (7 URLs).
+- New `functions/listings/detail.js`: Cloudflare Pages Function injecting per-listing OG meta into detail.html via HTMLRewriter over `next()` (keeps `_headers` CSP). UUID-validates `?id=`, fetches with ANON key + `status=eq.active`, HTML-escapes everything (user titles = XSS sink otherwise), generic fallback on any failure, works for all UAs (curl-testable). Coexists with maintenance-mode middleware (runs after it).
+
+**Copy fix (pushed):** how-it-works FAQ "There is no automatic release" contradiction fixed — now discloses the 72h auto-release + dispute pause (escrow.html already disclosed it).
+
+**Verify after SQL:** incognito /listings/genshin shows cards; curl `-A facebookexternalhit` a listing URL → real og: tags; robots.txt/sitemap.xml 200; logged-in regression (island/bell/dropdown) unchanged.
+
 ### 2026-07-02 — SESSION CLOSE: homepage FAQ + how-it-works + footer overhaul (ALL PUSHED & LIVE)
 Owner headed to work; checkpoint. **Everything below this session is committed and live on zenlootexchange.com** (ignore the "NOT yet pushed" notes inside the older sub-entries — they were true when written, all shipped since). Latest commit: `ded0729`.
 

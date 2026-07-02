@@ -273,11 +273,14 @@ if (new URLSearchParams(window.location.search).get('filters') === '1') {
   if (panel) panel.style.display = 'block';
 }
 
-// ── Auth-aware nav (delegates to the shared nav.js initNav once session is confirmed) ──
+// ── Auth-aware nav: logged-in users get the full nav, guests can browse ──
 async function initNavGate() {
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
-  await initNav(session.user);
+  if (session) { await initNav(session.user); return; }
+  // Guest: shell already rendered Sign in / Get started — make Sign in
+  // round-trip back to this page (with filters/search) after login.
+  const signIn = document.querySelector('#navActions a[href="/login"]');
+  if (signIn) signIn.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
 }
 
 // ── Exchange rates ──
@@ -322,7 +325,7 @@ async function fetchAllListings() {
   // Batch fetch all unique seller profiles in one query
   const sellerIds = [...new Set(data.map(l => l.seller_id))];
   const { data: profiles } = await sb
-    .from('profiles')
+    .from('profiles_public')
     .select('id, username, avatar_url, avg_rating, review_count')
     .in('id', sellerIds);
 
@@ -601,7 +604,7 @@ function subscribeToListings() {
       const { eventType, new: updated, old: removed } = payload;
 
       if (eventType === 'INSERT' && updated?.status === 'active') {
-        const { data: profile } = await sb.from('profiles').select('id, username, avatar_url').eq('id', updated.seller_id).maybeSingle();
+        const { data: profile } = await sb.from('profiles_public').select('id, username, avatar_url').eq('id', updated.seller_id).maybeSingle();
         allListings = [{ ...updated, seller: profile || null }, ...allListings];
         render();
       } else if (eventType === 'UPDATE') {

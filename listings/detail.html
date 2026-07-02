@@ -454,7 +454,7 @@
     }
 
     async function loadSeller(sellerId) {
-      const { data: seller } = await sb.from('profiles').select('username,avatar_url,avg_rating,review_count').eq('id', sellerId).single();
+      const { data: seller } = await sb.from('profiles_public').select('username,avatar_url,avg_rating,review_count').eq('id', sellerId).single();
       if (!seller) return;
 
       const av   = document.getElementById('sellerAv');
@@ -611,8 +611,10 @@
 
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search); return; }
-      await initNav(session.user);
+      if (session) { await initNav(session.user); return; }
+      // Guest: keep the static Sign in / Get started buttons, round-trip back here after login
+      const signIn = document.querySelector('#navActions a[href="/login"]');
+      if (signIn) signIn.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
     })();
     load();
   </script>

@@ -402,6 +402,14 @@
       const sellerId = new URLSearchParams(location.search).get('id');
       if (!sellerId) { document.getElementById('profileWrap').innerHTML = `<div style="text-align:center;padding:80px 0;color:var(--text-faint);">No seller ID provided.</div>`; return; }
 
+      // Profiles are member-only for now (fetch below needs an authed session);
+      // guests arriving from a listing round-trip through login and come back here.
+      const { data: { session: gateSession } } = await sb.auth.getSession();
+      if (!gateSession) {
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return;
+      }
+
       // Fetch profile + listings + verified seller status in parallel
       const [profileRes, listingsRes, sellerAppRes] = await Promise.all([
         sb.from('profiles').select('id,username,avatar_url,bio,created_at,is_banned,ban_reason,is_admin,last_active_at').eq('id', sellerId).single(),
