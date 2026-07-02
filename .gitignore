@@ -13,3 +13,9 @@ zen_existing/
 
 .playwright-mcp/
 .wrangler/
+
+# Local AI tooling — never commit
+.claude/
+.agents/
+.impeccable/
+skills-lock.json
