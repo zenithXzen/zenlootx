@@ -289,6 +289,16 @@
       .hero-rotating-line { height: 1.2em; }
       .hero-stats { gap: 12px; padding: 24px 20px; }
       .hero-stats > div { width: 100%; flex: none; min-width: 0; }
+      /* Narrow viewport squeezes the glow ellipse and mask; widen and
+         brighten so the tactical backdrop reads on small screens */
+      .hero-wrap::before {
+        background-image:
+          radial-gradient(ellipse 150% 55% at 50% 42%, rgba(25,195,125,0.10) 0%, transparent 70%),
+          radial-gradient(circle, rgba(25,195,125,0.20) 1.2px, transparent 1.2px);
+        background-size: 100% 100%, 30px 30px;
+        -webkit-mask-image: radial-gradient(ellipse 160% 95% at 50% 48%, black 35%, transparent 95%);
+        mask-image: radial-gradient(ellipse 160% 95% at 50% 48%, black 35%, transparent 95%);
+      }
     }
 
     /* SECTION BASE */
