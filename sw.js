@@ -8,8 +8,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/wallpaper/zx.png',
-      badge: '/wallpaper/zx.png',
+      icon: '/wallpaper/zx-icon-square.png',
+      badge: '/wallpaper/zx-icon-square.png',
       tag: data.tag || 'zlx',
       data: { url: data.url },
       requireInteraction: false,

@@ -32,7 +32,7 @@ export async function onRequest({ request, env, next }) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/wallpaper/zx.png" type="image/png">
+  <link rel="icon" href="/wallpaper/zx-icon-square.png" type="image/png">
   <title>ZenLootX — Maintenance</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
