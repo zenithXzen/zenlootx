@@ -229,6 +229,9 @@ async function initNav(user) {
     initNotifBadge(user.id);
   }
 
+  // Wallet balance inline in the dropdown — glanceable without opening /wallet
+  initWalletBalance(user.id);
+
   // Admin badge — pending disputes + seller applications
   if (user.app_metadata?.is_admin) {
     initAdminBadge();
@@ -499,6 +502,38 @@ async function initNotifBadge(userId) {
         setInterval(async () => setBadge(await fetchCount()), 30000);
       }
     });
+}
+
+async function initWalletBalance(userId) {
+  const fmt = v => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(v || 0);
+
+  function setBal(amount) {
+    document.querySelectorAll('.nav-wallet-bal').forEach(el => el.remove());
+    document.querySelectorAll('a[href="/wallet"]').forEach(link => {
+      const bal = document.createElement('span');
+      bal.className = 'nav-wallet-bal';
+      bal.textContent = fmt(amount);
+      bal.style.cssText = 'margin-left:auto;padding-left:12px;color:var(--accent);font-size:13px;font-weight:600;white-space:nowrap;';
+      link.appendChild(bal);
+    });
+  }
+
+  const { data: wallet } = await sb
+    .from('wallets')
+    .select('balance')
+    .eq('user_id', userId)
+    .maybeSingle();
+  setBal(parseFloat(wallet?.balance || 0));
+
+  // Keep it fresh when the wallet changes (payment released, top-up, withdrawal)
+  sb.channel(`nav-wallet-${userId}`)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'wallets',
+      filter: `user_id=eq.${userId}`,
+    }, payload => setBal(parseFloat(payload.new?.balance || 0)))
+    .subscribe();
 }
 
 async function initAdminBadge() {
