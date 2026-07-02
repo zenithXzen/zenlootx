@@ -267,6 +267,12 @@ document.querySelectorAll('.game-sw-btn').forEach(btn => {
   }, { passive: true });
 })();
 
+// Onboarding: /listings/<game>?filters=1 opens the filter panel on arrival
+if (new URLSearchParams(window.location.search).get('filters') === '1') {
+  const panel = document.getElementById('filterPanel');
+  if (panel) panel.style.display = 'block';
+}
+
 // ── Auth-aware nav (delegates to the shared nav.js initNav once session is confirmed) ──
 async function initNavGate() {
   const { data: { session } } = await sb.auth.getSession();

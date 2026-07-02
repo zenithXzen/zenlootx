@@ -663,7 +663,7 @@
         const s = document.getElementById('step2Success');
         s.textContent = 'Account created! Redirecting…';
         s.classList.add('visible');
-        setTimeout(() => { window.location.href = '/'; }, 1500);
+        setTimeout(() => { window.location.href = '/welcome'; }, 1500);
 
       } catch {
         errEl.textContent = 'Network error. Try again.';
