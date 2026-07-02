@@ -165,8 +165,11 @@ async function initNav(user) {
   const userDropdown = document.getElementById('userDropdown');
   const userMenu     = document.getElementById('userMenu');
 
-  // Append dropdown to body so it's never clipped by any parent overflow/z-index
+  // Append dropdown to body so it's never clipped by any parent overflow/z-index.
+  // position:fixed so viewport coords from getBoundingClientRect stay correct
+  // after the page is scrolled (the nav is sticky).
   document.body.appendChild(userDropdown);
+  userDropdown.style.position = 'fixed';
 
   function positionDropdown() {
     const rect = userBtn.getBoundingClientRect();
