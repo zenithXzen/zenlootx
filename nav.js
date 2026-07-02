@@ -512,7 +512,7 @@ async function initWalletBalance(userId) {
     document.querySelectorAll('a[href="/wallet"]').forEach(link => {
       const bal = document.createElement('span');
       bal.className = 'nav-wallet-bal';
-      bal.textContent = fmt(amount);
+      bal.innerHTML = `<span style="color:var(--text-faint);font-weight:400;margin-right:6px;">·</span>${fmt(amount)}`;
       bal.style.cssText = 'margin-left:auto;padding-left:12px;color:var(--accent);font-size:13px;font-weight:600;white-space:nowrap;';
       link.appendChild(bal);
     });
