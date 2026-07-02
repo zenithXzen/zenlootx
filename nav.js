@@ -94,9 +94,28 @@ async function initNav(user) {
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="user-dropdown" id="userDropdown" style="display:none;position:fixed;top:0;right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;min-width:210px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:9999;">
-        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
-          <div style="font-size:12px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</div>
-          <div id="ddWalletGlance" class="dd-mobile-only" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
+        <div style="position:relative;padding:18px 16px 14px;border-bottom:1px solid var(--border);overflow:hidden;">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse 130% 90% at 20% 0%, rgba(25,195,125,0.16) 0%, transparent 60%),radial-gradient(circle, rgba(25,195,125,0.10) 1px, transparent 1px);background-size:100% 100%, 22px 22px;pointer-events:none;"></div>
+          <div style="position:relative;display:flex;align-items:center;gap:13px;">
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:48px;height:48px;border-radius:50%;background:var(--accent-glow);border:2px solid var(--accent);box-shadow:0 0 16px rgba(25,195,125,0.35);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:var(--accent);overflow:hidden;">${avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : initial}</div>
+              <div style="position:absolute;bottom:-2px;right:-2px;width:15px;height:15px;border-radius:50%;background:var(--success, #22C55E);border:2.5px solid var(--bg-surface);"></div>
+            </div>
+            <div style="min-width:0;flex:1;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <span style="font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.01em;">${username}</span>
+                <span id="ddTierChip" style="display:none;align-items:center;gap:4px;background:rgba(107,119,111,0.15);border:1px solid var(--border-hi);border-radius:999px;padding:1.5px 8px;font-size:10px;font-weight:600;color:var(--text-dim);"></span>
+              </div>
+              <div style="font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${user.email}</div>
+            </div>
+          </div>
+          <a href="/wallet" id="ddWalletCard" style="position:relative;margin-top:12px;display:flex;align-items:center;gap:9px;background:rgba(10,14,12,0.55);border:1px solid rgba(25,195,125,0.25);border-radius:10px;padding:9px 12px;text-decoration:none;">
+            <span style="flex:1;min-width:0;">
+              <span style="display:block;font-size:9.5px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.07em;">Wallet balance</span>
+              <span id="ddWalletBalAmount" style="display:block;font-size:15px;font-weight:700;color:var(--accent);letter-spacing:-0.01em;margin-top:0.5px;">—</span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="13" height="13" style="color:var(--text-faint);flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+          </a>
         </div>
 
         <a href="/profile" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
@@ -107,9 +126,6 @@ async function initNav(user) {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
           Settings
         </a>
-
-        <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-
         <a href="/orders" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>
           Orders
@@ -122,9 +138,6 @@ async function initNav(user) {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/></svg>
           Wallet
         </a>
-
-        <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-
         <a href="/listings/genshin" class="dd-desktop-only" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:var(--text-dim);cursor:pointer;transition:background 0.16s,color 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
           View listings
@@ -143,7 +156,6 @@ async function initNav(user) {
           Become a seller
         </a>`}
         ${user.app_metadata?.is_admin ? `
-        <div style="height:1px;background:var(--border);margin:4px 0;"></div>
         <a href="/admin" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;color:#F87171;cursor:pointer;transition:background 0.16s;text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
           Admin Dashboard
@@ -159,7 +171,7 @@ async function initNav(user) {
     </div>`;
 
   // Hover styles via JS (since inline styles can't handle :hover)
-  el.querySelectorAll('a[href]:not(#navBellBtn), button#navLogoutBtn').forEach(item => {
+  el.querySelectorAll('a[href]:not(#navBellBtn):not(#ddWalletCard), button#navLogoutBtn').forEach(item => {
     item.addEventListener('mouseenter', () => { item.style.background = 'var(--bg-elevated)'; item.style.color = item.style.color || 'var(--text)'; });
     item.addEventListener('mouseleave', () => { item.style.background = ''; });
   });
@@ -596,26 +608,36 @@ async function initWalletBalance(userId) {
   const fmt = v => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(v || 0);
 
   function setBal(amount) {
-    document.querySelectorAll('.nav-wallet-bal').forEach(el => el.remove());
-    document.querySelectorAll('a[href="/wallet"]').forEach(link => {
-      if (link.closest('#zlxIsland')) return; // island tab stays icon-only
-      const bal = document.createElement('span');
-      bal.className = 'nav-wallet-bal';
-      bal.innerHTML = `<span style="color:var(--text-faint);font-weight:400;margin-right:6px;">·</span>${fmt(amount)}`;
-      bal.style.cssText = 'margin-left:auto;padding-left:12px;color:var(--accent);font-size:13px;font-weight:600;white-space:nowrap;';
-      link.appendChild(bal);
-    });
-    // Mobile dropdown header glance (Wallet row is hidden there)
-    const glance = document.getElementById('ddWalletGlance');
-    if (glance) glance.innerHTML = `Wallet <span style="color:var(--text-faint);">·</span> <span style="color:var(--accent);font-weight:600;">${fmt(amount)}</span>`;
+    const el = document.getElementById('ddWalletBalAmount');
+    if (el) el.textContent = fmt(amount);
   }
 
-  const { data: wallet } = await sb
-    .from('wallets')
-    .select('balance')
-    .eq('user_id', userId)
-    .maybeSingle();
+  // Same tier ladder as public-profile
+  const TIERS = [
+    {tier:1,name:'Stone',min:0,color:'#9CA3AF'},{tier:2,name:'Iron',min:500,color:'#D1D5DB'},
+    {tier:3,name:'Bronze',min:2000,color:'#F59E0B'},{tier:4,name:'Silver',min:5000,color:'#E5E7EB'},
+    {tier:5,name:'Gold',min:10000,color:'#FDE68A'},{tier:6,name:'Platinum',min:25000,color:'#BAE6FD'},
+    {tier:7,name:'Emerald',min:50000,color:'#6EE7B7'},{tier:8,name:'Sapphire',min:100000,color:'#93C5FD'},
+    {tier:9,name:'Ruby',min:250000,color:'#FDA4AF'},{tier:10,name:'Diamond',min:500000,color:'url(#dg)'},
+  ];
+  function setTier(txData, wallet) {
+    const chip = document.getElementById('ddTierChip');
+    if (!chip) return;
+    const txTotal     = (txData || []).filter(r => ['escrow','credit','refund'].includes(r.type)).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+    const sellerTotal = parseFloat(wallet?.total_earned || 0);
+    const total = Math.max(txTotal, sellerTotal);
+    const t = [...TIERS].reverse().find(t => total >= t.min) || TIERS[0];
+    const iconSvg = getTierIcon(t.tier, t.color).replace('<svg ', '<svg width="12" height="12" ');
+    chip.innerHTML = `${iconSvg}<span style="color:${t.color.startsWith('url') ? '#a78bfa' : t.color};">${t.name}</span>`;
+    chip.style.display = 'inline-flex';
+  }
+
+  const [{ data: txData }, { data: wallet }] = await Promise.all([
+    sb.from('transactions').select('amount,type').eq('user_id', userId),
+    sb.from('wallets').select('balance,total_earned').eq('user_id', userId).maybeSingle(),
+  ]);
   setBal(parseFloat(wallet?.balance || 0));
+  setTier(txData, wallet);
 
   // Keep it fresh when the wallet changes (payment released, top-up, withdrawal)
   sb.channel(`nav-wallet-${userId}`)
